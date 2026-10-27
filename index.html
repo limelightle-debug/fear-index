@@ -120,6 +120,11 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .app b{display:block;font-size:15px}
 .app span{display:block;font-size:12px;color:var(--muted);line-height:1.45}
 .app em{margin-left:auto;font-style:normal;color:var(--accent);font-size:18px}
+.tree{position:relative;margin:2px -14px 10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tree img{display:block;width:100%;height:auto}
+.tree a{position:absolute;border-radius:6px}
+.tree a:active{background:rgba(127,168,255,.25)}
+.book .ly{display:inline-block;font-style:normal;font-size:10px;font-weight:700;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:0 6px;margin-bottom:2px}
 .bmap{position:relative}
 .bmap::before{content:"";position:absolute;left:22px;top:32px;bottom:32px;width:2px;background:var(--line)}
 .book{position:relative;display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);text-decoration:none}
@@ -165,7 +170,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 </div>
 
 <script>
-const APP_VER="fi-v3";
+const APP_VER="fi-v4";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -174,8 +179,10 @@ const APPS=[
   ["tqqq","TQQQ","TQQQ の価格、高値からの下落、年次の成績",`${BASE}/tqqq/`,"icons/app-tqqq.png"],
   ["ndx","Nasdaq 100","構成銘柄のヒートマップ、騰落率、組入比率",`${BASE}/ndx-heatmap/`,"icons/app-ndx.png"]];
 // the books in the order of the institute's book map, each linking to its Amazon page
-const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vix.jpg"],["金利の重力","https://amzn.asia/d/04cgLpEq"],["失敗の魔術師","https://amzn.asia/d/0hWKU73R"],
-  ["帳簿と物差し","https://amzn.asia/d/03aL6HY1"],["兵法に学べ","https://amzn.asia/d/02BQOi5d"],["相場のアノマリーを斬る","https://amzn.asia/d/0boQWl0D"]];
+// [title, Amazon, cover, layer in the tree, the title's box on the tree image in % (left, top, width, height)]
+const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vix.jpg","",[34,36,32,7]],["金利の重力","https://amzn.asia/d/04cgLpEq","","地",[40.5,60,19.5,6.5]],
+  ["帳簿と物差し","https://amzn.asia/d/03aL6HY1","","根",[25.5,73,21,6.5]],["失敗の魔術師","https://amzn.asia/d/0hWKU73R","","根",[56,73,21,6.5]],
+  ["兵法に学べ","https://amzn.asia/d/02BQOi5d","","根",[25.5,81.5,18,6.5]],["相場のアノマリーを斬る","https://amzn.asia/d/0boQWl0D","","根",[49,81.5,36,6.5]]];
 const store={get:(k,d)=>{try{return localStorage.getItem("fi."+k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem("fi."+k,v)}catch(e){}}};
 const state={tab:store.get("tab","apps")};
 const DATA={};
@@ -293,8 +300,10 @@ function renderApps(){
     `<div class="layer soonl"><div class="lh"><b>これから</b><span>準備中</span></div><div class="chips">${SOON.map(x=>`<span>${x}</span>`).join("")}</div></div>`;
 }
 function renderBooks(){
-  $("books").innerHTML=`<div class="ph"><h2>書籍体系図</h2><span class="asof">Gold Locks / 恐怖指数研究所</span></div><div class="bmap">`+
-    BOOKS.map(([b,url,cv])=>`<a class="book" href="${url}" target="_blank" rel="noopener">${cv?`<img class="cv" src="${cv}" alt="" width="44" height="64">`:`<div class="cv">${b}</div>`}<div><b>『${b}』</b><span>Amazon で見る</span></div><em>›</em></a>`).join("")+`</div>`;
+  // the tree (tap a title to open its Amazon page), then the same books as a list
+  $("books").innerHTML=`<div class="ph"><h2>書籍体系図</h2><span class="asof">Gold Locks / 恐怖指数研究所</span></div>
+    <div class="tree"><img src="icons/book-map.jpg" alt="書籍体系図" width="1200" height="902">${BOOKS.map(([b,url,,,r])=>`<a href="${url}" target="_blank" rel="noopener" aria-label="『${b}』" style="left:${r[0]}%;top:${r[1]}%;width:${r[2]}%;height:${r[3]}%"></a>`).join("")}</div>
+    <div class="bmap">`+BOOKS.map(([b,url,cv,layer])=>`<a class="book" href="${url}" target="_blank" rel="noopener">${cv?`<img class="cv" src="${cv}" alt="" width="44" height="64">`:`<div class="cv">${b}</div>`}<div>${layer?`<i class="ly">${layer}</i>`:""}<b>『${b}』</b><span>Amazon で見る</span></div><em>›</em></a>`).join("")+`</div>`;
 }
 function renderTabs(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tab===state.tab));
