@@ -174,13 +174,14 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 </div>
 
 <script>
-const APP_VER="fi-v16";
+const APP_VER="fi-v17";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
   ["mri","Market Risk Index","VIX・SKEW・CAPE から天井と底を推定する MRI と、そのシグナル",`${BASE}/mri-app/`,"icons/app-mri.png"],
   ["vix","VIX Events","VIX イベントの記録と周期",`${BASE}/mri-app/vix/`,"icons/app-vix.png"],
   ["tqqq","TQQQ","TQQQ の価格、高値からの下落、年次の成績",`${BASE}/tqqq/`,"icons/app-tqqq.png"],
+  ["mind","Mind","毎朝の局面と、今大切な言葉、陥りやすいバイアス",`${BASE}/mind/`,"icons/app-mind.png"],
   ["ndx","Nasdaq 100","構成銘柄のヒートマップ、騰落率、組入比率",`${BASE}/ndx-heatmap/`,"icons/app-ndx.png"]];
 // the books in the order of the institute's book map, each linking to its Amazon page
 // [title, Amazon, cover, layer in the tree, the title's box on the tree image in % (left, top, width, height)]
@@ -294,6 +295,7 @@ function renderPaper(){
 // the apps placed on the parts of 『VIXの声を聴け』: [part, its role, its title, [app, what it does, chapter]]
 const MAP=[
   ["影","観測","黒鳥の影を追う",[["mri","相場の天井を捉える","第三章"]]],
+  ["心","心理","黒鳥と踊れ",[["mind","今大切な格言と、陥りやすいバイアス","第四・五章"]]],
   ["技","判定と実行","黒鳥と翔べ",[["vix","VIX イベント。底を捉える","第九章"],["tqqq","弾を選ぶ","第十一章"]]],
   ["体","設計と運用","黒鳥に備えろ",[["ndx","ポートフォリオの主軸を選ぶ。環境認識","第十四章"]]]];
 function renderApps(){
