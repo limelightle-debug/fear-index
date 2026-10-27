@@ -176,7 +176,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 
 <script src="books.js"></script>
 <script>
-const APP_VER="fi-v21";
+const APP_VER="fi-v22";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -312,7 +312,7 @@ function bookRow([b,url,cv,layer]){
 function renderBooks(){
   // the tree (tap a title to open its Amazon page), then the same books as a list; the English edition sits in its own panel below
   $("books").innerHTML=`<div class="ph"><h2>書籍体系図</h2><span class="asof">Gold Locks / 恐怖指数研究所</span></div>
-    <div class="tree"><img src="icons/book-map.jpg" alt="書籍体系図" width="1200" height="902">${BOOKS.filter(x=>x[4]).map(([b,url,,,r])=>`<a href="${url}" target="_blank" rel="noopener" aria-label="『${b}』" style="left:${r[0]}%;top:${r[1]}%;width:${r[2]}%;height:${r[3]}%"></a>`).join("")}</div>
+    <div class="tree"><img src="icons/book-map.jpg" alt="書籍体系図" width="1200" height="902" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='icons/book-map.jpg?r='+Date.now()}">${BOOKS.filter(x=>x[4]).map(([b,url,,,r])=>`<a href="${url}" target="_blank" rel="noopener" aria-label="『${b}』" style="left:${r[0]}%;top:${r[1]}%;width:${r[2]}%;height:${r[3]}%"></a>`).join("")}</div>
     <div class="bmap">${BOOKS.filter(x=>!x[5]).map(bookRow).join("")}</div>`;
   $("books-en").innerHTML=`<div class="ph"><h2>英語版</h2><span class="asof">English edition</span></div><div class="bmap solo">${BOOKS.filter(x=>x[5]).map(bookRow).join("")}</div>`;
 }
