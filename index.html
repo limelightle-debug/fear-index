@@ -100,7 +100,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 /* app map */
 .soon{padding:28px 0;text-align:center;color:var(--muted)}
 .layer{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#0d0d22}
-.lh{display:flex;align-items:baseline;gap:8px;margin:0 0 4px}
+.lh{display:flex;align-items:center;gap:8px;margin:0 0 4px}
 .lh b{font-size:13px;letter-spacing:.06em}
 .lh span{font-size:11px;color:var(--muted)}
 .node{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);text-decoration:none}
@@ -125,6 +125,8 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tree a{position:absolute;border-radius:6px}
 .tree a:active{background:rgba(127,168,255,.25)}
 .book .ly{display:inline-block;font-style:normal;font-size:10px;font-weight:700;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:0 6px;margin-bottom:2px}
+.lh .kan{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;font-size:14px;margin-right:2px}
+.node .ch{font-style:normal;font-weight:400;font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
 .bmap{position:relative}
 .bmap.solo::before{display:none}
 .bmap::before{content:"";position:absolute;left:22px;top:32px;bottom:32px;width:2px;background:var(--line)}
@@ -172,7 +174,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 </div>
 
 <script>
-const APP_VER="fi-v12";
+const APP_VER="fi-v13";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -289,17 +291,15 @@ function renderPaper(){
   const M=renderMRI(),V=renderVIX(),T=renderTQQQ(),N=renderNDX();renderLead(M,V,T,N);
 }
 // the individual apps by role: judge (when) -> trade (what) <- look inside; what comes next
+// the apps placed on the parts of 『VIXの声を聴け』: [part, its role, its title, [app, what it does, chapter]]
 const MAP=[
-  ["判断する","いつ動くか",[["mri","天井と底を推定する。SELL・BUY とテクニカルバブルのシグナル"],["vix","暴落（VIX イベント）を記録し、その周期を見る"]]],
-  ["売買する","何を動かすか",[["tqqq","本命。底で買い、天井で利確する対象"]]],
-  ["中身を見る","何が動かしたか",[["ndx","TQQQ の原資産。どの銘柄が指数を動かしたか"]]]];
-const SOON=["ゴールド（DXY）","金利","ビットコイン"];
+  ["影","観測","黒鳥の影を追う",[["vix","黒鳥の飛跡。VIX イベントがいつ、どれだけの間隔で来たか","第二章"],["mri","風船の膨らみを測る。天井と底を推定し、SELL・BUY を出す","第三章"]]],
+  ["技","実行","黒鳥と翔べ",[["tqqq","弾を選ぶ。底で撃ち、天井で利確する弾","第十一章"],["ndx","弾の中身。どの銘柄が TQQQ を動かしたか",""]]]];
 function renderApps(){
   const A=Object.fromEntries(APPS.map(a=>[a[0],a]));
-  const card=([k,role])=>{const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}</b><span>${role}</span></div><em>›</em></a>`};
-  $("apps").innerHTML=`<div class="ph"><h2>個別アプリ</h2><span class="asof">役割ごと</span></div>`+
-    MAP.map(([h,sub,items],i)=>`${i?`<div class="arrow">${i===1?"↓":"↑"}</div>`:""}<div class="layer"><div class="lh"><b>${h}</b><span>${sub}</span></div>${items.map(card).join("")}</div>`).join("")+
-    `<div class="layer soonl"><div class="lh"><b>これから</b><span>準備中</span></div><div class="chips">${SOON.map(x=>`<span>${x}</span>`).join("")}</div></div>`;
+  const card=([k,role,ch])=>{const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}${ch?`<i class="ch">${ch}</i>`:""}</b><span>${role}</span></div><em>›</em></a>`};
+  $("apps").innerHTML=`<div class="ph"><h2>個別アプリ</h2><span class="asof">『VIXの声を聴け』に沿って</span></div>`+
+    MAP.map(([k,role,title,items],i)=>`${i?`<div class="arrow">↓</div>`:""}<div class="layer"><div class="lh"><b class="kan">${k}</b><b>${role}</b><span>${title}</span></div>${items.map(card).join("")}</div>`).join("");
 }
 function bookRow([b,url,cv,layer]){
   return `<a class="book" href="${url}" target="_blank" rel="noopener">${cv?`<img class="cv" src="${cv}" alt="" width="44" height="64">`:`<div class="cv">${b}</div>`}<div>${layer?`<i class="ly">${layer}</i>`:""}<b>${/^[\x00-\x7F]+$/.test(b)?b:`『${b}』`}</b><span>Amazon で見る</span></div><em>›</em></a>`;
