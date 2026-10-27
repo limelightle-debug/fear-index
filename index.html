@@ -99,6 +99,16 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .bar2l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px}
 /* app map */
 .soon{padding:28px 0;text-align:center;color:var(--muted)}
+/* morning paper: one row per index, name / level / bar around zero / change */
+.irow{display:grid;grid-template-columns:7.4em 78px minmax(30px,1fr) 66px;align-items:center;gap:8px;padding:9px 0;line-height:1.2}
+.irow+.irow{border-top:1px solid var(--line)}
+.irow .nm{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.irow .lv{font-size:13px;color:var(--ink2);text-align:right}
+.irow .v{font-size:16px;font-weight:700;text-align:right}
+.irow .bar{position:relative;height:10px}
+.irow .bar::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.irow .bar i{position:absolute;top:0;bottom:0}
+.up{color:var(--up)}.dn{color:var(--dn)}
 .layer{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#0d0d22}
 .lh{display:flex;align-items:center;gap:8px;margin:0 0 4px}
 .lh b{font-size:13px;letter-spacing:.06em}
@@ -158,7 +168,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
   </div>
 
   <div id="t-paper">
-    <section class="panel"><div class="soon">朝刊は準備中です</div></section>
+    <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
   </div>
 
   <div id="t-apps" hidden>
@@ -176,7 +186,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 
 <script src="books.js"></script>
 <script>
-const APP_VER="fi-v26";
+const APP_VER="fi-v27";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -326,6 +336,32 @@ function renderEd(){
 }
 
 /* ---------- data: each app's own published data (same site) ---------- */
+// morning paper: the major indices at the last US close
+const PAPER="../mri-app/data/indices.json", ORDER=["SPX","NDX","DJI","RUT","SOX"];
+let IDX=null;
+const nyLabel=t=>{  // Cboe "2026-10-27T16:14:59" or Nasdaq "Oct 27, 2026": the day, and the close or the time
+  let m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);
+  if(m){const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3])),w="日月火水木金土"[d.getUTCDay()],hm=+m[4]*60+ +m[5];
+    return `${+m[2]}/${+m[3]}（${w}）${hm>=960?"引け":`${m[4]}:${m[5]} 時点`}`}
+  m=String(t||"").match(/^([A-Z][a-z]{2}) (\d+), (\d{4})/);
+  if(m){const mo="JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3,d=new Date(Date.UTC(+m[3],mo,+m[2]));return `${mo+1}/${+m[2]}（${"日月火水木金土"[d.getUTCDay()]}）引け`}
+  return "";
+};
+function renderIdx(){
+  const el=$("idx");
+  if(!IDX||!IDX.indices||!IDX.indices.length){el.innerHTML=`<div class="soon">${IDX===false?"データを読み込めませんでした":"読み込み中…"}</div>`;return}
+  const L=[...IDX.indices].sort((a,b)=>ORDER.indexOf(a.k)-ORDER.indexOf(b.k));
+  const mx=Math.max(1,...L.map(x=>Math.abs(x.pct||0)));
+  const asof=nyLabel((L.find(x=>x.k==="SPX")||L[0]).time);
+  el.innerHTML=`<div class="ph"><h2>主要指数</h2><span class="asof">${asof}</span></div>`+L.map(x=>{
+    const v=x.pct,c=v>0?"up":v<0?"dn":"",w=Math.abs(v||0)/mx*50;
+    const bar=v==null?"":v>=0?`left:50%;width:${w}%;background:var(--up);border-radius:0 3px 3px 0`:`right:50%;width:${w}%;background:var(--dn);border-radius:3px 0 0 3px`;
+    return `<div class="irow"><span class="nm">${x.ja}</span><span class="lv num">${x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2})}</span><span class="bar"><i style="${bar}"></i></span><span class="v num ${c}">${v==null?"-":(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2)+"%"}</span></div>`}).join("");
+}
+async function loadPaper(){
+  try{const r=await fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"});IDX=r.ok?await r.json():false}catch(e){IDX=false}
+  renderIdx();
+}
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
   await Promise.all(Object.entries(SRC).map(async([k,u])=>{try{const r=await fetch(u+"?ts="+Date.now(),{cache:"no-store"});if(r.ok)DATA[k]=await r.json()}catch(e){}}));
@@ -333,8 +369,8 @@ async function load(){
   renderPaper();
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
-renderEd();renderTabs();renderApps();renderBooks();
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")renderEd()});
+renderEd();renderTabs();renderApps();renderBooks();loadPaper();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
