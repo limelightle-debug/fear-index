@@ -97,6 +97,22 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .bar2{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:10px;background:var(--chip)}
 .bar2 i{display:block;height:100%}
 .bar2l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px}
+/* app map */
+.soon{padding:28px 0;text-align:center;color:var(--muted)}
+.layer{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#0d0d22}
+.lh{display:flex;align-items:baseline;gap:8px;margin:0 0 4px}
+.lh b{font-size:13px;letter-spacing:.06em}
+.lh span{font-size:11px;color:var(--muted)}
+.node{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);text-decoration:none}
+.lh+.node{border-top:0}
+.node img{width:44px;height:44px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
+.node b{display:block;font-size:14.5px}
+.node span{display:block;font-size:12px;color:var(--muted);line-height:1.45}
+.node em{margin-left:auto;font-style:normal;color:var(--accent);font-size:18px}
+.arrow{text-align:center;color:var(--accent);font-size:18px;line-height:1;padding:5px 0}
+.soonl{margin-top:12px;border-style:dashed;background:transparent}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 2px}
+.chips span{font-size:12px;color:var(--ink2);background:var(--chip);border-radius:999px;padding:3px 10px}
 /* apps and books */
 .app{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);text-decoration:none}
 .app:first-of-type{border-top:0;padding-top:2px}
@@ -130,14 +146,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
   </div>
 
   <div id="t-paper">
-    <div class="empty" id="empty">データを読み込んでいます…</div>
-    <div id="paper" hidden>
-      <section class="panel lead"><div class="ph"><h2>今朝のまとめ</h2><span class="asof" id="leadAsof"></span></div><ul id="lead"></ul></section>
-      <section class="panel" id="p-mri"></section>
-      <section class="panel" id="p-vix"></section>
-      <section class="panel" id="p-tqqq"></section>
-      <section class="panel" id="p-ndx"></section>
-    </div>
+    <section class="panel"><div class="soon">朝刊は準備中です</div></section>
   </div>
 
   <div id="t-apps" hidden>
@@ -152,7 +161,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 </div>
 
 <script>
-const APP_VER="fi-v1";
+const APP_VER="fi-v2";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -162,7 +171,7 @@ const APPS=[
   ["ndx","Nasdaq 100","構成銘柄のヒートマップ、騰落率、組入比率",`${BASE}/ndx-heatmap/`,"icons/app-ndx.png"]];
 const BOOKS=[["VIXの声を聴け","icons/book-vix.jpg"],["失敗の魔術師"],["兵法に学べ"],["帳簿と物差し"],["金利の重力"],["相場のアノマリーを斬る"]];
 const store={get:(k,d)=>{try{return localStorage.getItem("fi."+k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem("fi."+k,v)}catch(e){}}};
-const state={tab:store.get("tab","paper")};
+const state={tab:store.get("tab","apps")};
 const DATA={};
 
 const pc=(v,d=1)=>`${v>=0?"+":"−"}${Math.abs(v*100).toFixed(d)}%`;
@@ -264,8 +273,18 @@ function renderPaper(){
   const any=Object.keys(DATA).length;$("empty").hidden=!!any;$("paper").hidden=!any;if(!any)return;
   const M=renderMRI(),V=renderVIX(),T=renderTQQQ(),N=renderNDX();renderLead(M,V,T,N);
 }
+// the individual apps by role: judge (when) -> trade (what) <- look inside; what comes next
+const MAP=[
+  ["判断する","いつ動くか",[["mri","天井と底を推定する。SELL・BUY とテクニカルバブルのシグナル"],["vix","暴落（VIX イベント）を記録し、その周期を見る"]]],
+  ["売買する","何を動かすか",[["tqqq","本命。底で買い、天井で利確する対象"]]],
+  ["中身を見る","何が動かしたか",[["ndx","TQQQ の原資産。どの銘柄が指数を動かしたか"]]]];
+const SOON=["ゴールド（DXY）","金利","ビットコイン"];
 function renderApps(){
-  $("apps").innerHTML=`<div class="ph"><h2>個別アプリ</h2></div>`+APPS.map(([,n,dsc,url,ic])=>`<a class="app" href="${url}"><img src="${ic}" alt="" width="52" height="52"><div><b>${n}</b><span>${dsc}</span></div><em>›</em></a>`).join("");
+  const A=Object.fromEntries(APPS.map(a=>[a[0],a]));
+  const card=([k,role])=>{const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}</b><span>${role}</span></div><em>›</em></a>`};
+  $("apps").innerHTML=`<div class="ph"><h2>個別アプリ</h2><span class="asof">役割ごと</span></div>`+
+    MAP.map(([h,sub,items],i)=>`${i?`<div class="arrow">${i===1?"↓":"↑"}</div>`:""}<div class="layer"><div class="lh"><b>${h}</b><span>${sub}</span></div>${items.map(card).join("")}</div>`).join("")+
+    `<div class="layer soonl"><div class="lh"><b>これから</b><span>準備中</span></div><div class="chips">${SOON.map(x=>`<span>${x}</span>`).join("")}</div></div>`;
 }
 function renderBooks(){
   $("books").innerHTML=`<div class="ph"><h2>書籍</h2><span class="asof">Gold Locks / 恐怖指数研究所</span></div>`+BOOKS.map(([b,cv])=>`<div class="book">${cv?`<img class="cv" src="${cv}" alt="" width="44" height="64">`:`<div class="cv">${b}</div>`}<div><b>『${b}』</b><span>Gold Locks（恐怖指数研究所）</span></div></div>`).join("");
@@ -276,7 +295,7 @@ function renderTabs(){
 }
 function renderEd(){
   const d=new Date(),w="日月火水木金土"[d.getDay()];
-  $("ed").innerHTML=`<b>朝刊</b>　${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${w}）`;
+  $("ed").innerHTML=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${w}）`;
 }
 
 /* ---------- data: each app's own published data (same site) ---------- */
@@ -287,8 +306,8 @@ async function load(){
   renderPaper();
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
-renderEd();renderTabs();renderApps();renderBooks();load();
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();load()}});
+renderEd();renderTabs();renderApps();renderBooks();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")renderEd()});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
