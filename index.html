@@ -120,11 +120,15 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .app b{display:block;font-size:15px}
 .app span{display:block;font-size:12px;color:var(--muted);line-height:1.45}
 .app em{margin-left:auto;font-style:normal;color:var(--accent);font-size:18px}
-.book{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.bmap{position:relative}
+.bmap::before{content:"";position:absolute;left:22px;top:32px;bottom:32px;width:2px;background:var(--line)}
+.book{position:relative;display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);text-decoration:none}
+.book em{margin-left:auto;font-style:normal;color:var(--accent);font-size:18px}
+.book .cv{position:relative;z-index:1}
 .book:first-of-type{border-top:0;padding-top:2px}
 .book .cv{width:44px;height:64px;border-radius:4px;flex:none;object-fit:cover;background:linear-gradient(160deg,#2a1020,#0b0b18);box-shadow:0 0 0 1px var(--line);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);text-align:center;line-height:1.2;padding:3px}
 .book b{display:block;font-size:15px}
-.book span{display:block;font-size:12px;color:var(--muted)}
+.book span{display:block;font-size:12px;color:var(--accent)}
 .foot{margin-top:18px;text-align:center;font-size:11px;color:var(--muted)}
 </style>
 </head>
@@ -161,7 +165,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 </div>
 
 <script>
-const APP_VER="fi-v2";
+const APP_VER="fi-v3";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -169,7 +173,9 @@ const APPS=[
   ["vix","VIX Events","VIX イベントの記録と周期",`${BASE}/mri-app/vix/`,"icons/app-vix.png"],
   ["tqqq","TQQQ","TQQQ の価格、高値からの下落、年次の成績",`${BASE}/tqqq/`,"icons/app-tqqq.png"],
   ["ndx","Nasdaq 100","構成銘柄のヒートマップ、騰落率、組入比率",`${BASE}/ndx-heatmap/`,"icons/app-ndx.png"]];
-const BOOKS=[["VIXの声を聴け","icons/book-vix.jpg"],["失敗の魔術師"],["兵法に学べ"],["帳簿と物差し"],["金利の重力"],["相場のアノマリーを斬る"]];
+// the books in the order of the institute's book map, each linking to its Amazon page
+const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vix.jpg"],["金利の重力","https://amzn.asia/d/04cgLpEq"],["失敗の魔術師","https://amzn.asia/d/0hWKU73R"],
+  ["帳簿と物差し","https://amzn.asia/d/03aL6HY1"],["兵法に学べ","https://amzn.asia/d/02BQOi5d"],["相場のアノマリーを斬る","https://amzn.asia/d/0boQWl0D"]];
 const store={get:(k,d)=>{try{return localStorage.getItem("fi."+k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem("fi."+k,v)}catch(e){}}};
 const state={tab:store.get("tab","apps")};
 const DATA={};
@@ -287,7 +293,8 @@ function renderApps(){
     `<div class="layer soonl"><div class="lh"><b>これから</b><span>準備中</span></div><div class="chips">${SOON.map(x=>`<span>${x}</span>`).join("")}</div></div>`;
 }
 function renderBooks(){
-  $("books").innerHTML=`<div class="ph"><h2>書籍</h2><span class="asof">Gold Locks / 恐怖指数研究所</span></div>`+BOOKS.map(([b,cv])=>`<div class="book">${cv?`<img class="cv" src="${cv}" alt="" width="44" height="64">`:`<div class="cv">${b}</div>`}<div><b>『${b}』</b><span>Gold Locks（恐怖指数研究所）</span></div></div>`).join("");
+  $("books").innerHTML=`<div class="ph"><h2>書籍体系図</h2><span class="asof">Gold Locks / 恐怖指数研究所</span></div><div class="bmap">`+
+    BOOKS.map(([b,url,cv])=>`<a class="book" href="${url}" target="_blank" rel="noopener">${cv?`<img class="cv" src="${cv}" alt="" width="44" height="64">`:`<div class="cv">${b}</div>`}<div><b>『${b}』</b><span>Amazon で見る</span></div><em>›</em></a>`).join("")+`</div>`;
 }
 function renderTabs(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tab===state.tab));
