@@ -170,7 +170,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 </div>
 
 <script>
-const APP_VER="fi-v4";
+const APP_VER="fi-v5";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -180,8 +180,8 @@ const APPS=[
   ["ndx","Nasdaq 100","構成銘柄のヒートマップ、騰落率、組入比率",`${BASE}/ndx-heatmap/`,"icons/app-ndx.png"]];
 // the books in the order of the institute's book map, each linking to its Amazon page
 // [title, Amazon, cover, layer in the tree, the title's box on the tree image in % (left, top, width, height)]
-const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vix.jpg","",[34,36,32,7]],["金利の重力","https://amzn.asia/d/04cgLpEq","","地",[40.5,60,19.5,6.5]],
-  ["帳簿と物差し","https://amzn.asia/d/03aL6HY1","","根",[25.5,73,21,6.5]],["失敗の魔術師","https://amzn.asia/d/0hWKU73R","","根",[56,73,21,6.5]],
+const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vix.jpg","",[34,36,32,7]],["金利の重力","https://amzn.asia/d/04cgLpEq","icons/book-kinri.jpg","地",[40.5,60,19.5,6.5]],
+  ["帳簿と物差し","https://amzn.asia/d/03aL6HY1","icons/book-chobo.jpg","根",[25.5,73,21,6.5]],["失敗の魔術師","https://amzn.asia/d/0hWKU73R","icons/book-shippai.jpg","根",[56,73,21,6.5]],
   ["兵法に学べ","https://amzn.asia/d/02BQOi5d","","根",[25.5,81.5,18,6.5]],["相場のアノマリーを斬る","https://amzn.asia/d/0boQWl0D","","根",[49,81.5,36,6.5]]];
 const store={get:(k,d)=>{try{return localStorage.getItem("fi."+k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem("fi."+k,v)}catch(e){}}};
 const state={tab:store.get("tab","apps")};
