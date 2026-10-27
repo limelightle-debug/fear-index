@@ -101,6 +101,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .soon{padding:28px 0;text-align:center;color:var(--muted)}
 /* morning paper, front page: a headline, then the indices as tiles coloured by the day's move (S&P 500 large) */
 .head{font-size:24px;font-weight:800;line-height:1.25;letter-spacing:.02em;margin:2px 0 4px}
+.head .h2b{display:block;font-size:20px;margin-top:2px}
 .sub{font-size:13px;color:var(--ink2);margin:0 0 12px}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .tile{border-radius:10px;padding:10px 12px 11px;color:#fff;min-width:0}
@@ -110,6 +111,13 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tile.hero .tp{font-size:56px;line-height:1}
 .tile .tl{font-family:var(--f-tick);font-stretch:85%;font-size:12.5px;opacity:.85;margin-top:3px;font-variant-numeric:tabular-nums}
 .tile.hero .tl{font-size:15px}
+.story{margin-top:14px}
+.story .sec{padding:9px 0}
+.story .sec+.sec{border-top:1px solid var(--line)}
+.story .sec b{display:inline-block;font-size:11.5px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 8px;margin-bottom:5px}
+.story .sec p{margin:0;font-size:15px;line-height:1.75;color:var(--ink)}
+.story .src{margin-top:8px;font-size:11.5px;color:var(--muted)}
+.story .src a{color:var(--muted)}
 .up{color:var(--up)}.dn{color:var(--dn)}
 .layer{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#0d0d22}
 .lh{display:flex;align-items:center;gap:8px;margin:0 0 4px}
@@ -188,7 +196,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 
 <script src="books.js"></script>
 <script>
-const APP_VER="fi-v28";
+const APP_VER="fi-v29";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -340,7 +348,8 @@ function renderEd(){
 /* ---------- data: each app's own published data (same site) ---------- */
 // morning paper: the major indices at the last US close
 const PAPER="../mri-app/data/indices.json", ORDER=["SPX","NDX","DJI","RUT","SOX"];
-let IDX=null;
+let IDX=null, STORY=null;
+const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const nyLabel=t=>{  // Cboe "2026-10-27T16:14:59" or Nasdaq "Oct 27, 2026": the day, and the close or the time
   let m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);
   if(m){const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3])),w="日月火水木金土"[d.getUTCDay()],hm=+m[4]*60+ +m[5];
@@ -364,12 +373,17 @@ function renderIdx(){
   const el=$("idx");
   if(!IDX||!IDX.indices||!IDX.indices.length){el.innerHTML=`<div class="soon">${IDX===false?"データを読み込めませんでした":"読み込み中…"}</div>`;return}
   const L=[...IDX.indices].sort((a,b)=>ORDER.indexOf(a.k)-ORDER.indexOf(b.k));
-  const asof=nyLabel((L.find(x=>x.k==="SPX")||L[0]).time), [h1,h2]=headline(L);
-  el.innerHTML=`<div class="ph"><h2>主要指数</h2><span class="asof">${asof}</span></div><div class="head">${h1}</div><div class="sub">${h2}</div><div class="tiles">`+L.map(x=>
-    `<div class="tile${x.k==="SPX"?" hero":""}" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tp">${fmtPct(x.pct)}</div><div class="tl">${x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2})}</div></div>`).join("")+`</div>`;
+  const t0=(L.find(x=>x.k==="SPX")||L[0]).time, asof=nyLabel(t0);
+  // the written article for the same session, when there is one; otherwise a headline from the numbers
+  const day=(String(t0).match(/^\d{4}-\d\d-\d\d/)||[""])[0], st=STORY&&STORY.date===day?STORY:null;
+  let [h1,h2]=headline(L); if(st){h1=st.headline;h2=""}
+  el.innerHTML=`<div class="ph"><h2>主要指数</h2><span class="asof">${asof}</span></div><div class="head">${Array.isArray(h1)?esc(h1[0])+(h1[1]?`<span class="h2b">${esc(h1[1])}</span>`:""):esc(h1)}</div>${h2?`<div class="sub">${h2}</div>`:`<div style="height:10px"></div>`}<div class="tiles">`+L.map(x=>
+    `<div class="tile${x.k==="SPX"?" hero":""}" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tp">${fmtPct(x.pct)}</div><div class="tl">${x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2})}</div></div>`).join("")+`</div>`+(st?`<div class="story">${st.sections.map(([k,t])=>`<div class="sec"><b>${esc(k)}</b><p>${esc(t)}</p></div>`).join("")}${st.sources&&st.sources.length?`<div class="src">出典 ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div>`:""}</div>`:"");
 }
 async function loadPaper(){
-  try{const r=await fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"});IDX=r.ok?await r.json():false}catch(e){IDX=false}
+  await Promise.all([
+    fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
+    fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>STORY=j).catch(()=>STORY=null)]);
   renderIdx();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
