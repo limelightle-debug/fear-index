@@ -174,7 +174,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 </div>
 
 <script>
-const APP_VER="fi-v13";
+const APP_VER="fi-v14";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -293,8 +293,8 @@ function renderPaper(){
 // the individual apps by role: judge (when) -> trade (what) <- look inside; what comes next
 // the apps placed on the parts of 『VIXの声を聴け』: [part, its role, its title, [app, what it does, chapter]]
 const MAP=[
-  ["影","観測","黒鳥の影を追う",[["vix","黒鳥の飛跡。VIX イベントがいつ、どれだけの間隔で来たか","第二章"],["mri","風船の膨らみを測る。天井と底を推定し、SELL・BUY を出す","第三章"]]],
-  ["技","実行","黒鳥と翔べ",[["tqqq","弾を選ぶ。底で撃ち、天井で利確する弾","第十一章"],["ndx","弾の中身。どの銘柄が TQQQ を動かしたか",""]]]];
+  ["影","観測","黒鳥の影を追う",[["mri","風船の膨らみを測る。天井と底を推定し、SELL・BUY を出す","第三章"]]],
+  ["技","判定と実行","黒鳥と翔べ",[["vix","VIX イベント。底を捉える","第九章"],["tqqq","弾を選ぶ。底で撃ち、天井で利確する弾","第十一章"],["ndx","弾の中身。どの銘柄が TQQQ を動かしたか",""]]]];
 function renderApps(){
   const A=Object.fromEntries(APPS.map(a=>[a[0],a]));
   const card=([k,role,ch])=>{const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}${ch?`<i class="ch">${ch}</i>`:""}</b><span>${role}</span></div><em>›</em></a>`};
