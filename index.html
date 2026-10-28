@@ -270,7 +270,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="books.js"></script>
 <script src="../mind/engine.js"></script>
 <script>
-const APP_VER="fi-v44";
+const APP_VER="fi-v45";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -659,7 +659,7 @@ function renderNums(){
     spread=row("sp","長短差（10年−2年）",`${sgn(sp)}${Math.abs(sp).toFixed(2)}`,`<span class="tag" style="color:${tag[1]};background:${tag[1]}1f">${tag[0]}</span>`,"")}
   const t=(it.usdjpy||it.gold||{}).time;
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>数字</h2><span class="asof">${ETLabel(t)}</span></div>
+  el.innerHTML=`<div class="ph" style="justify-content:flex-end"><span class="asof">${ETLabel(t)}</span></div>
     <div class="ng">金利</div>${Y("us10y","米10年債")}${Y("us2y","米2年債")}${spread}
     <div class="ng">為替</div>${R("usdjpy","ドル円")}${R("eurjpy","ユーロ円")}${R("gbpjpy","ポンド円")}${R("dxy","ドルインデックス")}
     <div class="ng">コモディティ</div>${R("gold","金")}${R("wti","原油（WTI）")}${R("copper","銅")}${R("btc","ビットコイン")}`;
