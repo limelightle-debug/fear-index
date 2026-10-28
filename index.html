@@ -235,7 +235,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="books.js"></script>
 <script src="../mind/engine.js"></script>
 <script>
-const APP_VER="fi-v35";
+const APP_VER="fi-v36";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -441,7 +441,7 @@ let TEMP=null;
 const mdN=n=>`${Math.floor(n/100)%100}/${n%100}`;
 function mriChart(R,W){
   // daily MRI over the last 3 months on a 0-100 scale, with the SELL (80) and BUY (7.5) lines and the green bottom zone
-  const H=130,ML=24,MR=34,MT=6,MB=16,PW=W-ML-MR,PH=H-MT-MB,n=R.length;
+  const H=200,ML=24,MR=34,MT=6,MB=16,PW=W-ML-MR,PH=H-MT-MB,n=R.length;
   const x=i=>ML+(n<2?PW:i/(n-1)*PW),y=v=>MT+(1-v)*PH;
   const pts=R.map((r,i)=>`${x(i).toFixed(1)},${y(r[7]).toFixed(1)}`).join(" ");
   const ref=(v,c,lab)=>`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" stroke-width="1" stroke-dasharray="4 3"/><text x="${ML-4}" y="${y(v)+3}" text-anchor="end">${lab}</text>`;
