@@ -99,24 +99,23 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .bar2l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px}
 /* app map */
 .soon{padding:28px 0;text-align:center;color:var(--muted)}
-/* morning paper, front page: a headline, then the indices as tiles coloured by the day's move (S&P 500 large) */
-.head{font-size:24px;font-weight:800;line-height:1.25;letter-spacing:.02em;margin:2px 0 4px}
-.head .h2b{display:block;font-size:20px;margin-top:2px}
-.sub{font-size:13px;color:var(--ink2);margin:0 0 12px}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.tile{border-radius:10px;padding:10px 12px 11px;color:#fff;min-width:0}
-.tile.hero{grid-column:1/-1;padding:14px 14px 16px}
-.tile .tn{font-size:13px;font-weight:700;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile .tp{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:30px;line-height:1.05;margin-top:4px;font-variant-numeric:tabular-nums}
-.tile.hero .tp{font-size:56px;line-height:1}
-.tile .tl{font-family:var(--f-tick);font-stretch:85%;font-size:12.5px;opacity:.85;margin-top:3px;font-variant-numeric:tabular-nums}
-.tile.hero .tl{font-size:15px}
-.story{margin-top:14px}
-.story .sec{padding:9px 0}
-.story .sec+.sec{border-top:1px solid var(--line)}
-.story .sec b{display:inline-block;font-size:11.5px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 8px;margin-bottom:5px}
-.story .sec p{margin:0;font-size:15px;line-height:1.75;color:var(--ink)}
-.story .src{margin-top:8px;font-size:11.5px;color:var(--muted)}
+/* morning paper, front page: headline, the indices as tiles coloured by the day's move, then the article; fits one screen */
+.head{font-size:20px;font-weight:800;line-height:1.3;letter-spacing:.02em;margin:0 0 2px}
+.head .h2b{display:block;font-size:16px;margin-top:1px}
+.sub{font-size:12.5px;color:var(--ink2);margin:0 0 8px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.tile{border-radius:9px;padding:7px 10px 8px;color:#fff;min-width:0}
+.tile .tn{font-size:12px;font-weight:700;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .tb{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:1px}
+.tile .tp{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:22px;line-height:1.05;font-variant-numeric:tabular-nums}
+.tile .tl{font-family:var(--f-tick);font-stretch:85%;font-size:11.5px;opacity:.85;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile.hero{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
+.tile.hero .tn{font-size:14px}
+.tile.hero .tl{display:block;font-size:13px;margin-top:2px}
+.tile.hero .tp{font-size:40px;line-height:1}
+.story{margin-top:10px}
+.story p{margin:0;font-size:14px;line-height:1.68;text-indent:1em;text-align:justify;color:var(--ink)}
+.story .src{margin-top:6px;font-size:11.5px;color:var(--muted)}
 .story .src a{color:var(--muted)}
 .up{color:var(--up)}.dn{color:var(--dn)}
 .layer{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#0d0d22}
@@ -196,7 +195,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 
 <script src="books.js"></script>
 <script>
-const APP_VER="fi-v29";
+const APP_VER="fi-v30";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -377,8 +376,10 @@ function renderIdx(){
   // the written article for the same session, when there is one; otherwise a headline from the numbers
   const day=(String(t0).match(/^\d{4}-\d\d-\d\d/)||[""])[0], st=STORY&&STORY.date===day?STORY:null;
   let [h1,h2]=headline(L); if(st){h1=st.headline;h2=""}
-  el.innerHTML=`<div class="ph"><h2>主要指数</h2><span class="asof">${asof}</span></div><div class="head">${Array.isArray(h1)?esc(h1[0])+(h1[1]?`<span class="h2b">${esc(h1[1])}</span>`:""):esc(h1)}</div>${h2?`<div class="sub">${h2}</div>`:`<div style="height:10px"></div>`}<div class="tiles">`+L.map(x=>
-    `<div class="tile${x.k==="SPX"?" hero":""}" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tp">${fmtPct(x.pct)}</div><div class="tl">${x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2})}</div></div>`).join("")+`</div>`+(st?`<div class="story">${st.sections.map(([k,t])=>`<div class="sec"><b>${esc(k)}</b><p>${esc(t)}</p></div>`).join("")}${st.sources&&st.sources.length?`<div class="src">出典 ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div>`:""}</div>`:"");
+  el.innerHTML=`<div class="ph"><h2>主要指数</h2><span class="asof">${asof}</span></div><div class="head">${Array.isArray(h1)?esc(h1[0])+(h1[1]?`<span class="h2b">${esc(h1[1])}</span>`:""):esc(h1)}</div>${h2?`<div class="sub">${h2}</div>`:`<div style="height:8px"></div>`}<div class="tiles">`+L.map(x=>
+    {const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2});
+    return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${x.ja}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
+      :`<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`+(st?`<div class="story"><p>${esc(st.body||(st.sections||[]).map(x=>x[1]).join(""))}</p>${st.sources&&st.sources.length?`<div class="src">出典 ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div>`:""}</div>`:"");
 }
 async function loadPaper(){
   await Promise.all([
