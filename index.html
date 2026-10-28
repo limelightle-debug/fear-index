@@ -284,7 +284,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v47";
+const APP_VER="fi-v48";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -459,9 +459,10 @@ function headline(L){
 const fmtPct=v=>v==null?"-":(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2)+"%";
 // issue date and time (Japan): when the article was written; before it is, the time the numbers came in
 function renderIssue(st){
-  const t=new Date(st&&st.writtenAt||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
+  // a revised edition (after the after-hours earnings) shows the revision time instead
+  const t=new Date(st&&(st.revisedAt||st.writtenAt)||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
   const w="日月火水木金土"[j.getUTCDay()], hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
-  $("issue").innerHTML=`<div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?"発刊":"数字の更新"}</span></div>`;
+  $("issue").innerHTML=`<div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?(st.revisedAt?"改訂版":"発刊"):"数字の更新"}</span></div>`;
 }
 function renderIdx(){
   const el=$("idx");
