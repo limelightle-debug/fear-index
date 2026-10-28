@@ -114,7 +114,14 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tile.hero .tl{display:block;font-size:13px;margin-top:2px}
 .tile.hero .tp{font-size:40px;line-height:1}
 .story{margin-top:10px}
-.story p{margin:0;font-size:14px;line-height:1.68;text-indent:1em;text-align:justify;color:var(--ink)}
+/* the issue: date and time the paper came out, large, in its own panel on top */
+.issue{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 14px}
+.issue .id{font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1.1}
+.issue .id small{font-size:17px;font-weight:700;margin-left:2px}
+.issue .it{text-align:right;line-height:1.1}
+.issue .it b{font-family:var(--f-tick);font-stretch:82%;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.issue .it span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.story p{margin:0;font-size:14px;line-height:1.64;text-indent:1em;text-align:left;color:var(--ink)}
 .story .src{margin-top:6px;font-size:11.5px;color:var(--muted)}
 .story .src a{color:var(--muted)}
 .up{color:var(--up)}.dn{color:var(--dn)}
@@ -177,6 +184,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
   </div>
 
   <div id="t-paper">
+    <section class="panel issue" id="issue"></section>
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
   </div>
 
@@ -195,7 +203,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 
 <script src="books.js"></script>
 <script>
-const APP_VER="fi-v30";
+const APP_VER="fi-v31";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -368,6 +376,12 @@ function headline(L){
   return [`米国株 ${mood}`,lead?`${SHORT[lead.k]||lead.ja}が${Math.abs(lead.pct).toFixed(1)}%${lead.pct>=0?"高":"安"}と最も大きく動いた`:""];
 }
 const fmtPct=v=>v==null?"-":(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2)+"%";
+// issue date and time (Japan): when the article was written; before it is, the time the numbers came in
+function renderIssue(st){
+  const t=new Date(st&&st.writtenAt||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
+  const w="日月火水木金土"[j.getUTCDay()], hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
+  $("issue").innerHTML=`<div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?"発行":"数字の更新"}</span></div>`;
+}
 function renderIdx(){
   const el=$("idx");
   if(!IDX||!IDX.indices||!IDX.indices.length){el.innerHTML=`<div class="soon">${IDX===false?"データを読み込めませんでした":"読み込み中…"}</div>`;return}
@@ -376,6 +390,7 @@ function renderIdx(){
   // the written article for the same session, when there is one; otherwise a headline from the numbers
   const day=(String(t0).match(/^\d{4}-\d\d-\d\d/)||[""])[0], st=STORY&&STORY.date===day?STORY:null;
   let [h1,h2]=headline(L); if(st){h1=st.headline;h2=""}
+  renderIssue(st);
   el.innerHTML=`<div class="ph"><h2>主要指数</h2><span class="asof">${asof}</span></div><div class="head">${Array.isArray(h1)?esc(h1[0])+(h1[1]?`<span class="h2b">${esc(h1[1])}</span>`:""):esc(h1)}</div>${h2?`<div class="sub">${h2}</div>`:`<div style="height:8px"></div>`}<div class="tiles">`+L.map(x=>
     {const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2});
     return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${x.ja}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
