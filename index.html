@@ -217,6 +217,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="mrip" hidden></section>
     <section class="panel" id="temp" hidden></section>
+    <section class="panel" id="cmdty" hidden></section>
   </div>
 
   <div id="t-apps" hidden>
@@ -235,7 +236,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="books.js"></script>
 <script src="../mind/engine.js"></script>
 <script>
-const APP_VER="fi-v36";
+const APP_VER="fi-v37";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -503,6 +504,25 @@ function renderTemp(){
     </div>
     <div class="tline"><span>${last?`前回のVIXイベント ${String(last.start).slice(0,4)}/${+String(last.start).slice(4,6)} から${mb(last.start,day)}ヶ月`:""}</span><a href="${BASE}/mind/">Mind で詳しく ›</a></div>`;
 }
+// commodities: gold, WTI, copper, bitcoin as tiles coloured by the day's move (data/markets.json in the MRI app)
+let MK=null;
+const ETLabel=t=>{const m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);if(!m)return"";
+  const w="日月火水木金土"[new Date(Date.UTC(+m[1],+m[2]-1,+m[3])).getUTCDay()],h=+m[4];
+  return `${+m[2]}/${+m[3]}（${w}）${h>=16&&h<18?"米国市場引け":`${m[4]}:${m[5]} 時点（米東部）`}`};
+function renderCmdty(){
+  const el=$("cmdty"),it=MK&&MK.items?MK.items.filter(x=>["gold","wti","copper","btc"].includes(x.k)):[];
+  if(!it.length){el.hidden=true;return}
+  const ord=["gold","wti","copper","btc"];it.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));
+  const g=it.find(x=>x.k==="gold")||it[0];
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>コモディティ</h2><span class="asof">${ETLabel(g.time)}</span></div><div class="tiles">`+it.map(x=>{
+    const lv="$"+x.price.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec});
+    return `<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`;
+}
+async function loadMarkets(){
+  try{const r=await fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"});MK=r.ok?await r.json():null}catch(e){MK=null}
+  renderCmdty();
+}
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
@@ -521,8 +541,8 @@ async function load(){
   renderPaper();
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
-renderEd();renderTabs();renderApps();renderBooks();loadPaper();loadTemp();
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadTemp()}});
+renderEd();renderTabs();renderApps();renderBooks();loadPaper();loadTemp();loadMarkets();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadTemp();loadMarkets()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
