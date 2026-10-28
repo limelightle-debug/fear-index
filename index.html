@@ -203,7 +203,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 
 <script src="books.js"></script>
 <script>
-const APP_VER="fi-v31";
+const APP_VER="fi-v32";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -360,9 +360,9 @@ const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const nyLabel=t=>{  // Cboe "2026-10-27T16:14:59" or Nasdaq "Oct 27, 2026": the day, and the close or the time
   let m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);
   if(m){const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3])),w="日月火水木金土"[d.getUTCDay()],hm=+m[4]*60+ +m[5];
-    return `${+m[2]}/${+m[3]}（${w}）${hm>=960?"引け":`${m[4]}:${m[5]} 時点`}`}
+    return `${+m[2]}/${+m[3]}（${w}）${hm>=960?"米国市場引け":`米国市場 ${m[4]}:${m[5]} 時点`}`}
   m=String(t||"").match(/^([A-Z][a-z]{2}) (\d+), (\d{4})/);
-  if(m){const mo="JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3,d=new Date(Date.UTC(+m[3],mo,+m[2]));return `${mo+1}/${+m[2]}（${"日月火水木金土"[d.getUTCDay()]}）引け`}
+  if(m){const mo="JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3,d=new Date(Date.UTC(+m[3],mo,+m[2]));return `${mo+1}/${+m[2]}（${"日月火水木金土"[d.getUTCDay()]}）米国市場引け`}
   return "";
 };
 // tile colour: grey at 0, full green or red at ±3% (as in the Nasdaq 100 heatmap)
@@ -380,7 +380,7 @@ const fmtPct=v=>v==null?"-":(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2)+"%";
 function renderIssue(st){
   const t=new Date(st&&st.writtenAt||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
   const w="日月火水木金土"[j.getUTCDay()], hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
-  $("issue").innerHTML=`<div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?"発行":"数字の更新"}</span></div>`;
+  $("issue").innerHTML=`<div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?"発刊":"数字の更新"}</span></div>`;
 }
 function renderIdx(){
   const el=$("idx");
