@@ -284,7 +284,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v46";
+const APP_VER="fi-v47";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -321,7 +321,7 @@ function signals(D,lastN){
   const up=(v,a)=>v>=a[2]?3:v>=a[1]?2:v>=a[0]?1:0,dn=(v,a)=>v<=a[2]?3:v<=a[1]?2:v<=a[0]?1:0;
   return[["tbub","テクニカルバブル","sell","CAPE 単独",latch("tbub",r=>up(r[6],[.841345,.97725,.99865]),r=>r[6]<=.5)],
     ["sell","SELL","sell","MRI",latch("sell",r=>up(r[7],[.8,.85,.9]),r=>r[7]<=.5)],
-    ["buy","BUY","buy","MRI",latch("buy",r=>dn(r[7],[.075,.05,.025]),r=>r[7]>=.5)]].map(([k,name,side,basis,E])=>{
+    ["buy","BUY","buy","MRI",latch("buy",r=>dn(r[7],[.08,.06,.04]),r=>r[7]>=.5)]].map(([k,name,side,basis,E])=>{
       const e=E[E.length-1],on=!!(e&&e.off==null);return{k,name,side,basis,lv:on?e.lv:0,on,since:on?e.on:null,reset:e&&!on?e.off:null}});
 }
 
@@ -335,8 +335,8 @@ function renderMRI(){
   $("p-mri").innerHTML=`<div class="ph"><h2>MRI</h2><a class="more" href="${APPS[0][3]}">MRI アプリで詳しく ›</a></div>
     <div class="mri"><div><div class="ed" style="margin:0 0 6px">米国 ${md(r[0])} 確定値</div><span class="lvl" style="background:var(${lv[2]});color:${lv[3]}">${lv[1]}</span></div>
       <div><div class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</div><div class="chg">前日比 ${sg((m-p[7])*100)}pt</div></div></div>
-    <div class="rampw"><div class="flag buy${m<=.075?" on":""}" style="left:7.5%">BUY<b>7.5</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
-      <div class="ramp"><div class="tk" style="left:7.5%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
+    <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
+      <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
     <div class="sigs">${S.map(s=>`<div class="sg"><div class="sgn">${s.name}<small><em class="tag ${s.side}">${s.side.toUpperCase()}</em>${s.basis}</small></div>
       <div class="lamps">${C.map((c,i)=>`<i class="${i<s.lv?"on":""}" style="--c:${c}"></i>`).join("")}</div>
       <div class="sgv">${s.on?`<b>点灯 Lv. ${s.lv}</b>${ymd(s.since)}`:s.reset?`<b>リセット</b>${ymd(s.reset)}`:"–"}</div></div>`).join("")}</div>`;
@@ -386,7 +386,7 @@ function renderLead(M,V,T,N){
   const L=[];
   if(M){
     L.push(`MRI は <b>${(M.m*100).toFixed(2)}</b>（${M.lv[1]}、前日比 ${sg((M.m-M.p[7])*100)}pt）。`+
-      (M.m>=.8?"SELL ライン（80）を超えています。":M.m<=.075?"BUY ライン（7.5）を下回っています。":`BUY 7.5 と SELL 80 の間。`));
+      (M.m>=.8?"SELL ライン（80）を超えています。":M.m<=.08?"BUY ライン（8）を下回っています。":`BUY 8 と SELL 80 の間。`));
     const on=M.S.filter(s=>s.on);
     L.push(on.length?on.map(s=>`${s.name} <b>Lv. ${s.lv}</b> 点灯中（${ymd(s.since)}〜）`).join("、")+"。":"点灯中のシグナルはありません。");
   }
@@ -489,7 +489,7 @@ const SCENE={calm:[0,"平穏","VIXは静かだ。静かな時間の方が圧倒�
 let TEMP=null;
 const mdN=n=>`${Math.floor(n/100)%100}/${n%100}`;
 function mriChart(R,W){
-  // daily MRI over the last 3 months on a 0-100 scale, with the SELL (80) and BUY (7.5) lines and the green bottom zone
+  // daily MRI over the last 3 months on a 0-100 scale, with the SELL (80) and BUY (8) lines and the green bottom zone
   const H=200,ML=24,MR=34,MT=6,MB=16,PW=W-ML-MR,PH=H-MT-MB,n=R.length;
   const x=i=>ML+(n<2?PW:i/(n-1)*PW),y=v=>MT+(1-v)*PH;
   const pts=R.map((r,i)=>`${x(i).toFixed(1)},${y(r[7]).toFixed(1)}`).join(" ");
@@ -497,8 +497,8 @@ function mriChart(R,W){
   const months=[];R.forEach((r,i)=>{const m=Math.floor(r[0]/100)%100;if(i===0||m!==Math.floor(R[i-1][0]/100)%100)months.push([i,m])});
   const last=R[n-1],lv=level(last[7]);
   return `<svg viewBox="0 0 ${W} ${H}" height="${H}">
-    <rect x="${ML}" y="${y(.075)}" width="${PW}" height="${y(0)-y(.075)}" fill="var(--buy)" opacity=".18"/>
-    ${ref(.8,"var(--sell)","80")}${ref(.5,"var(--line)","50")}${ref(.075,"var(--buy)","7.5")}
+    <rect x="${ML}" y="${y(.08)}" width="${PW}" height="${y(0)-y(.08)}" fill="var(--buy)" opacity=".18"/>
+    ${ref(.8,"var(--sell)","80")}${ref(.5,"var(--line)","50")}${ref(.08,"var(--buy)","8")}
     ${months.slice(1).map(([i,m])=>`<line x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${MT+PH}" stroke="var(--line)" stroke-width="1"/>`).join("")}
     ${months.filter(([i],k)=>x((months[k+1]||[n-1])[0])-x(i)>=26).map(([i,m])=>`<text x="${x(i)+3}" y="${H-3}">${m}月</text>`).join("")}
     <polyline points="${pts}" fill="none" stroke="#e8e8f4" stroke-width="2" stroke-linejoin="round"/>
@@ -515,8 +515,8 @@ function renderMRIp(){
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>MRI</h2><span class="asof">${mdN(day)}（${"日月火水木金土"[new Date(Date.UTC(Math.floor(day/1e4),Math.floor(day/100)%100-1,day%100)).getUTCDay()]}）米国市場引け</span></div>
     <div class="mrihead"><span class="lvl" style="background:var(${lv[2]});color:${lv[3]}">${lv[1]}</span><div style="text-align:right"><div class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</div><div class="chg">前日比 ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
-    <div class="rampw"><div class="flag buy${m<=.075?" on":""}" style="left:7.5%">BUY<b>7.5</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
-      <div class="ramp"><div class="tk" style="left:7.5%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
+    <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
+      <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
     ${lit.length?`<div class="sigline">${lit.map(x=>`<em>${x.side.toUpperCase()}</em>${x.name} Lv.${x.lv} 点灯中（${String(x.since).slice(0,4)}/${+String(x.since).slice(4,6)}/${+String(x.since).slice(6,8)} から）`).join("<br>")}</div>`:""}
     <div class="scores">${[["VIX",r[4],r[1].toFixed(2)],["SKEW",r[5],r[2].toFixed(2)],["CAPE",r[6],r[3].toFixed(2)]].map(([n,v,raw])=>{const l=level(v);
       return `<div class="score" style="background:var(${l[2]});color:${l[3]}"><div class="sn">${n} スコア</div><div class="sv">${(v*100).toFixed(1)}</div><div class="sr">${n} ${raw}</div></div>`}).join("")}</div>
