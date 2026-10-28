@@ -131,19 +131,22 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .view b{font-size:11.5px;font-weight:700;color:var(--accent)}
 .view p{margin:3px 0 0;font-size:14px;line-height:1.64;text-indent:1em}
 /* rates: 3M, 2Y, 10Y, 30Y, the spreads and the curve's state; the curve now / 3 / 6 months ago; both spreads over 5 years */
-.rsum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.rsum div{font-size:11.5px;color:var(--ink2)}
-.rsum b{display:block;font-family:var(--f-tick);font-stretch:82%;font-size:21px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-.rsum small{display:block;font-family:var(--f-tick);font-stretch:85%;font-size:11px;color:var(--muted)}
-.rstate{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--ink2)}
-.rstate .pill{font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px}
-.rstate .note{width:100%;color:var(--muted)}
-.rchart{margin-top:8px}
+.rsum{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.rsum div{background:var(--chip);border-radius:10px;padding:8px 9px 7px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.rsum b{display:block;font-family:var(--f-tick);font-stretch:82%;font-size:22px;font-weight:700;color:var(--ink);letter-spacing:0;margin-top:1px;font-variant-numeric:tabular-nums}
+.rsum small{display:block;font-family:var(--f-tick);font-stretch:85%;font-size:11px;font-weight:600;margin-top:1px;font-variant-numeric:tabular-nums}
+.rsum small.u{color:#ff8a84}.rsum small.d{color:#7fd6a4}
+.rstate{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--ink2)}
+.rstate .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px 3px 8px;border:1px solid}
+.rstate .pill i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+.rstate .sp b{font-family:var(--f-tick);font-stretch:82%;font-size:15px;color:var(--ink);margin-left:4px}
+.rstate .note{width:100%;color:var(--muted);font-size:11.5px}
+.rchart{margin-top:6px}
 .rchart svg{display:block;width:100%;overflow:visible}
 .rchart text{font-family:var(--f-tick);font-stretch:85%;font-size:10px;fill:var(--muted)}
-.rcap{font-size:12px;font-weight:700;color:var(--ink2);margin-top:12px}
-.rkey{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:4px}
-.rkey i{display:inline-block;width:14px;height:0;border-top:2px solid;vertical-align:middle;margin-right:4px}
+.rcap{display:flex;align-items:baseline;justify-content:space-between;margin-top:16px;font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
+.rkey{display:flex;gap:10px;font-size:10.5px;font-weight:600;color:var(--muted)}
+.rkey i{display:inline-block;width:12px;height:0;border-top:2px solid;vertical-align:middle;margin-right:4px}
 /* page 3: how afraid the market is - the scene (from Mind), then VIX, MRI and SKEW */
 .scene{display:flex;align-items:baseline;gap:8px;margin:2px 0 2px}
 .scene b{font-size:24px;font-weight:800;letter-spacing:.04em}
@@ -252,7 +255,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="books.js"></script>
 <script src="../mind/engine.js"></script>
 <script>
-const APP_VER="fi-v39";
+const APP_VER="fi-v40";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -549,29 +552,48 @@ function renderFX(){
 let CV=null;
 const RC={now:"#f2f2f7",m3:"#7fa8ff",m6:"#8a8aa6"};
 function curveChart(c,W){
-  const H=160,ML=30,MR=8,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors;
+  const H=170,ML=28,MR=40,MT=10,MB=20,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors;
   const xs=v=>Math.sqrt(v),x0=xs(T[0][1]),x1=xs(T[T.length-1][1]),x=v=>ML+(xs(v)-x0)/(x1-x0)*PW;
   const all=[c.now,c.m3,c.m6].flatMap(q=>T.map(([k])=>q.y[k]).filter(v=>v!=null));
   const lo=Math.floor(Math.min(...all)*2)/2,hi=Math.ceil(Math.max(...all)*2)/2,y=v=>MT+(hi-v)/(hi-lo)*PH;
-  const line=(q,st)=>`<polyline points="${T.filter(([k])=>q.y[k]!=null).map(([k,yr])=>`${x(yr).toFixed(1)},${y(q.y[k]).toFixed(1)}`).join(" ")}" fill="none" stroke-linejoin="round" ${st}/>`;
-  const ticks=[];for(let v=lo;v<=hi+1e-9;v+=.5)ticks.push(v);
-  return `<svg viewBox="0 0 ${W} ${H}" height="${H}">${ticks.map(v=>`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${ML-4}" y="${y(v)+3}" text-anchor="end">${v.toFixed(1)}</text>`).join("")}
-    ${T.filter(([k])=>["3M","2Y","5Y","10Y","30Y"].includes(k)).map(([k,yr])=>`<text x="${x(yr)}" y="${H-4}" text-anchor="middle">${k}</text>`).join("")}
-    ${line(c.m6,`stroke="${RC.m6}" stroke-width="1.5" stroke-dasharray="4 3"`)}${line(c.m3,`stroke="${RC.m3}" stroke-width="1.6"`)}${line(c.now,`stroke="${RC.now}" stroke-width="2.4"`)}
-    ${T.filter(([k])=>c.now.y[k]!=null).map(([k,yr])=>`<circle cx="${x(yr)}" cy="${y(c.now.y[k])}" r="2.2" fill="${RC.now}"/>`).join("")}</svg>`;
+  const P=q=>T.filter(([k])=>q.y[k]!=null).map(([k,yr])=>[x(yr),y(q.y[k])]);
+  // smooth line through the points (monotone-ish cubic)
+  // monotone cubic (Fritsch-Carlson): smooth, never overshoots between tenors
+  const path=P=>{const n=P.length,dx=[],m=[],t=[];for(let i=0;i<n-1;i++){dx[i]=P[i+1][0]-P[i][0];m[i]=(P[i+1][1]-P[i][1])/dx[i]}
+    t[0]=m[0];t[n-1]=m[n-2];for(let i=1;i<n-1;i++)t[i]=m[i-1]*m[i]<=0?0:3*(dx[i-1]+dx[i])/((2*dx[i]+dx[i-1])/m[i-1]+(dx[i]+2*dx[i-1])/m[i]);
+    let d=`M${P[0][0].toFixed(1)},${P[0][1].toFixed(1)}`;for(let i=0;i<n-1;i++){const h=dx[i]/3;d+=`C${(P[i][0]+h).toFixed(1)},${(P[i][1]+t[i]*h).toFixed(1)} ${(P[i+1][0]-h).toFixed(1)},${(P[i+1][1]-t[i+1]*h).toFixed(1)} ${P[i+1][0].toFixed(1)},${P[i+1][1].toFixed(1)}`}return d};
+  const pn=P(c.now),last=pn[pn.length-1],ticks=[];for(let v=lo;v<=hi+1e-9;v+=.5)ticks.push(v);
+  const end=(q,col)=>{const p=P(q).slice(-1)[0];return`<text x="${p[0]+6}" y="${p[1]+3.5}" style="fill:${col};font-weight:700">${q.y["30Y"].toFixed(2)}</text>`};
+  return `<svg viewBox="0 0 ${W} ${H}" height="${H}"><defs>
+      <linearGradient id="cvf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fa8ff" stop-opacity=".28"/><stop offset="1" stop-color="#7fa8ff" stop-opacity="0"/></linearGradient>
+      <filter id="glow" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    ${ticks.map(v=>`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#ffffff" stroke-opacity=".06"/><text x="${ML-6}" y="${y(v)+3}" text-anchor="end">${v.toFixed(1)}</text>`).join("")}
+    ${T.filter(([k])=>["3M","2Y","5Y","10Y","30Y"].includes(k)).map(([k,yr])=>`<text x="${x(yr)}" y="${H-5}" text-anchor="middle">${k}</text>`).join("")}
+    <path d="${path(pn)}L${last[0].toFixed(1)},${MT+PH}L${pn[0][0].toFixed(1)},${MT+PH}Z" fill="url(#cvf)"/>
+    <path d="${path(P(c.m6))}" fill="none" stroke="${RC.m6}" stroke-width="1.3" stroke-dasharray="3 4" stroke-linecap="round"/>
+    <path d="${path(P(c.m3))}" fill="none" stroke="${RC.m3}" stroke-width="1.5" stroke-opacity=".85"/>
+    <path d="${path(pn)}" fill="none" stroke="${RC.now}" stroke-width="2.4" stroke-linecap="round" filter="url(#glow)"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="3.5" fill="${RC.now}"/>
+    ${end(c.now,RC.now)}${end(c.m3,RC.m3)}${end(c.m6,RC.m6)}</svg>`;
 }
 function spreadChart(S,W){
-  const H=120,ML=30,MR=8,MT=6,MB=16,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.flatMap(q=>[q[1],q[2]]).filter(v=>v!=null);
+  const H=128,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.flatMap(q=>[q[1],q[2]]).filter(v=>v!=null);
   const lo=Math.min(-.5,Math.floor(Math.min(...vs)*2)/2),hi=Math.max(.5,Math.ceil(Math.max(...vs)*2)/2);
-  const x=i=>ML+i/(n-1)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH;
-  const pl=(j,st)=>`<polyline points="${S.map((q,i)=>q[j]==null?null:`${x(i).toFixed(1)},${y(q[j]).toFixed(1)}`).filter(Boolean).join(" ")}" fill="none" stroke-linejoin="round" ${st}/>`;
+  const x=i=>ML+i/(n-1)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH,z=y(0);
+  const pts=j=>S.map((q,i)=>q[j]==null?null:[x(i),y(q[j])]).filter(Boolean);
+  const d=p=>p.map((q,i)=>`${i?"L":"M"}${q[0].toFixed(1)},${q[1].toFixed(1)}`).join("");
+  const p1=pts(1),p2=pts(2),area=`${d(p1)}L${p1[p1.length-1][0]},${z}L${p1[0][0]},${z}Z`;
   const yrs=[];S.forEach((q,i)=>{const yy=q[0].slice(0,4);if(i===0||yy!==S[i-1][0].slice(0,4))yrs.push([i,yy])});
-  return `<svg viewBox="0 0 ${W} ${H}" height="${H}">
-    <rect x="${ML}" y="${y(0)}" width="${PW}" height="${y(lo)-y(0)}" fill="var(--dn)" opacity=".12"/>
-    <line x1="${ML}" x2="${ML+PW}" y1="${y(0)}" y2="${y(0)}" stroke="var(--ink2)"/><text x="${ML-4}" y="${y(0)+3}" text-anchor="end">0</text>
-    <text x="${ML-4}" y="${y(hi)+8}" text-anchor="end">+${hi.toFixed(1)}</text><text x="${ML-4}" y="${y(lo)}" text-anchor="end">${lo.toFixed(1)}</text>
-    ${yrs.slice(1).map(([i,yy])=>`<line x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${MT+PH}" stroke="var(--line)"/><text x="${x(i)+3}" y="${H-3}">${yy}</text>`).join("")}
-    ${pl(2,`stroke="${RC.m3}" stroke-width="1.4"`)}${pl(1,`stroke="${RC.now}" stroke-width="1.6"`)}</svg>`;
+  const L=S[n-1],lab=(v,col,dy)=>`<text x="${ML+PW+6}" y="${y(v)+3.5+dy}" style="fill:${col};font-weight:700">${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" height="${H}"><defs>
+      <linearGradient id="spf" x1="0" y1="${MT}" x2="0" y2="${MT+PH}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7fa8ff" stop-opacity=".35"/><stop offset="${((z-MT)/PH).toFixed(3)}" stop-color="#7fa8ff" stop-opacity=".02"/><stop offset="${((z-MT)/PH).toFixed(3)}" stop-color="#ff5a5a" stop-opacity=".05"/><stop offset="1" stop-color="#ff5a5a" stop-opacity=".45"/></linearGradient></defs>
+    ${yrs.slice(1).map(([i,yy])=>`<line x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${MT+PH}" stroke="#ffffff" stroke-opacity=".06"/><text x="${x(i)}" y="${H-5}" text-anchor="middle">${yy}</text>`).join("")}
+    <path d="${area}" fill="url(#spf)"/>
+    <line x1="${ML}" x2="${ML+PW}" y1="${z}" y2="${z}" stroke="#ffffff" stroke-opacity=".35" stroke-dasharray="2 3"/><text x="${ML-6}" y="${z+3}" text-anchor="end">0</text>
+    <text x="${ML-6}" y="${y(hi)+8}" text-anchor="end">+${hi.toFixed(1)}</text><text x="${ML-6}" y="${y(lo)}" text-anchor="end">${lo.toFixed(1)}</text>
+    <path d="${d(p2)}" fill="none" stroke="${RC.m3}" stroke-width="1.2" stroke-opacity=".8"/>
+    <path d="${d(p1)}" fill="none" stroke="${RC.now}" stroke-width="1.6"/>
+    ${lab(L[1],RC.now,L[1]>=L[2]?-5:5)}${L[2]!=null?lab(L[2],RC.m3,L[2]>L[1]?-5:5):""}</svg>`;
 }
 function renderRates(){
   const el=$("rates");
@@ -582,19 +604,17 @@ function renderRates(){
   const d8=q=>new Date(Date.UTC(+q.slice(0,4),+q.slice(4,6)-1,+q.slice(6,8)));
   const mo=lastNeg<0?null:Math.floor((d8(last[0])-d8(S[lastNeg][0]))/2629.8e6);
   const when=lastNeg<0?"":`${S[lastNeg][0].slice(0,4)}/${+S[lastNeg][0].slice(4,6)}`;
-  const st=(s2<0||s3<0)?["逆イールド","var(--dn)","#fff",""]:mo!=null&&mo<12?["解消直後","var(--amber)","#000",`逆イールドの解消（${when}）から${mo}ヶ月`]:["順イールド","var(--line)","var(--ink2)",mo!=null?`逆イールドの解消（${when}）から${mo}ヶ月`:""];
+  const st=(s2<0||s3<0)?["逆イールド","#ff6b6b",""]:mo!=null&&mo<12?["解消直後","#ffb547",`逆イールドの解消（${when}）から${mo}ヶ月`]:["順イールド","#7fd6a4",mo!=null?`逆イールドの解消（${when}）から${mo}ヶ月`:""];
   const ch=(k,ref)=>{const d=n[k]-ref.y[k];return `${d>=0?"+":"−"}${Math.abs(d).toFixed(2)}`};
   const sg=v=>`${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}`;
   const [Y,M,D]=CV.date.split("-").map(Number),w="日月火水木金土"[new Date(Date.UTC(Y,M-1,D)).getUTCDay()];
   el.hidden=false;
   const W=Math.max(260,el.clientWidth-28);
   el.innerHTML=`<div class="ph"><h2>金利</h2><span class="asof">${M}/${D}（${w}）米国債</span></div>
-    <div class="rsum">${[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>`<div>${l}<b>${n[k].toFixed(2)}</b><small>3ヶ月で ${ch(k,CV.m3)}</small></div>`).join("")}</div>
-    <div class="rstate"><span class="pill" style="background:${st[1]};color:${st[2]}">${st[0]}</span><span>10年−2年 <b class="${s2<0?"dn":""}">${sg(s2)}</b>　10年−3ヶ月 <b class="${s3<0?"dn":""}">${sg(s3)}</b></span>${st[3]?`<span class="note">${st[3]}</span>`:""}</div>
-    <div class="rcap">イールドカーブ</div><div class="rchart">${curveChart(CV,W)}</div>
-    <div class="rkey"><span><i style="border-color:${RC.now}"></i>最新 ${M}/${D}</span><span><i style="border-color:${RC.m3}"></i>3ヶ月前</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>6ヶ月前</span></div>
-    <div class="rcap">長短金利差 5年</div><div class="rchart">${spreadChart(S,W)}</div>
-    <div class="rkey"><span><i style="border-color:${RC.now}"></i>10年−2年</span><span><i style="border-color:${RC.m3}"></i>10年−3ヶ月</span></div>`;
+    <div class="rsum">${[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>{const dv=n[k]-CV.m3.y[k];return `<div>${l}<b>${n[k].toFixed(2)}</b><small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small></div>`}).join("")}</div>
+    <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">10年−2年<b>${sg(s2)}</b></span><span class="sp">10年−3ヶ月<b>${sg(s3)}</b></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
+    <div class="rcap"><span>イールドカーブ</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>最新</span><span><i style="border-color:${RC.m3}"></i>3ヶ月前</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>6ヶ月前</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
+    <div class="rcap"><span>長短金利差 5年</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>10年−2年</span><span><i style="border-color:${RC.m3}"></i>10年−3ヶ月</span></span></div><div class="rchart">${spreadChart(S,W)}</div>`;
 }
 async function loadMarkets(){
   await Promise.all([
