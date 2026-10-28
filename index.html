@@ -114,6 +114,19 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tile.hero .tl{display:block;font-size:13px;margin-top:2px}
 .tile.hero .tp{font-size:40px;line-height:1}
 .story{margin-top:10px}
+/* page 2: how afraid the market is - the scene (from Mind), then VIX, MRI and SKEW */
+.scene{display:flex;align-items:baseline;gap:8px;margin:2px 0 2px}
+.scene b{font-size:24px;font-weight:800;letter-spacing:.04em}
+.scene span{font-size:12px;color:var(--muted)}
+.scenet{font-size:13px;line-height:1.6;color:var(--ink2);margin:2px 0 10px}
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.meter{background:var(--chip);border-radius:9px;padding:8px 10px;min-width:0}
+.meter .mn{font-size:12px;font-weight:700;color:var(--ink2)}
+.meter .mv{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.meter .ms{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.meter .pill{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;margin-top:5px;white-space:nowrap}
+.tline{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-top:8px}
+.tline a{color:var(--accent);text-decoration:none;white-space:nowrap}
 /* the issue: date and time the paper came out, large, in its own panel on top */
 .issue{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 14px}
 .issue .id{font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1.1}
@@ -186,6 +199,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
   <div id="t-paper">
     <section class="panel issue" id="issue"></section>
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
+    <section class="panel" id="temp" hidden></section>
   </div>
 
   <div id="t-apps" hidden>
@@ -202,8 +216,9 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 </div>
 
 <script src="books.js"></script>
+<script src="../mind/engine.js"></script>
 <script>
-const APP_VER="fi-v32";
+const APP_VER="fi-v33";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -396,6 +411,52 @@ function renderIdx(){
     return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${x.ja}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
       :`<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`+(st?`<div class="story"><p>${esc(st.body||(st.sections||[]).map(x=>x[1]).join(""))}</p>${st.sources&&st.sources.length?`<div class="src">出典 ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div>`:""}</div>`:"");
 }
+// page 2: the scene of the day, judged as in the Mind app, and the three readings behind it
+const ACT=["第一幕","第二幕","第三幕","第四幕"];
+const SCENE={calm:[0,"平穏","VIXは静かだ。静かな時間の方が圧倒的に長い。だからこそ人は忘れ、備えを怠る。"],
+  after:[0,"余震","前回のVIXイベントから1年以内。株価が戻り、人は「どうせ戻る」と学習する。"],
+  balloon:[0,"風船","風船が見えている。膨らんでいるという事実だけで、量を調整する理由になる。"],
+  needle:[1,"針","VIXが+1σを超えた。異常を異常と認めない間に、針は深く刺さっていく。"],
+  panic:[2,"パニック","VIXイベント発生中。VIXが+2σを超えた。その瞬間に大底は形成される。"],
+  rebound:[3,"コツン","5日LWMAが10日LWMAを下回った。恐怖の頂点は過ぎた。"],
+  quiet:[3,"静かな底","VIXイベントなしにMRIがBUYを示している。風船は針で割れずに萎むこともある。"]};
+let TEMP=null;
+const mdN=n=>`${Math.floor(n/100)%100}/${n%100}`;
+function renderTemp(){
+  const el=$("temp");
+  if(!TEMP||!window.MindEngine){el.hidden=true;return}
+  const {vix,daily,mri}=TEMP;
+  const rows=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[1]),r=rows[rows.length-1],p=rows[rows.length-2],day=r[0];
+  // daily VIX highs up to that close; days the history file hasn't reached yet use the close
+  const days=daily.high.filter(x=>x[0]<=day).map(x=>[x[0],x[1]]);
+  rows.forEach(x=>{if(x[0]>days[days.length-1][0]&&x[0]<=day)days.push([x[0],x[1]])});
+  const {st,ev}=MindEngine.runEvents(days,vix.months),s=st[st.length-1];
+  const S=signals(mri,day),lit=S.filter(x=>x.on),sig=k=>S.find(x=>x.k===k).on;
+  const done=ev.filter(e=>e.end),last=done[done.length-1];
+  const mb=(a,b)=>(Math.floor(b/10000)-Math.floor(a/10000))*12+(Math.floor(b/100)%100-Math.floor(a/100)%100);
+  let key;
+  if(s.phase==="panic")key="panic";else if(s.phase==="rebound")key="rebound";else if(sig("buy"))key="quiet";
+  else if(st.slice(-5).some(x=>x.high>=x.s1))key="needle";else if(sig("tbub")||sig("sell"))key="balloon";
+  else if(last&&mb(last.end,day)<12)key="after";else key="calm";
+  const [act,name,text]=SCENE[key];
+  const hi=s.high,stage=hi>=s.s2?["+2σ超","var(--dn)","#fff"]:hi>=s.s1?["+1σ超","var(--amber)","#000"]:["平常","var(--line)","var(--ink2)"];
+  const m=r[7],lv=level(m),dm=(m-p[7])*100;
+  const vq=vix.quote&&vix.quote.time&&vix.quote.time.replace(/-/g,"").slice(0,8)==String(day)?vix.quote.price:r[1];
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>恐怖の温度</h2><span class="asof">${mdN(day)}（${"日月火水木金土"[new Date(Date.UTC(Math.floor(day/1e4),Math.floor(day/100)%100-1,day%100)).getUTCDay()]}）米国市場引け</span></div>
+    <div class="scene"><b>${name}</b><span>${ACT[act]} · 今の局面</span></div><div class="scenet">${text}</div>
+    <div class="meters">
+      <div class="meter"><div class="mn">VIX</div><div class="mv">${vq.toFixed(2)}</div><div class="ms">高値 ${hi.toFixed(2)}<br>+1σ ${s.s1.toFixed(1)}<br>+2σ ${s.s2.toFixed(1)}</div><span class="pill" style="background:${stage[1]};color:${stage[2]}">${stage[0]}</span></div>
+      <div class="meter"><div class="mn">MRI</div><div class="mv" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</div><div class="ms">${lv[1]}<br>前日比 ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}</div><span class="pill" style="background:${lit.length?"var(--sell)":"var(--line)"};color:${lit.length?"#fff":"var(--ink2)"}">${lit.length?lit.map(x=>`${x.k==="tbub"?"バブル":x.name} Lv.${x.lv}`).join("・"):"シグナルなし"}</span></div>
+      <div class="meter"><div class="mn">SKEW</div><div class="mv">${r[2].toFixed(2)}</div><div class="ms">前日 ${p[2].toFixed(2)}<br>前日比 ${r[2]-p[2]>=0?"+":"−"}${Math.abs(r[2]-p[2]).toFixed(2)}</div></div>
+    </div>
+    <div class="tline"><span>${last?`前回のVIXイベント ${String(last.start).slice(0,4)}/${+String(last.start).slice(4,6)} から${mb(last.start,day)}ヶ月`:""}</span><a href="${BASE}/mind/">Mind で詳しく ›</a></div>`;
+}
+async function loadTemp(){
+  const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
+  try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
+  renderTemp();
+}
 async function loadPaper(){
   await Promise.all([
     fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
@@ -409,8 +470,8 @@ async function load(){
   renderPaper();
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
-renderEd();renderTabs();renderApps();renderBooks();loadPaper();
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper()}});
+renderEd();renderTabs();renderApps();renderBooks();loadPaper();loadTemp();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadTemp()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
