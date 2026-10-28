@@ -130,6 +130,20 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .view{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
 .view b{font-size:11.5px;font-weight:700;color:var(--accent)}
 .view p{margin:3px 0 0;font-size:14px;line-height:1.64;text-indent:1em}
+/* rates: 3M, 2Y, 10Y, 30Y, the spreads and the curve's state; the curve now / 3 / 6 months ago; both spreads over 5 years */
+.rsum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rsum div{font-size:11.5px;color:var(--ink2)}
+.rsum b{display:block;font-family:var(--f-tick);font-stretch:82%;font-size:21px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.rsum small{display:block;font-family:var(--f-tick);font-stretch:85%;font-size:11px;color:var(--muted)}
+.rstate{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--ink2)}
+.rstate .pill{font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px}
+.rstate .note{width:100%;color:var(--muted)}
+.rchart{margin-top:8px}
+.rchart svg{display:block;width:100%;overflow:visible}
+.rchart text{font-family:var(--f-tick);font-stretch:85%;font-size:10px;fill:var(--muted)}
+.rcap{font-size:12px;font-weight:700;color:var(--ink2);margin-top:12px}
+.rkey{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:4px}
+.rkey i{display:inline-block;width:14px;height:0;border-top:2px solid;vertical-align:middle;margin-right:4px}
 /* page 3: how afraid the market is - the scene (from Mind), then VIX, MRI and SKEW */
 .scene{display:flex;align-items:baseline;gap:8px;margin:2px 0 2px}
 .scene b{font-size:24px;font-weight:800;letter-spacing:.04em}
@@ -217,6 +231,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="mrip" hidden></section>
     <section class="panel" id="temp" hidden></section>
+    <section class="panel" id="rates" hidden></section>
     <section class="panel" id="fx" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
   </div>
@@ -237,7 +252,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="books.js"></script>
 <script src="../mind/engine.js"></script>
 <script>
-const APP_VER="fi-v38";
+const APP_VER="fi-v39";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -530,9 +545,62 @@ function renderFX(){
     const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec})+(x.unit==="円"?"円":"");
     return `<div class="tile" style="background:${tileColor(x.pct,1)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`;
 }
+// rates (data/curve.json in the MRI app: the Treasury's daily par yield curve)
+let CV=null;
+const RC={now:"#f2f2f7",m3:"#7fa8ff",m6:"#8a8aa6"};
+function curveChart(c,W){
+  const H=160,ML=30,MR=8,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors;
+  const xs=v=>Math.sqrt(v),x0=xs(T[0][1]),x1=xs(T[T.length-1][1]),x=v=>ML+(xs(v)-x0)/(x1-x0)*PW;
+  const all=[c.now,c.m3,c.m6].flatMap(q=>T.map(([k])=>q.y[k]).filter(v=>v!=null));
+  const lo=Math.floor(Math.min(...all)*2)/2,hi=Math.ceil(Math.max(...all)*2)/2,y=v=>MT+(hi-v)/(hi-lo)*PH;
+  const line=(q,st)=>`<polyline points="${T.filter(([k])=>q.y[k]!=null).map(([k,yr])=>`${x(yr).toFixed(1)},${y(q.y[k]).toFixed(1)}`).join(" ")}" fill="none" stroke-linejoin="round" ${st}/>`;
+  const ticks=[];for(let v=lo;v<=hi+1e-9;v+=.5)ticks.push(v);
+  return `<svg viewBox="0 0 ${W} ${H}" height="${H}">${ticks.map(v=>`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${ML-4}" y="${y(v)+3}" text-anchor="end">${v.toFixed(1)}</text>`).join("")}
+    ${T.filter(([k])=>["3M","2Y","5Y","10Y","30Y"].includes(k)).map(([k,yr])=>`<text x="${x(yr)}" y="${H-4}" text-anchor="middle">${k}</text>`).join("")}
+    ${line(c.m6,`stroke="${RC.m6}" stroke-width="1.5" stroke-dasharray="4 3"`)}${line(c.m3,`stroke="${RC.m3}" stroke-width="1.6"`)}${line(c.now,`stroke="${RC.now}" stroke-width="2.4"`)}
+    ${T.filter(([k])=>c.now.y[k]!=null).map(([k,yr])=>`<circle cx="${x(yr)}" cy="${y(c.now.y[k])}" r="2.2" fill="${RC.now}"/>`).join("")}</svg>`;
+}
+function spreadChart(S,W){
+  const H=120,ML=30,MR=8,MT=6,MB=16,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.flatMap(q=>[q[1],q[2]]).filter(v=>v!=null);
+  const lo=Math.min(-.5,Math.floor(Math.min(...vs)*2)/2),hi=Math.max(.5,Math.ceil(Math.max(...vs)*2)/2);
+  const x=i=>ML+i/(n-1)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH;
+  const pl=(j,st)=>`<polyline points="${S.map((q,i)=>q[j]==null?null:`${x(i).toFixed(1)},${y(q[j]).toFixed(1)}`).filter(Boolean).join(" ")}" fill="none" stroke-linejoin="round" ${st}/>`;
+  const yrs=[];S.forEach((q,i)=>{const yy=q[0].slice(0,4);if(i===0||yy!==S[i-1][0].slice(0,4))yrs.push([i,yy])});
+  return `<svg viewBox="0 0 ${W} ${H}" height="${H}">
+    <rect x="${ML}" y="${y(0)}" width="${PW}" height="${y(lo)-y(0)}" fill="var(--dn)" opacity=".12"/>
+    <line x1="${ML}" x2="${ML+PW}" y1="${y(0)}" y2="${y(0)}" stroke="var(--ink2)"/><text x="${ML-4}" y="${y(0)+3}" text-anchor="end">0</text>
+    <text x="${ML-4}" y="${y(hi)+8}" text-anchor="end">+${hi.toFixed(1)}</text><text x="${ML-4}" y="${y(lo)}" text-anchor="end">${lo.toFixed(1)}</text>
+    ${yrs.slice(1).map(([i,yy])=>`<line x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${MT+PH}" stroke="var(--line)"/><text x="${x(i)+3}" y="${H-3}">${yy}</text>`).join("")}
+    ${pl(2,`stroke="${RC.m3}" stroke-width="1.4"`)}${pl(1,`stroke="${RC.now}" stroke-width="1.6"`)}</svg>`;
+}
+function renderRates(){
+  const el=$("rates");
+  if(!CV||!CV.now||!CV.m3){el.hidden=true;return}
+  const n=CV.now.y,S=CV.spread,last=S[S.length-1],s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"];
+  // state: inverted now (either spread), or months since the last inversion ended (the year after it ends is the one to watch)
+  let lastNeg=-1;for(let i=S.length-1;i>=0;i--)if(S[i][1]<0||(S[i][2]!=null&&S[i][2]<0)){lastNeg=i;break}
+  const d8=q=>new Date(Date.UTC(+q.slice(0,4),+q.slice(4,6)-1,+q.slice(6,8)));
+  const mo=lastNeg<0?null:Math.floor((d8(last[0])-d8(S[lastNeg][0]))/2629.8e6);
+  const when=lastNeg<0?"":`${S[lastNeg][0].slice(0,4)}/${+S[lastNeg][0].slice(4,6)}`;
+  const st=(s2<0||s3<0)?["逆イールド","var(--dn)","#fff",""]:mo!=null&&mo<12?["解消直後","var(--amber)","#000",`逆イールドの解消（${when}）から${mo}ヶ月`]:["順イールド","var(--line)","var(--ink2)",mo!=null?`逆イールドの解消（${when}）から${mo}ヶ月`:""];
+  const ch=(k,ref)=>{const d=n[k]-ref.y[k];return `${d>=0?"+":"−"}${Math.abs(d).toFixed(2)}`};
+  const sg=v=>`${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}`;
+  const [Y,M,D]=CV.date.split("-").map(Number),w="日月火水木金土"[new Date(Date.UTC(Y,M-1,D)).getUTCDay()];
+  el.hidden=false;
+  const W=Math.max(260,el.clientWidth-28);
+  el.innerHTML=`<div class="ph"><h2>金利</h2><span class="asof">${M}/${D}（${w}）米国債</span></div>
+    <div class="rsum">${[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>`<div>${l}<b>${n[k].toFixed(2)}</b><small>3ヶ月で ${ch(k,CV.m3)}</small></div>`).join("")}</div>
+    <div class="rstate"><span class="pill" style="background:${st[1]};color:${st[2]}">${st[0]}</span><span>10年−2年 <b class="${s2<0?"dn":""}">${sg(s2)}</b>　10年−3ヶ月 <b class="${s3<0?"dn":""}">${sg(s3)}</b></span>${st[3]?`<span class="note">${st[3]}</span>`:""}</div>
+    <div class="rcap">イールドカーブ</div><div class="rchart">${curveChart(CV,W)}</div>
+    <div class="rkey"><span><i style="border-color:${RC.now}"></i>最新 ${M}/${D}</span><span><i style="border-color:${RC.m3}"></i>3ヶ月前</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>6ヶ月前</span></div>
+    <div class="rcap">長短金利差 5年</div><div class="rchart">${spreadChart(S,W)}</div>
+    <div class="rkey"><span><i style="border-color:${RC.now}"></i>10年−2年</span><span><i style="border-color:${RC.m3}"></i>10年−3ヶ月</span></div>`;
+}
 async function loadMarkets(){
-  try{const r=await fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"});MK=r.ok?await r.json():null}catch(e){MK=null}
-  renderFX();renderCmdty();
+  await Promise.all([
+    fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MK=j).catch(()=>MK=null),
+    fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null)]);
+  renderRates();renderFX();renderCmdty();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
