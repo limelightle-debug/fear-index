@@ -135,6 +135,18 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .view{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
 .view b{font-size:11.5px;font-weight:700;color:var(--accent)}
 .view p{margin:3px 0 0;font-size:14px;line-height:1.64;text-indent:1em}
+/* 心: the column at the foot of the front page, like a paper's daily column (from the Mind app) */
+.kokoro{border-top:3px double var(--line);border-bottom:3px double var(--line);border-radius:4px;background:linear-gradient(180deg,#14143a,var(--panel))}
+.kokoro .kh{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.kokoro .kh b{font-size:20px;font-weight:800;letter-spacing:.2em}
+.kokoro .kh span{font-size:12px;color:var(--muted)}
+.kokoro .kh span em{font-style:normal;font-weight:700;color:var(--ink2)}
+.kokoro .kw{margin:10px 0 0;font-size:15px;font-weight:700;line-height:1.75}
+.kokoro .kb{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.kokoro .kb small{display:block;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.06em}
+.kokoro .kb strong{display:block;font-size:14px;margin-top:2px}
+.kokoro .kb p{margin:2px 0 0;font-size:13px;line-height:1.65;color:var(--ink2)}
+.kokoro .kl{display:block;text-align:right;margin-top:8px;font-size:12px;color:var(--accent);text-decoration:none}
 /* the day's other news, one line each with a tag */
 .nws{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:baseline}
 .nws b{font-size:11px;font-weight:700;color:var(--accent);border:1px solid rgba(127,168,255,.45);border-radius:999px;padding:1px 8px;white-space:nowrap;justify-self:start}
@@ -251,6 +263,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
     <section class="panel issue" id="issue"></section>
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="news" hidden></section>
+    <section class="panel kokoro" id="kokoro" hidden></section>
     <section class="panel" id="nums" hidden></section>
   </div>
 
@@ -269,8 +282,9 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 
 <script src="books.js"></script>
 <script src="../mind/engine.js"></script>
+<script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v45";
+const APP_VER="fi-v46";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -664,6 +678,33 @@ function renderNums(){
     <div class="ng">為替</div>${R("usdjpy","ドル円")}${R("eurjpy","ユーロ円")}${R("gbpjpy","ポンド円")}${R("dxy","ドルインデックス")}
     <div class="ng">コモディティ</div>${R("gold","金")}${R("wti","原油（WTI）")}${R("copper","銅")}${R("btc","ビットコイン")}`;
 }
+// 心: the scene of the day judged as in Mind (US closes before 7:00 Japan time), and Mind's word and bias for the day
+const fortuneDay=()=>{const j=new Date(Date.now()+(9-7)*36e5);return j.getUTCFullYear()*10000+(j.getUTCMonth()+1)*100+j.getUTCDate()};
+const dayIdx=d=>Math.floor(new Date(Math.floor(d/10000),Math.floor(d/100)%100-1,d%100).getTime()/864e5);
+function sceneOf({vix,daily,mri}){
+  const cut=fortuneDay(),rows=mri.daily.filter(r=>r[0]<cut&&r[0]!==mri.liveDay&&r[1]),day=rows[rows.length-1][0];
+  const days=daily.high.filter(x=>x[0]<cut).map(x=>[x[0],x[1]]);
+  rows.forEach(x=>{if(x[0]>days[days.length-1][0])days.push([x[0],x[1]])});
+  const {st,ev}=MindEngine.runEvents(days,vix.months),s=st[st.length-1];
+  const S=signals(mri,day),sig=k=>S.find(x=>x.k===k).on;
+  const done=ev.filter(e=>e.end),last=done[done.length-1];
+  const mb=(a,b)=>(Math.floor(b/10000)-Math.floor(a/10000))*12+(Math.floor(b/100)%100-Math.floor(a/100)%100);
+  if(s.phase==="panic")return"panic";if(s.phase==="rebound")return"rebound";if(sig("buy"))return"quiet";
+  if(st.slice(-5).some(x=>x.high>=x.s1))return"needle";if(sig("tbub")||sig("sell"))return"balloon";
+  if(last&&mb(last.end,day)<12)return"after";return"calm";
+}
+function renderKokoro(){
+  const el=$("kokoro"),M=window.MindData;
+  if(!TEMP||!M||!window.MindEngine){el.hidden=true;return}
+  let key;try{key=sceneOf(TEMP)}catch(e){el.hidden=true;return}
+  const [ai,name,,biases,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja])=>W[n]=ja));
+  const di=dayIdx(fortuneDay()),w=W[words[di%words.length]],b=M.BIAS[biases[di%biases.length]];
+  el.hidden=false;
+  el.innerHTML=`<div class="kh"><b>心</b><span>今の局面 <em>${name[0]}</em>（${ACT[ai]}）</span></div>
+    <p class="kw">「${esc(w)}」</p>
+    <div class="kb"><small>気をつけるバイアス</small><strong>${esc(b[0])}</strong><p>${esc(b[1])}</p></div>
+    <a class="kl" href="${BASE}/mind/">Mind で詳しく ›</a>`;
+}
 async function loadMarkets(){
   await Promise.all([
     fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MK=j).catch(()=>MK=null),
@@ -673,7 +714,7 @@ async function loadMarkets(){
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderMRIp();renderTemp();
+  renderKokoro();
 }
 async function loadPaper(){
   await Promise.all([
@@ -688,8 +729,8 @@ async function load(){
   renderPaper();
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
-renderEd();renderTabs();renderApps();renderBooks();loadPaper();loadMarkets();
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets()}});
+renderEd();renderTabs();renderApps();renderBooks();loadPaper();loadMarkets();loadTemp();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
