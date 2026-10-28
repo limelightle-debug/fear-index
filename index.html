@@ -217,6 +217,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="mrip" hidden></section>
     <section class="panel" id="temp" hidden></section>
+    <section class="panel" id="fx" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
   </div>
 
@@ -236,7 +237,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="books.js"></script>
 <script src="../mind/engine.js"></script>
 <script>
-const APP_VER="fi-v37";
+const APP_VER="fi-v38";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -400,7 +401,7 @@ const nyLabel=t=>{  // Cboe "2026-10-27T16:14:59" or Nasdaq "Oct 27, 2026": the 
 };
 // tile colour: grey at 0, full green or red at ±3% (as in the Nasdaq 100 heatmap)
 const TC={up:[45,176,105],dn:[234,74,81],mid:[54,59,68]};
-const tileColor=v=>{if(v==null)return"rgb(54,59,68)";const t=Math.min(1,Math.abs(v)/3)**.75,e=v>=0?TC.up:TC.dn;return`rgb(${TC.mid.map((m,i)=>Math.round(m+(e[i]-m)*t)).join(",")})`};
+const tileColor=(v,full=3)=>{if(v==null)return"rgb(54,59,68)";const t=Math.min(1,Math.abs(v)/full)**.75,e=v>=0?TC.up:TC.dn;return`rgb(${TC.mid.map((m,i)=>Math.round(m+(e[i]-m)*t)).join(",")})`};
 const SHORT={SPX:"S&P500",NDX:"ナスダック100",DJI:"ダウ",RUT:"小型株",SOX:"半導体"};
 function headline(L){
   const ok=L.filter(x=>x.pct!=null),up=ok.filter(x=>x.pct>0).length,dn=ok.filter(x=>x.pct<0).length;
@@ -519,9 +520,19 @@ function renderCmdty(){
     const lv="$"+x.price.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec});
     return `<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`;
 }
+// currencies: the dollar index and the yen against the dollar, euro and pound (full colour at ±1%, they move less)
+function renderFX(){
+  const el=$("fx"),ord=["usdjpy","eurjpy","gbpjpy","dxy"],it=MK&&MK.items?MK.items.filter(x=>ord.includes(x.k)):[];
+  if(!it.length){el.hidden=true;return}
+  it.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>為替</h2><span class="asof">${ETLabel(it[0].time)}</span></div><div class="tiles">`+it.map(x=>{
+    const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec})+(x.unit==="円"?"円":"");
+    return `<div class="tile" style="background:${tileColor(x.pct,1)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`;
+}
 async function loadMarkets(){
   try{const r=await fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"});MK=r.ok?await r.json():null}catch(e){MK=null}
-  renderCmdty();
+  renderFX();renderCmdty();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
