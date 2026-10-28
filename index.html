@@ -109,6 +109,11 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tile .tb{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:1px}
 .tile .tp{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:22px;line-height:1.05;font-variant-numeric:tabular-nums}
 .tile .tl{font-family:var(--f-tick);font-stretch:85%;font-size:11.5px;opacity:.85;font-variant-numeric:tabular-nums;white-space:nowrap}
+/* value tiles (currencies, commodities): the level large, the change under it */
+.tile .tv{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:25px;line-height:1.1;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile .tv small{font-size:13px;font-weight:600;margin-left:2px;opacity:.85}
+.tile .tc{font-family:var(--f-tick);font-stretch:85%;font-size:13px;font-weight:700;margin-top:1px;opacity:.95;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile .tc span{font-weight:500;opacity:.8;margin-left:6px}
 .tile.hero{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
 .tile.hero .tn{font-size:14px}
 .tile.hero .tl{display:block;font-size:13px;margin-top:2px}
@@ -255,7 +260,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 <script src="books.js"></script>
 <script src="../mind/engine.js"></script>
 <script>
-const APP_VER="fi-v41";
+const APP_VER="fi-v42";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -535,8 +540,9 @@ function renderCmdty(){
   const g=it.find(x=>x.k==="gold")||it[0];
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>コモディティ</h2><span class="asof">${ETLabel(g.time)}</span></div><div class="tiles">`+it.map(x=>{
-    const lv="$"+x.price.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec});
-    return `<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`;
+    const f=v=>v.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec});
+    const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}$${f(Math.abs(x.chg))}`;
+    return `<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tv"><small style="margin:0 1px 0 0">$</small>${f(x.price)}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
 }
 // currencies: the dollar index and the yen against the dollar, euro and pound (full colour at ±1%, they move less)
 function renderFX(){
@@ -545,8 +551,9 @@ function renderFX(){
   it.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>為替</h2><span class="asof">${ETLabel(it[0].time)}</span></div><div class="tiles">`+it.map(x=>{
-    const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec})+(x.unit==="円"?"円":"");
-    return `<div class="tile" style="background:${tileColor(x.pct,1)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`;
+    const f=v=>v.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec});
+    const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}${f(Math.abs(x.chg))}${x.unit==="円"?"円":""}`;
+    return `<div class="tile" style="background:${tileColor(x.pct,1)}"><div class="tn">${x.ja}</div><div class="tv">${f(x.price)}${x.unit==="円"?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
 }
 // rates (data/curve.json in the MRI app: the Treasury's daily par yield curve)
 let CV=null;
