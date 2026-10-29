@@ -318,7 +318,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v72";
+const APP_VER="fi-v73";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -641,6 +641,8 @@ function renderFX(){
 }
 // rates (data/curve.json in the MRI app: the Treasury's daily par yield curve)
 let CV=null;
+// colours in the rates charts: white is each chart's main line (the latest curve, 10Y-2Y, and the one series of the
+// real yield and OAS charts); blue the second line it is read against (3 months ago, 10Y-3M); grey dashed the third
 const RC={now:"#f2f2f7",m3:"#7fa8ff",m6:"#8a8aa6"};
 function curveChart(c,W){
   const H=170,ML=28,MR=40,MT=10,MB=20,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors.filter(([k])=>k!=="20Y"&&k!=="5Y");  // no 5Y or 20Y on the curve
@@ -719,8 +721,8 @@ function ratesMore(){
   return `<div class="rcap"><span>10年実質金利・インフレ期待・OAS</span></div><div class="rsum rx2">
     ${I?row("実質金利",I.real10,oi?dR:null,I.real10_d1)+row("インフレ期待",I.be10,oi&&dN!=null?dN-dR:null,I.be10_d1):""}${O?row("OAS HY",O.hy,oo?cr("hyg"):null,O.hy_d1)+row("OAS IG",O.ig,oo?cr("lqd"):null,O.ig_d1):""}</div>
     <div class="rxn">HY＝ハイイールド債、IG＝投資適格債。矢印は前日比。</div>
-    ${I&&I.hist&&I.hist.length>1?`<div class="rcap"><span>10年実質金利の推移</span></div><div class="rchart">${histChart(I.hist,RW,"#7fa8ff","rlf")}</div>`:""}
-    ${O&&O.hist&&O.hist.length>1?`<div class="rcap"><span>OAS ハイイールドの推移</span></div><div class="rchart">${histChart(O.hist,RW,"#ff8a65","hyf")}</div>`:""}`;
+    ${I&&I.hist&&I.hist.length>1?`<div class="rcap"><span>10年実質金利の推移</span></div><div class="rchart">${histChart(I.hist,RW,RC.now,"rlf")}</div>`:""}
+    ${O&&O.hist&&O.hist.length>1?`<div class="rcap"><span>OAS ハイイールドの推移</span></div><div class="rchart">${histChart(O.hist,RW,RC.now,"hyf")}</div>`:""}`;
 }
 function renderRates(){
   const el=$("rates");
