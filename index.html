@@ -314,7 +314,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v66";
+const APP_VER="fi-v67";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -704,13 +704,14 @@ function ratesMore(){
   const DUR={tip:6.6,ief:7,hyg:3.1,lqd:8.2},pc=k=>it[k]&&it[k].pct!=null?it[k].pct:null;
   const cr=k=>pc(k)==null||pc("ief")==null?null:-(pc(k)-pc("ief")*DUR[k]/DUR.ief)/DUR[k];
   const dR=pc("tip")==null?null:-pc("tip")/DUR.tip,dN=it.us10y&&it.us10y.chg!=null?it.us10y.chg:null;
-  // cards as the yields above: the value, its change from 3 months earlier, and 推定値 while it is an estimate
-  const row=(name,v,d,v3)=>{if(v==null)return"";const x=v+(d||0),dv=v3==null?null:x-v3;
+  // cards as the yields above: the value and the day's change (an estimate's change is from the official value
+  // it stands on), and 推定値 while it is an estimate
+  const row=(name,v,d,v1)=>{if(v==null)return"";const x=v+(d||0),dv=d!=null?d:v1==null?null:x-v1;
     return `<div>${name}<b>${x.toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}${d==null?"":"<em>推定値</em>"}</div>`};
   const oi=I&&newer(I)&&dR!=null,oo=O&&newer(O);
   return `<div class="rcap"><span>10年実質金利・インフレ期待・OAS</span></div><div class="rsum rx2">
-    ${I?row("実質金利",I.real10,oi?dR:null,I.real10_m3)+row("インフレ期待",I.be10,oi&&dN!=null?dN-dR:null,I.be10_m3):""}${O?row("OAS HY",O.hy,oo?cr("hyg"):null,O.hy_m3)+row("OAS IG",O.ig,oo?cr("lqd"):null,O.ig_m3):""}</div>
-    <div class="rxn">HY＝ハイイールド債、IG＝投資適格債。矢印は3ヶ月前比。</div>
+    ${I?row("実質金利",I.real10,oi?dR:null,I.real10_d1)+row("インフレ期待",I.be10,oi&&dN!=null?dN-dR:null,I.be10_d1):""}${O?row("OAS HY",O.hy,oo?cr("hyg"):null,O.hy_d1)+row("OAS IG",O.ig,oo?cr("lqd"):null,O.ig_d1):""}</div>
+    <div class="rxn">HY＝ハイイールド債、IG＝投資適格債。矢印は前日比。</div>
     ${I&&I.hist&&I.hist.length>1?`<div class="rcap"><span>10年実質金利の推移</span></div><div class="rchart">${histChart(I.hist,RW,"#7fa8ff","rlf")}</div>`:""}
     ${O&&O.hist&&O.hist.length>1?`<div class="rcap"><span>OAS ハイイールドの推移</span></div><div class="rchart">${histChart(O.hist,RW,"#ff8a65","hyf")}</div>`:""}`;
 }
@@ -730,7 +731,7 @@ function renderRates(){
   el.hidden=false;
   const W=Math.max(260,el.clientWidth-28);
   el.innerHTML=`<div class="ph"><h2>金利</h2><span class="asof">${M}/${D}（${w}）米国債</span></div>
-    <div class="rsum">${[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>{const dv=n[k]-CV.m3.y[k];return `<div>${l}<b>${n[k].toFixed(2)}</b><small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small></div>`}).join("")}</div>
+    <div class="rsum">${[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
     <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">10年−2年<b>${sg(s2)}</b></span><span class="sp">10年−3ヶ月<b>${sg(s3)}</b></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>イールドカーブ</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>最新</span><span><i style="border-color:${RC.m3}"></i>3ヶ月前</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>6ヶ月前</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
     <div class="rcap"><span>長短金利差の推移</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>10年−2年</span><span><i style="border-color:${RC.m3}"></i>10年−3ヶ月</span></span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}`;
