@@ -243,7 +243,11 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 /* MRI tab: the MRI app in a frame, edge to edge under the tabs, scrolling inside */
 #mriframe{display:block;border:0;background:var(--bg);margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));width:calc(100% + max(16px,env(safe-area-inset-left,0px)) + max(16px,env(safe-area-inset-right,0px)));height:70vh}
 html.mritab,html.mritab body{overflow:hidden;overscroll-behavior:none}
-html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
+html.mritab .wrap{padding-bottom:0}
+/* switching the top tabs: the new page rises in a moment after the tap */
+.rise{animation:rise .42s cubic-bezier(.2,.7,.2,1) .07s both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.rise{animation:none}}html.mritab .foot{display:none}
 </style>
 </head>
 <body>
@@ -291,7 +295,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v49";
+const APP_VER="fi-v50";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -741,7 +745,8 @@ async function load(){
   if(!Object.keys(DATA).length)$("empty").textContent="データを読み込めませんでした";
   renderPaper();
 }
-document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){const same=b.dataset.tab===state.tab;state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0);
+  if(!same){const el=$("t-"+state.tab);el.classList.remove("rise");void el.offsetWidth;el.classList.add("rise")}}});
 renderEd();renderTabs();renderApps();renderBooks();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
