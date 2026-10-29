@@ -191,10 +191,12 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tline{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-top:8px}
 .tline a{color:var(--accent);text-decoration:none;white-space:nowrap}
 /* the issue: date and time the paper came out, large, in its own panel on top */
-.issue{display:flex;align-items:stretch;gap:12px;padding:10px 14px 10px 10px}
-/* the title piece: the institute's picture with 恐怖新聞 down it, as on a paper's front page */
-.issue .mast{display:block;width:60px;height:124px;flex:none;border-radius:9px}
-.issue .ib{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0;padding:4px 0 2px}
+.issue{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px}
+/* the title piece: the institute's picture with 恐怖新聞 across it, as on a paper's front page */
+.issue .mast{display:block;width:150px;height:58px;flex:none;border-radius:9px}
+.issue .ib{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:0}
+.issue .ib .id{font-size:20px;white-space:nowrap}.issue .ib .id small{font-size:13px}
+.issue .ib .it{display:flex;align-items:baseline;gap:6px}.issue .ib .it b{font-size:22px}.issue .ib .it span{margin-top:0}
 .issue .id{font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1.1}
 .issue .id small{font-size:17px;font-weight:700;margin-left:2px}
 .issue .it{text-align:right;line-height:1.1}
@@ -295,7 +297,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v54";
+const APP_VER="fi-v55";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -478,7 +480,7 @@ function renderIssue(st){
   // a revised edition (after the after-hours earnings) shows the revision time instead
   const t=new Date(st&&(st.revisedAt||st.writtenAt)||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
   const w="日月火水木金土"[j.getUTCDay()], hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
-  $("issue").innerHTML=`<img class="mast" src="icons/masthead.png" alt="恐怖新聞" width="60" height="124"><div class="ib"><div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?(st.revisedAt?"改訂版":"発刊"):"数字の更新"}</span></div></div>`;
+  $("issue").innerHTML=`<img class="mast" src="icons/masthead.png" alt="恐怖新聞" width="150" height="58"><div class="ib"><div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?(st.revisedAt?"改訂版":"発刊"):"数字の更新"}</span></div></div>`;
 }
 function renderIdx(){
   const el=$("idx");
