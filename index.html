@@ -403,7 +403,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v129";
+const APP_VER="fi-v130";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -607,6 +607,8 @@ let IDX=null, STORY=null, FUT=null;
 // the evening edition (paper.json preAt): index futures, the realtime MRI and the pre-open quotes stand in for the
 // last close, from the MRI app's data/futures.json (taken 4:00-9:35 ET), when it is for the same US day
 const etYMD=d=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+// the evening edition carries the article into the session it was written before (after the US open the numbers turn to that day)
+const sameDay=d=>!!STORY&&(STORY.date===d||!!(STORY.preAt&&etYMD(new Date(STORY.preAt))===d));
 const EVE=()=>!!(STORY&&STORY.preAt&&FUT&&FUT.items&&FUT.items.length&&FUT.day===etYMD(new Date(STORY.preAt)));
 const preLab=()=>FUT&&FUT.updatedAt?tx(`日本時間 ${fmtJ(new Date(FUT.updatedAt))}（寄り前）`,`${fmtJ(new Date(FUT.updatedAt))} Japan time (pre-open)`):"";
 const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -649,7 +651,7 @@ function renderIdx(){
   const L=[...IDX.indices].sort((a,b)=>ORDER.indexOf(a.k)-ORDER.indexOf(b.k));
   const t0=(L.find(x=>x.k==="SPX")||L[0]).time, asof=nyLabel(t0);
   // the written article for the same session, when there is one; otherwise a headline from the numbers
-  const day=(String(t0).match(/^\d{4}-\d\d-\d\d/)||[""])[0], st=STORY&&STORY.date===day?STORY:null;
+  const day=(String(t0).match(/^\d{4}-\d\d-\d\d/)||[""])[0], st=STORY&&sameDay(day)?STORY:null;
   let [h1,h2]=headline(L); if(st){h1=SP(st,"headline");h2=""}
   renderIssue(st);
   if(EVE()){renderIdxEve(el,st,asof);return}
@@ -712,7 +714,7 @@ function renderMRIp(){
   const {mri}=TEMP,rows=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[7]!=null),r=rows[rows.length-1],p=rows[rows.length-2],day=r[0];
   const from=(Math.floor(day/100)-3)*100+day%100, R3=rows.filter(x=>x[0]>=(Math.floor(from/100)%100<1?from-8800:from));
   const m=r[7],lv=level(m),dm=(m-p[7])*100,S=signals(mri,day),lit=S.filter(x=>x.on);
-  const view=STORY&&STORY.date===String(day).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3")&&STORY.mri;
+  const view=STORY&&sameDay(String(day).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3"))&&STORY.mri;
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>MRI</h2><span class="asof">${mdN(day)}（${"日月火水木金土"[new Date(Date.UTC(Math.floor(day/1e4),Math.floor(day/100)%100-1,day%100)).getUTCDay()]}）米国市場引け</span></div>
     <div class="mrihead"><span class="lvl" style="background:var(${lv[2]});color:${lv[3]}">${lv[1]}</span><div style="text-align:right"><div class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</div><div class="chg">前日比 ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
@@ -758,7 +760,7 @@ function renderMriTop(){
   let cm,mh,auto;
   try{auto=mriHeadline(mri,r,p)}catch(e){auto=[`MRI ${(m*100).toFixed(2)}`,""]}
   if(live){cm=SP(STORY,"mriLive");mh=SP(STORY,"mriLiveHead")}
-  else{cm=STORY&&STORY.date===ymd&&SP(STORY,"mri");mh=STORY&&STORY.date===ymd&&SP(STORY,"mriHead")}
+  else{cm=STORY&&sameDay(ymd)&&SP(STORY,"mri");mh=STORY&&sameDay(ymd)&&SP(STORY,"mriHead")}
   const [h1,h2]=Array.isArray(mh)&&mh.length?mh:auto;
   el.hidden=false;
   const Y=Math.floor(day/1e4),Mo=Math.floor(day/100)%100,Dd=day%100;
@@ -1008,7 +1010,7 @@ function renderRates(){
 }
 function renderNews(){
   const el=$("news"),day=IDX&&IDX.indices&&IDX.indices.length?(String((IDX.indices.find(x=>x.k==="SPX")||IDX.indices[0]).time).match(/^\d{4}-\d\d-\d\d/)||[""])[0]:"";
-  const N=STORY&&STORY.date===day&&SP(STORY,"news");
+  const N=STORY&&sameDay(day)&&SP(STORY,"news");
   if(!N||!N.length){el.hidden=true;return}
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>${tx("主なニュース","News")}</h2></div><div class="nws">${N.map(([t,x])=>`<b>${esc(t)}</b><p>${esc(x)}</p>`).join("")}</div>`;
@@ -1121,7 +1123,7 @@ function renderEye(){
   if(wind.up.length||wind.down.length)F.push(en?[wind.down.length?`Headwinds: ${wind.down.join(", ")}.`:"",wind.up.length?`Tailwinds: ${wind.up.join(", ")}.`:""].filter(Boolean).join(" ")
     :`株にとって${wind.down.length?`${wind.down.join("・")}が向かい風`:""}${wind.down.length&&wind.up.length?"、":""}${wind.up.length?`${wind.up.join("・")}が追い風`:""}になっている。`);
   const lastDay=TEMP&&TEMP.mri?String(TEMP.mri.daily.filter(r=>r[0]!==TEMP.mri.liveDay&&r[7]!=null).slice(-1)[0][0]).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3"):null;
-  const O=STORY&&(!lastDay||STORY.date===lastDay)&&Array.isArray(SP(STORY,"eye"))?SP(STORY,"eye"):null;
+  const O=STORY&&(!lastDay||sameDay(lastDay))&&Array.isArray(SP(STORY,"eye"))?SP(STORY,"eye"):null;
   const txt=[O&&O[0]||H.join(""),O&&O[1]||F.join(""),O&&O[2]||U.join("")];
   const h1=gState?tx(`景気は${gState}、物価は${B&&B.cpi?(lastOf(yoyOf(B.cpi))[1]>=3?"高止まり":"落ち着き"):"—"}`,`Growth ${gState}, inflation ${B&&B.cpi&&lastOf(yoyOf(B.cpi))[1]>=3?"elevated":"contained"}`):tx("今日の全体像","Today's picture");
   const h2=wind.down.length||wind.up.length?(en?[wind.down.length?`headwinds: ${wind.down.join(", ")}`:"",wind.up.length?`tailwinds: ${wind.up.join(", ")}`:""].filter(Boolean).join(" / "):[wind.down.length?`向かい風 ${wind.down.join("・")}`:"",wind.up.length?`追い風 ${wind.up.join("・")}`:""].filter(Boolean).join("　")):"";
@@ -1161,7 +1163,7 @@ const pw=el=>{const w=el.clientWidth||(el.parentElement&&el.parentElement.client
 // otherwise one built from the data
 const sessionDay=()=>TEMP&&TEMP.mri?String(TEMP.mri.daily.filter(r=>r[0]!==TEMP.mri.liveDay&&r[7]!=null).slice(-1)[0][0]).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3"):(IDX&&IDX.indices&&IDX.indices[0]?String(IDX.indices[0].time).slice(0,10):null);
 function note(key,auto){
-  const day=sessionDay(),own=STORY&&(!day||STORY.date===day)&&SP(STORY,key),t=own||auto||"";
+  const day=sessionDay(),own=STORY&&(!day||sameDay(day))&&SP(STORY,key),t=own||auto||"";
   return t?`<div class="ccm"><p>${esc(t)}</p></div>`:"";
 }
 const sgn1=(v,d=1,u="")=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(d)}${u}`;
