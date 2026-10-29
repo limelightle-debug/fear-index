@@ -206,7 +206,8 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 /* the title piece: the institute's picture with 恐怖新聞 across it, as on a paper's front page */
 .issue .mast{display:block;width:150px;height:58px;flex:none;border-radius:9px}
 .issue .ib{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:0}
-.issue .ib .id{font-size:23px;white-space:nowrap}.issue .ib .id small{font-size:15px}
+.issue .ib .id{font-size:28px;white-space:nowrap}.issue .ib .id small{font-size:16px}
+@media (max-width:400px){.issue .mast{width:128px;height:49.5px}.issue .ib .id{font-size:26px}.issue .ib .id small{font-size:15px}}
 .issue .ib .it{display:flex;align-items:baseline;gap:6px}.issue .ib .it b{font-size:16px}.issue .ib .it span{margin-top:0}
 .issue .id{font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1.1}
 .issue .id small{font-size:17px;font-weight:700;margin-left:2px}
@@ -310,7 +311,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v59";
+const APP_VER="fi-v60";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
