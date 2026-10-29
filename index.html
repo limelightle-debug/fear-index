@@ -354,7 +354,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v88";
+const APP_VER="fi-v89";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -482,7 +482,7 @@ function renderApps(){
   const A=Object.fromEntries(APPS.map(a=>[a[0],a]));
   const card=([k,role,ch])=>{const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}${ch?`<i class="ch">${ch}</i>`:""}</b><span>${role}</span></div><em>›</em></a>`};
   // seen from another app (its アプリ tab), the institute itself comes first: the way back to the paper
-  const home=EMBED?`<a class="node home" href="${BASE}/fear-index/"><img src="icons/app.png" alt="" width="44" height="44"><div><b>恐怖指数研究所</b><span>恐怖新聞、アプリ、書籍</span></div><em>›</em></a>`:"";
+  const home=EMBED?`<a class="node home" href="${BASE}/fear-index/"><img src="icons/app.png" alt="" width="44" height="44"><div><b>恐怖指数研究所</b><span>毎朝の恐怖新聞</span></div><em>›</em></a>`:"";
   $("apps").innerHTML=`<div class="ph"><h2>アプリ</h2><span class="asof">『VIXの声を聴け』に沿って</span></div>${home}`+
     MAP.map(([k,role,title,items],i)=>`${i?`<div class="arrow">↓</div>`:""}<div class="layer"><div class="lh"><b class="kan">${k}</b><b>${role}</b><span>${title}</span></div>${items.map(card).join("")}</div>`).join("");
 }

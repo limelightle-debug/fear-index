@@ -1,7 +1,7 @@
 // Offline shell; the page and the data are always fetched fresh when online. Bump CACHE when the app files change.
 // Fetch by URL, not with the request itself: a page navigation can't be re-sent with options, and doing so used to fall
 // through to the cached (old) page, so updates never showed.
-const CACHE = "fi-v88";
+const CACHE = "fi-v89";
 const SHELL = ["./", "index.html", "suite.js", "manifest.webmanifest", "books.js", "icons/app.png", "icons/masthead.png", "icons/icon-192.png", "icons/book-map.jpg",
   "icons/book-vix.jpg", "icons/book-vix-en.jpg", "icons/book-kinri.jpg", "icons/book-chobo.jpg", "icons/book-shippai.jpg",
   "icons/book-heiho.jpg", "icons/book-anomaly.jpg"];
