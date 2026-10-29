@@ -189,7 +189,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .rpseg{display:inline-flex;margin:0;padding:2px;gap:1px;border-radius:7px}.rpseg button{flex:none;font-size:11px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:0}
 .rx2{margin-top:6px}.rx2 .pre{display:block;font-style:normal;font-size:10.5px;font-weight:600;color:var(--muted);opacity:.85;margin-bottom:1px}.rx2 div{letter-spacing:0;white-space:nowrap}
 .rx2 em{display:inline-block;margin-top:4px;font-family:var(--f-body);font-style:normal;font-size:9.5px;font-weight:700;color:#ffb547;border:1px solid #ffb54766;border-radius:999px;padding:0 6px;line-height:1.5}
-.rxn{font-size:11px;color:var(--muted);margin-top:6px}
+.rxn{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6}
 .rchart svg{display:block;width:100%;overflow:visible}
 .rchart text{font-family:var(--f-tick);font-stretch:85%;font-size:10px;fill:var(--muted)}
 .rcap{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;margin-top:16px;font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
@@ -338,7 +338,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v82";
+const APP_VER="fi-v83";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -769,7 +769,7 @@ function ratesMore(){
   const RH=withEst(I&&I.hist,Z.real),HH=withEst(O&&O.hist,Z.hy);
   return `<div class="rcap"><span>実質金利・インフレ期待・OAS</span></div><div class="rsum rx2">
     ${row("実質金利",Z.real,"10年")}${row("インフレ期待",Z.be,"10年")}${row("OAS HY",Z.hy,"米社債")}${row("OAS IG",Z.ig,"米社債")}</div>
-    <div class="rxn">HY＝ハイイールド債、IG＝投資適格債。矢印は前日比。</div>
+    <div class="rxn">OAS は、米社債の利回りが国債をどれだけ上回るか。決まった年限の国債1本ではなく、社債ごとにお金が返ってくる時期に合わせた国債の利回り（国債カーブ）と比べ、指数全体で平均している。HY＝ハイイールド債（平均満期5年前後）、IG＝投資適格債（同10年前後）。矢印は前日比。</div>
     ${RH&&RH.length>1?`<div class="rcap"><span>10年実質金利の推移</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?'<div class="rkey rleg">最後の点は推定値</div>':""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}
     ${HH&&HH.length>1?`<div class="rcap"><span>OAS ハイイールドの推移</span>${rpSeg("hy")}</div>${Z.hy&&Z.hy.est?'<div class="rkey rleg">最後の点は推定値</div>':""}<div class="rchart">${histChart(HH,RW,RC.now,"hyf","hy")}</div>`:""}`;
 }
