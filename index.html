@@ -53,6 +53,10 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .seg{display:flex;background:var(--chip);border-radius:8px;padding:3px;gap:2px;margin-top:10px}
 .seg button{flex:1;appearance:none;border:0;background:transparent;color:var(--ink2);font:500 13.5px/1 var(--f-body);padding:9px 6px;border-radius:6px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.4);font-weight:700}
+.sec{margin:28px 2px 4px;text-align:center}
+.sec b{display:flex;align-items:center;gap:12px;color:var(--ink);font-weight:800;font-size:15px;letter-spacing:.06em}
+.sec b::before,.sec b::after{content:"";flex:1;height:1px;background:var(--line)}
+.sec small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted);line-height:1.5}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px}
 .ph{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
 .ph h2{margin:0;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--ink2)}
@@ -365,6 +369,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
   <div id="t-paper">
     <section class="panel issue" id="issue"></section>
     <section class="panel eye" id="eye" hidden></section>
+    <div class="sec" id="sec-daily"></div>
     <section class="panel mtop" id="mritop" hidden></section>
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="news" hidden></section>
@@ -372,6 +377,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="fedw" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
+    <div class="sec" id="sec-rel"></div>
     <section class="panel" id="gdp" hidden></section>
     <section class="panel" id="infl" hidden></section>
     <section class="panel" id="jobs" hidden></section>
@@ -397,7 +403,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v127";
+const APP_VER="fi-v128";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -567,6 +573,11 @@ const GUIDE=[
  ["雇用","雇用者数の増減、失業率、求人率、平均時給、失業保険の申請。求人率が失業率を上回っているあいだは人手不足で、下回ると雇用は緩み始める。ベヴァリッジ曲線は失業率と求人率の組み合わせを月ごとに結んだもの。点線より上が人手不足の側。平均時給は物価と比べ、上回れば実質賃金はプラス。新規申請は毎週出る、景気の変化にいちばん早く反応する数字。","Jobs","Payrolls, unemployment, job openings, hourly earnings and jobless claims. While openings run above unemployment the market is tight; below it, it starts to loosen. The Beveridge curve joins the two month by month; above the dashed line is the tight side. Hourly earnings against prices show real wages. Weekly claims are the quickest to react to a turn."],
  ["ドル流動性","FRB のバランスシートが準備預金を生み、その外側にリバースレポという緩衝材がある。ドルが吸われるとき、まず緩衝材が減り、尽きると準備預金という本体が直接削られる。準備預金の下限は誰にも分からず、2019年9月には1.4兆ドルで短期金利が跳ねた。SOFR が IORB を上回るのは、資金の綱が張っている合図。M2 は内側ではなく、市中のお金の増え方を表す（『金利の重力』第十七章）。","Dollar liquidity","The Fed's balance sheet creates bank reserves; outside them sits a buffer, the reverse repo. When dollars are drawn out, the buffer goes first; once it is gone, reserves, the body, are drained directly. No one knows where their floor is: in September 2019 short rates spiked with $1.4T. SOFR above IORB is the sign the rope is pulled tight. M2 shows money outside the system, in the economy."],
  ["数字","すべての数字を、毎日同じ順番で。慣れると、どこが動いたかが一目でわかる。","The numbers","Every number, in the same order every day. Once you are used to it, what moved jumps out."]];
+// section dividers in the paper: the panels that change every session, then the releases (quarterly, monthly, weekly)
+function renderSecs(){
+  $("sec-daily").innerHTML=`<b>${tx("毎日の相場","Every session")}</b><small>${tx("取引日ごとに更新","Updated each trading day")}</small>`;
+  $("sec-rel").innerHTML=`<b>${tx("経済指標","Economic releases")}</b><small>${tx("四半期・月次・週次の発表ごとに更新","Updated on each quarterly, monthly or weekly release")}</small>`;
+}
 function renderGuide(){
   $("guide").innerHTML=`<div class="ph"><h2>${tx("この新聞の読み方","How to read this paper")}</h2></div><dl>${GUIDE.map(g=>`<dt>${EN()?g[2]:g[0]}</dt><dd>${EN()?g[3]:g[1]}</dd>`).join("")}</dl>`;
 }
@@ -1475,9 +1486,9 @@ document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-lang]");if(!b||b.dataset.lang===LANG)return;
   LANG=b.dataset.lang;document.documentElement.lang=LANG;if(!EMBED)try{localStorage.setItem("lang",LANG)}catch(err){}
-  renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderIdx();renderNews();renderMriTop();renderRates();renderCmdty();renderNums();renderKokoro();
+  renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderSecs();renderIdx();renderNews();renderMriTop();renderRates();renderCmdty();renderNums();renderKokoro();
 });
-renderEd();renderTabs();renderApps();renderBooks();renderGuide();loadPaper();loadMarkets();loadTemp();
+renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderSecs();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
