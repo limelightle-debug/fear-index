@@ -152,7 +152,8 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .mtop .mrow .lvl{margin-top:8px;font-size:18px;padding:5px 15px}
 .mtop .mv{text-align:right}.mtop .mv .big{font-size:44px}.mtop .mv .ml{font-family:var(--f-tick);font-size:18px;font-weight:700;color:var(--ink2);margin-right:8px}
 .mtop .rlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
-.mtop .cm{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.mtop .cm,.ccm{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.ccm p{margin:0;font-size:14px;line-height:1.7;text-indent:1em;color:var(--ink)}
 .mtop .cm b{font-size:11.5px;font-weight:700;color:var(--accent)}
 .mtop .cm p{margin:3px 0 0;font-size:14px;line-height:1.64;text-indent:1em}
 .view{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
@@ -394,7 +395,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v120";
+const APP_VER="fi-v121";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -753,6 +754,30 @@ let MK=null;
 const ETLabel=t=>{const m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);if(!m)return"";
   const h=+m[4];
   return `${dayLab(+m[2],+m[3],wdOf(+m[1],+m[2],+m[3]))} ${h>=16&&h<18?CLOSE():tx(`${m[4]}:${m[5]} 時点（米東部）`,`${m[4]}:${m[5]} ET`)}`};
+// a reading of the commodities and the dollar: the biggest move and what it stands for, the rest in one breath, and
+// what the combination says (paper.json "cmdty" replaces it when the day's article has one for the same session)
+function cmdtyComment(it,T){
+  const en=EN(),f=(x,d)=>x.price.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+  const mv=T.filter(([k])=>it[k].pct!=null).map(([k,name,full])=>({k,name:en?it[k].en:name.replace(/（.*）/,""),x:it[k],z:it[k].pct/full}));
+  if(!mv.length)return"";
+  const top=[...mv].sort((a,b)=>Math.abs(b.z)-Math.abs(a.z))[0],dir=q=>Math.abs(q.z)<.1?0:q.z>0?1:-1,a=q=>Math.abs(q.x.pct).toFixed(1);
+  const lv={gold:()=>`${f(top.x,0)}${en?"":"ドル"}`,wti:()=>`${f(top.x,2)}${en?"":"ドル"}`,copper:()=>`${f(top.x,2)}${en?"":"ドル"}`,btc:()=>`${f(top.x,0)}${en?"":"ドル"}`,dxy:()=>f(top.x,2),usdjpy:()=>`${f(top.x,2)}${en?"":"円"}`};
+  const mean=en?{gold:["fear and doubt about money were bought","fear eased"],wti:["the embers of inflation glow again","inflation pressure takes a breath"],copper:["the economy is read as strong","the economy is read with caution"],btc:["the appetite for risk holds","the appetite for risk shrank"],dxy:["money is pulled back to the dollar","money drifts away from the dollar"],usdjpy:["the yen weakened","the yen firmed"]}
+    :{gold:["不安とお金への疑いが買われた","不安はやや後退した"],wti:["インフレの火種が再びくすぶる","インフレの圧力はひと息ついた"],copper:["景気は強いと読まれている","景気への見方は慎重だ"],btc:["リスクを取る気分は残る","リスクを取る気分はしぼんだ"],dxy:["世界のお金がドルへ引き戻された","お金はドルから少し離れた"],usdjpy:["円は売られた","円は買い戻された"]};
+  const d0=dir(top);let t="";
+  if(!d0)return en?"Commodities and the dollar barely moved.":"コモディティもドルも、ほとんど動かなかった。";
+  t+=en?`${top.name} ${d0>0?"rose":"fell"} ${a(top)}% to ${top.k==="dxy"?"":"$"}${lv[top.k]()}: ${mean[top.k][d0>0?0:1]}.`:`${top.name}が${a(top)}%${d0>0?(top.k==="usdjpy"?"上がり":"高の"):(top.k==="usdjpy"?"下がり":"安の")}${lv[top.k]()}。${mean[top.k][d0>0?0:1]}。`;
+  const rest=mv.filter(q=>q!==top&&dir(q)),up=rest.filter(q=>dir(q)>0).map(q=>q.name),dn=rest.filter(q=>dir(q)<0).map(q=>q.name);
+  if(up.length||dn.length)t+=en?` ${[up.length?`${up.join(", ")} up`:"",dn.length?`${dn.join(", ")} down`:""].filter(Boolean).join("; ")}.`:`${up.length?`${up.join("と")}は上げ`:""}${up.length&&dn.length?"、":""}${dn.length?`${dn.join("と")}は下げた`:"た"}。`.replace("上げた。","上げた。");
+  const D=k=>{const q=mv.find(x=>x.k===k);return q?dir(q):0};
+  let g="";
+  if(D("wti")>0&&D("gold")>0)g=en?"Oil and gold rising together is a hedge against both inflation and unease.":"原油と金がそろって上がるのは、インフレと不安の両方に備える動きだ。";
+  else if(D("wti")>0&&D("copper")>0&&D("btc")>=0)g=en?"Oil and copper up together is a bet on strong demand.":"原油と銅がそろって上がるのは、需要の強さに賭ける動きだ。";
+  else if(D("gold")>0&&D("btc")<0)g=en?"Gold up while bitcoin falls is a retreat to safety.":"金が上がりビットコインが下がるのは、守りに入る動きだ。";
+  else if(D("wti")<0&&D("copper")<0)g=en?"Oil and copper down together hint at softer demand.":"原油と銅がそろって下がるのは、需要の陰りを映す。";
+  else if(D("dxy")>0&&D("gold")<0)g=en?"A firmer dollar weighs on gold.":"ドル高が金の重しになった。";
+  return t+(g?(en?" ":"")+g:"");
+}
 function renderCmdty(){
   // gold, crude, copper, bitcoin, the dollar index and the yen as tiles coloured by the day's move
   // (full colour at ±3%; ±1% for the dollar and the yen, which move less; ±5% for bitcoin)
@@ -768,7 +793,7 @@ function renderCmdty(){
   el.innerHTML=`<div class="ph"><h2>${tx("コモディティ・ドル","Commodities & dollar")}</h2><span class="asof">${ETLabel((it.gold||it[T[0][0]]).time)}</span></div>${mv.length?headHTML("cmdtyHead",ch2):""}<div class="tiles ctiles">`+T.map(([k,name,full])=>{const x=it[k];if(EN())name=x.en;
     const f=v=>v.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec}),usd=x.unit==="ドル",yen=x.unit==="円";
     const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}${usd?"$":""}${f(Math.abs(x.chg))}${yen&&!EN()?"円":""}`;
-    return `<div class="tile" style="background:${tileColor(x.pct,full)}"><div class="tn">${name}</div><div class="tv">${usd?'<small style="margin:0 1px 0 0">$</small>':""}${f(x.price)}${yen&&!EN()?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
+    return `<div class="tile" style="background:${tileColor(x.pct,full)}"><div class="tn">${name}</div><div class="tv">${usd?'<small style="margin:0 1px 0 0">$</small>':""}${f(x.price)}${yen&&!EN()?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`+(()=>{const day=(it.gold||it[T[0][0]]).time,ymd=String(day||"").slice(0,10),own=STORY&&(STORY.date===ymd)&&SP(STORY,"cmdty"),c=own||cmdtyComment(it,T);return c?`<div class="ccm"><p>${esc(c)}</p></div>`:""})();
 }
 // currencies: the dollar index and the yen against the dollar, euro and pound (full colour at ±1%, they move less)
 function renderFX(){
