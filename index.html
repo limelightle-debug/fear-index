@@ -350,7 +350,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v94";
+const APP_VER="fi-v95";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -567,7 +567,8 @@ function renderIssue(st){
   const t=new Date(st&&(st.revisedAt||st.writtenAt)||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
   const w=WD(j.getUTCDay()), hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
   // the day's points to watch (paper.json "points"), picked from what the paper carries below
-  const P=st&&Array.isArray(SP(st,"points"))?SP(st,"points").slice(0,3):[];
+  // usually 3, up to 5 on a heavy day (the morning run decides)
+  const P=st&&Array.isArray(SP(st,"points"))?SP(st,"points").slice(0,5):[];
   $("issue").innerHTML=`<div class="irow"><img class="mast" src="icons/masthead.png" alt="恐怖新聞" width="150" height="58"><div class="ib"><div class="id">${EN()?`${MON[j.getUTCMonth()]} ${j.getUTCDate()}<small> ${w}</small>`:`${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small>`}</div><div class="it"><b>${hm}</b><span>${st?(st.revisedAt?tx("改訂版","Revised"):tx("発刊","Published")):tx("数字の更新","Updated")}</span></div></div></div>`
     +(P.length?`<ul class="pts">${P.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"");
 }
