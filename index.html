@@ -397,7 +397,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v125";
+const APP_VER="fi-v126";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -408,6 +408,7 @@ const WD=n=>(EN()?["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]:[..."日月火水�
 const dayLab=(m,d,w)=>EN()?`${WD(w)} ${MON[m-1]} ${d}`:`${m}/${d}（${WD(w)}）`;   // m 1-12, w weekday 0-6
 const wdOf=(y,m,d)=>new Date(Date.UTC(y,m-1,d)).getUTCDay();
 const CLOSE=()=>tx("米国市場引け","US close");
+const fmtJ=d=>{const j=new Date(d.getTime()+9*36e5);return `${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`};
 // the day's article in the reader's language (paper.json "en"), falling back to the Japanese
 const SP=(st,k)=>st&&(EN()&&st.en&&st.en[k]!=null?st.en[k]:st[k]);
 const BASE="https://limelightle-debug.github.io";
@@ -591,7 +592,12 @@ function renderEd(){
 /* ---------- data: each app's own published data (same site) ---------- */
 // morning paper: the major indices at the last US close
 const PAPER="../mri-app/data/indices.json", ORDER=["SPX","NDX","DJI","RUT","SOX"];
-let IDX=null, STORY=null;
+let IDX=null, STORY=null, FUT=null;
+// the evening edition (paper.json preAt): index futures, the realtime MRI and the pre-open quotes stand in for the
+// last close, from the MRI app's data/futures.json (taken 4:00-9:35 ET), when it is for the same US day
+const etYMD=d=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+const EVE=()=>!!(STORY&&STORY.preAt&&FUT&&FUT.items&&FUT.items.length&&FUT.day===etYMD(new Date(STORY.preAt)));
+const preLab=()=>FUT&&FUT.updatedAt?tx(`日本時間 ${fmtJ(new Date(FUT.updatedAt))}（寄り前）`,`${fmtJ(new Date(FUT.updatedAt))} Japan time (pre-open)`):"";
 const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const nyLabel=t=>{  // Cboe "2026-10-27T16:14:59" or Nasdaq "Oct 27, 2026": the day, and the close or the time
   let m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);
@@ -635,10 +641,29 @@ function renderIdx(){
   const day=(String(t0).match(/^\d{4}-\d\d-\d\d/)||[""])[0], st=STORY&&STORY.date===day?STORY:null;
   let [h1,h2]=headline(L); if(st){h1=SP(st,"headline");h2=""}
   renderIssue(st);
+  if(EVE()){renderIdxEve(el,st,asof);return}
   el.innerHTML=`<div class="ph"><h2>${tx("主要指数","Markets")}</h2><span class="asof">${asof}</span></div><div class="head">${Array.isArray(h1)?esc(h1[0])+(h1[1]?`<span class="h2b">${esc(h1[1])}</span>`:""):esc(h1)}</div>${h2?`<div class="sub">${h2}</div>`:`<div style="height:8px"></div>`}${st?`<div class="ccm"><p>${esc(SP(st,"body")||(st.sections||[]).map(x=>x[1]).join(""))}</p></div>`:""}<div class="tiles">`+L.map(x=>
     {const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2});
     return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${EN()?x.en:x.ja}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
       :`<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${EN()?x.en:x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`+(st&&st.sources&&st.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div></div>`:"");
+}
+// the evening edition: the index futures as tiles, a headline and reading for them (paper.json "futHead", "fut"),
+// then the morning article on the last close under its own caption
+function renderIdxEve(el,st,asof){
+  const F=[...FUT.items].sort((a,b)=>ORDER.indexOf(a.key)-ORDER.indexOf(b.key)).map(x=>({...x,k:x.key}));
+  const ok=F.filter(x=>x.pct!=null),up=ok.filter(x=>x.pct>0).length,dn=ok.filter(x=>x.pct<0).length,lead=[...ok].sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct))[0];
+  const mood=EN()?(up===ok.length?"all higher":dn===ok.length?"all lower":up>dn?"mostly higher":dn>up?"mostly lower":"mixed"):(up===ok.length?"全面高":dn===ok.length?"全面安":up>dn?"総じて高い":dn>up?"総じて安い":"高安まちまち");
+  const auto=EN()?[`US futures ${mood}`,lead?`${lead.en} ${lead.pct>=0?"up":"down"} ${Math.abs(lead.pct).toFixed(1)}%`:""]
+    :[`米株先物 ${mood}`,lead?`${lead.ja.replace(/（.*）/,"")}が${Math.abs(lead.pct).toFixed(1)}%${lead.pct>=0?"高":"安"}`:""];
+  const fh=SP(STORY,"futHead"),[h1,h2]=Array.isArray(fh)&&fh.length?fh:auto,fc=SP(STORY,"fut");
+  const tile=x=>{const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2}),nm=EN()?x.en:x.ja;
+    return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${nm}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
+      :`<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${nm}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`};
+  const body=st&&(SP(st,"body")||(st.sections||[]).map(x=>x[1]).join(""));
+  el.innerHTML=`<div class="ph"><h2>${tx("株価指数先物","Index futures")}</h2><span class="asof">${preLab()}</span></div><div class="head">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div><div style="height:8px"></div>${fc?`<div class="ccm"><p>${esc(fc)}</p></div>`:""}<div class="tiles">${F.map(tile).join("")}</div>
+    <div class="rxn">${tx("前日の清算値からの騰落。半導体は先物がないため、半導体ETF（SOXX）の寄り前の値。","Change from the previous settlement. Semiconductors: no future trades, so the SOXX ETF's pre-market quote.")}</div>`
+    +(body?`<div class="rcap" style="margin-top:14px"><span>${tx("前日の米国市場","The last US session")}</span><span class="asof">${asof}</span></div><div class="ccm"><p>${esc(body)}</p></div>`:"")
+    +(st&&st.sources&&st.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div></div>`:"");
 }
 // page 2: the scene of the day, judged as in the Mind app, and the three readings behind it
 const ACT=["第一幕","第二幕","第三幕","第四幕"];
@@ -707,18 +732,32 @@ const headHTML=(key,auto)=>{const o=STORY&&SP(STORY,key),[h1,h2]=Array.isArray(o
 function renderMriTop(){
   const el=$("mritop");
   if(!TEMP||!TEMP.mri){el.hidden=true;return}
-  const {mri}=TEMP,rows=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[7]!=null),r=rows[rows.length-1],p=rows[rows.length-2],day=r[0];
+  const {mri}=TEMP,rows=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[7]!=null);
+  // the evening edition shows the realtime MRI (the session in progress, against the last close) once the edition is
+  // out for that session: paper.json preAt on the live day (US Eastern date)
+  const etDay=iso=>{const t=new Date(iso),f=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(t);return +f.replace(/-/g,"")};
+  const lr=mri.liveDay&&mri.daily.find(x=>x[0]===mri.liveDay&&x[7]!=null);
+  const live=!!(lr&&STORY&&STORY.preAt&&etDay(STORY.preAt)===mri.liveDay);
+  const r=live?lr:rows[rows.length-1],p=live?rows[rows.length-1]:rows[rows.length-2],day=r[0];
   const m=r[7],lv=level(m),dm=(m-p[7])*100,ymd=String(day).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3");
-  // the comment comes with the day's article (paper.json "mri"), only for the same session
-  const cm=STORY&&STORY.date===ymd&&SP(STORY,"mri");
-  const mh=STORY&&STORY.date===ymd&&SP(STORY,"mriHead"),[h1,h2]=Array.isArray(mh)&&mh.length?mh:mriHeadline(mri,r,p);
+  // the comment comes with the day's article (paper.json "mri"), only for the same session; the evening edition's
+  // realtime reading is "mriLive" (and "mriLiveHead")
+  let cm,mh,auto;
+  try{auto=mriHeadline(mri,r,p)}catch(e){auto=[`MRI ${(m*100).toFixed(2)}`,""]}
+  if(live){cm=SP(STORY,"mriLive");mh=SP(STORY,"mriLiveHead")}
+  else{cm=STORY&&STORY.date===ymd&&SP(STORY,"mri");mh=STORY&&STORY.date===ymd&&SP(STORY,"mriHead")}
+  const [h1,h2]=Array.isArray(mh)&&mh.length?mh:auto;
   el.hidden=false;
   const Y=Math.floor(day/1e4),Mo=Math.floor(day/100)%100,Dd=day%100;
-  el.innerHTML=`<div class="ph"><h2>${tx("MRI 確定値","MRI, confirmed")}</h2><span class="asof">${dayLab(Mo,Dd,wdOf(Y,Mo,Dd))} ${CLOSE()}</span></div>
+  const at=live&&mri.live&&mri.live.vix&&mri.live.vix.at?new Date(mri.live.vix.at):(live?new Date(mri.updatedAt):null);
+  const hm=at?(EN()?fmtJ(at)+" Japan time":"日本時間 "+fmtJ(at)):"";
+  el.innerHTML=live?`<div class="ph"><h2>${tx("MRI リアルタイム","MRI, realtime")}</h2><span class="asof">${hm}</span></div>`
+    :`<div class="ph"><h2>${tx("MRI 確定値","MRI, confirmed")}</h2><span class="asof">${dayLab(Mo,Dd,wdOf(Y,Mo,Dd))} ${CLOSE()}</span></div>`;
+  el.innerHTML+=`
     <div class="head mhd">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div>
     ${cm?`<div class="ccm"><p>${esc(cm)}</p></div>`:""}
     <div class="mrow"><div><div class="mrl">Market Risk Level</div><span class="lvl" style="background:var(${lv[2]});color:${lv[3]}">${lv[1]}</span></div>
-      <div class="mv"><div><span class="ml">MRI</span><span class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</span></div><div class="chg">${tx("前日比","vs prev.")} ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
+      <div class="mv"><div><span class="ml">MRI</span><span class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</span></div><div class="chg">${live?tx("前日確定比","vs last close"):tx("前日比","vs prev.")} ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
     <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
       <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
     <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>`;
@@ -784,7 +823,7 @@ function cmdtyComment(it,T){
 function renderCmdty(){
   // gold, crude, copper, bitcoin, the dollar index and the yen as tiles coloured by the day's move
   // (full colour at ±3%; ±1% for the dollar and the yen, which move less; ±5% for bitcoin)
-  const el=$("cmdty"),it={};(MK&&MK.items||[]).forEach(x=>it[x.k]=x);
+  const el=$("cmdty"),it={},eve=EVE()&&FUT.markets;(MK&&MK.items||[]).forEach(x=>it[x.k]=eve&&FUT.markets[x.k]?{...x,...FUT.markets[x.k]}:x);
   const T=[["gold","金",3],["wti","原油（WTI）",3],["copper","銅",3],["btc","ビットコイン",5],["dxy","ドルインデックス",1],["usdjpy","ドル円",1]].filter(([k])=>it[k]);
   if(!T.length){el.hidden=true;return}
   el.hidden=false;
@@ -793,7 +832,7 @@ function renderCmdty(){
   const say=([k,name])=>{const x=it[k],a=Math.abs(x.pct).toFixed(1);if(EN())return`${x.en} ${x.pct>=0?"up":"down"} ${a}%`;
     return k==="usdjpy"?`ドル円は${a}%の円${x.pct>=0?"安":"高"}`:k==="dxy"?`ドルは${a}%${x.pct>=0?"高":"安"}`:`${name.replace(/（.*）/,"")}は${a}%${x.pct>=0?"高":"安"}`};
   const ch2=mv.length?[say(mv[0]).replace("は","が"),mv.slice(1,3).map(say).join(EN()?", ":"、")]:["",""];
-  el.innerHTML=`<div class="ph"><h2>${tx("コモディティ・ドル","Commodities & dollar")}</h2><span class="asof">${ETLabel((it.gold||it[T[0][0]]).time)}</span></div>${mv.length?headHTML("cmdtyHead",ch2):""}${note("cmdty",cmdtyComment(it,T))}<div class="tiles ctiles">`+T.map(([k,name,full])=>{const x=it[k];if(EN())name=x.en;
+  el.innerHTML=`<div class="ph"><h2>${tx("コモディティ・ドル","Commodities & dollar")}</h2><span class="asof">${eve?preLab():ETLabel((it.gold||it[T[0][0]]).time)}</span></div>${mv.length?(eve?headHTML("cmdtyEveHead",ch2):headHTML("cmdtyHead",ch2)):""}${eve?`<div class="ccm"><p>${esc(SP(STORY,"cmdtyEve")||cmdtyComment(it,T))}</p></div>`:note("cmdty",cmdtyComment(it,T))}<div class="tiles ctiles">`+T.map(([k,name,full])=>{const x=it[k];if(EN())name=x.en;
     const f=v=>v.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec}),usd=x.unit==="ドル",yen=x.unit==="円";
     const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}${usd?"$":""}${f(Math.abs(x.chg))}${yen&&!EN()?"円":""}`;
     return `<div class="tile" style="background:${tileColor(x.pct,full)}"><div class="tn">${name}</div><div class="tv">${usd?'<small style="margin:0 1px 0 0">$</small>':""}${f(x.price)}${yen&&!EN()?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
@@ -944,6 +983,7 @@ function renderRates(){
   const rh=EN()?[`US 10Y ${a10<.01?"flat at":d10>0?(a10>=.1?"jumps to":"up to"):(a10>=.1?"drops to":"down to")} ${n["10Y"].toFixed(2)}%`,`${st[0]}, rate path: ${pth}`]
     :[`米10年債 ${n["10Y"].toFixed(2)}%${a10<.01?"で横ばい":`に${a10>=.1?"大幅":""}${d10>0?"上昇":"低下"}`}`,`${st[0]}、2年−3ヶ月は${pth}`];
   el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>${headHTML("ratesHead",rh)}${note("rates",autoRates())}
+    ${EVE()&&FUT.markets&&FUT.markets.us10y?`<div class="rcap"><span>${tx("寄り前の利回り","Pre-open yields")}</span><span class="asof">${preLab()}</span></div><div class="rsum rx2">${[[tx("2年","2Y"),"us2y"],[tx("10年","10Y"),"us10y"]].filter(([,k])=>FUT.markets[k]).map(([l,k])=>{const q=FUT.markets[k],dv=q.chg;return `<div>${l}<b>${q.price.toFixed(3)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(3)}</small>`}</div>`}).join("")}</div><div class="rcap"><span>${tx("前日の米国債（財務省）","Last session (Treasury)")}</span></div>`:""}
     <div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
     <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span><span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(n["2Y"]-n["3M"])}</b><em class="path" style="color:${pathOf(n["2Y"]-n["3M"])[1]}">${pathOf(n["2Y"]-n["3M"])[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
@@ -1417,8 +1457,9 @@ async function loadTemp(){
 async function loadPaper(){
   await Promise.all([
     fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
-    fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>STORY=j).catch(()=>STORY=null)]);
-  renderIdx();renderNews();renderMriTop();renderNums();renderEye();
+    fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>STORY=j).catch(()=>STORY=null),
+    fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null)]);
+  renderIdx();renderNews();renderMriTop();renderNums();renderEye();renderCmdty();renderRates();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
