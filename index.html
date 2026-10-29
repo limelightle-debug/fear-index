@@ -343,6 +343,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="rates" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
+    <section class="panel" id="gdp" hidden></section>
     <section class="panel" id="infl" hidden></section>
     <section class="panel" id="jobs" hidden></section>
     <section class="panel" id="liq" hidden></section>
@@ -367,7 +368,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v105";
+const APP_VER="fi-v106";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -939,13 +940,16 @@ function tsChart(S,W,o={}){
   S=S.filter(x=>x.p&&x.p.length>1);if(!S.length)return"";
   const H=o.H||140,ML=30,MR=44,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,dec=o.dec??1,u=o.unit||"";
   const ts=S.flatMap(x=>x.p.map(q=>q[0])),vs=S.flatMap(x=>x.p.map(q=>q[1])).concat(o.ref||[]).concat(o.bars||o.zero?[0]:[]);
-  const t0=Math.min(...ts),t1=Math.max(...ts);let lo=Math.min(...vs),hi=Math.max(...vs);
+  let t0=Math.min(...ts),t1=Math.max(...ts);
+  if(o.bars){const pad=(t1-t0)/Math.max(1,S[0].p.length-1)/2;t0-=pad;t1+=pad}  // room for the first and last bars
+  let lo=Math.min(...vs),hi=Math.max(...vs);
   const span=hi-lo||1,st=[.1,.2,.25,.5,1,2,2.5,5,10,20,25,50,100,200,250,500,1000].find(k=>span/k<=4)||1000;
   lo=Math.floor(lo/st)*st;hi=Math.ceil(hi/st)*st;if(hi===lo)hi=lo+st;
   const x=t=>ML+(t1===t0?PW:(t-t0)/(t1-t0)*PW),y=v=>MT+(hi-v)/(hi-lo)*PH,f=v=>(v<0?"−":o.sign&&v>0?"+":"")+Math.abs(v).toFixed(dec)+u;
   let g="";
   for(let v=lo;v<=hi+1e-9;v+=st)g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity="${Math.abs(v)<1e-9&&lo<0?.3:.06}"/><text x="${ML-5}" y="${y(v)+3}" text-anchor="end">${(Math.abs(v)<1e-9?0:+v.toFixed(st<1?(st<.25?1:2):0))}</text>`;
-  for(let yr=new Date(t0).getUTCFullYear()+1;Date.UTC(yr,0,1)<=t1;yr++){const xx=x(Date.UTC(yr,0,1));g+=`<line x1="${xx}" x2="${xx}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".08"/><text x="${xx}" y="${H-5}" text-anchor="middle">${yr}</text>`}
+  if(t1-t0<400*864e5){const d=new Date(t0);for(let m=d.getUTCMonth()+1,yy=d.getUTCFullYear();Date.UTC(yy,m,1)<=t1;m++){const tt=Date.UTC(yy,m,1),xx=x(tt),mo=new Date(tt).getUTCMonth();g+=`<line x1="${xx}" x2="${xx}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".08"/><text x="${xx}" y="${H-5}" text-anchor="middle">${tx(`${mo+1}月`,MON[mo])}</text>`}}
+  else for(let yr=new Date(t0).getUTCFullYear()+1;Date.UTC(yr,0,1)<=t1;yr++){const xx=x(Date.UTC(yr,0,1));g+=`<line x1="${xx}" x2="${xx}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".08"/><text x="${xx}" y="${H-5}" text-anchor="middle">${yr}</text>`}
   (o.ref||[]).forEach(v=>{g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity=".4" stroke-dasharray="3 3"/>`});
   if(o.gap){const A=S[o.gap[0]].p,Bm=new Map(S[o.gap[1]].p.map(q=>[q[0],q[1]])),Q=A.filter(q=>Bm.has(q[0])).map(q=>[q[0],q[1],Bm.get(q[0])]);
     for(let i=1;i<Q.length;i++){const [t0,a0,b0]=Q[i-1],[t1,a1,b1]=Q[i],d0=a0-b0,d1=a1-b1;
@@ -955,9 +959,9 @@ function tsChart(S,W,o={}){
       else poly([t0,t1],[a0,a1],[b0,b1],col(d0+d1))}}
   let p="";const ends=[];
   S.forEach((sr,k)=>{const P=sr.p;
-    if(o.bars&&k===0){const bw=Math.max(1.5,PW/P.length*.7);P.forEach(([t,v])=>{p+=`<rect x="${(x(t)-bw/2).toFixed(1)}" y="${Math.min(y(v),y(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(.5,Math.abs(y(v)-y(0))).toFixed(1)}" fill="${sr.c}" opacity="${v<0?.9:.75}"/>`})}
+    if(o.bars&&k===0){const bw=Math.max(1.5,PW/(P.length+(o.lastC?1:0))*.7);P.forEach(([t,v],i)=>{const lc=o.lastC&&i===P.length-1;p+=`<rect x="${(x(t)-bw/2).toFixed(1)}" y="${Math.min(y(v),y(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(.5,Math.abs(y(v)-y(0))).toFixed(1)}" fill="${lc?o.lastC:sr.c}" opacity="${lc?.95:v<0?.9:.75}"${lc?` stroke="${o.lastC}" stroke-dasharray="3 2" fill-opacity=".35"`:""}/>`})}
     else p+=`<path d="${P.map(([t,v],i)=>`${i?"L":"M"}${x(t).toFixed(1)},${y(v).toFixed(1)}`).join("")}" fill="none" stroke="${sr.c}" stroke-width="${sr.w||1.6}" stroke-linejoin="round"/>`;
-    const L=P[P.length-1];ends.push({y:y(L[1]),t:f(L[1]),c:sr.c})});
+    const L=P[P.length-1];ends.push({y:y(L[1]),t:f(L[1]),c:o.bars&&k===0&&o.lastC?o.lastC:sr.c})});
   ends.sort((a,b)=>a.y-b.y);for(let i=1;i<ends.length;i++)if(ends[i].y-ends[i-1].y<11)ends[i].y=ends[i-1].y+11;
   ends.forEach(e=>{p+=`<text x="${ML+PW+5}" y="${(e.y+3.5).toFixed(1)}" style="fill:${e.c};font-weight:700">${e.t}</text>`});
   return `<div class="rchart"><svg viewBox="0 0 ${W} ${H}" height="${H}">${g}${p}</svg></div>`;
@@ -990,6 +994,32 @@ function beveridge(U,V,W){
   Q.forEach((q,i)=>{if(q[0].endsWith("-01")&&i>n-62&&Math.hypot(x(q[1])-x(L0[1]),y(q[2])-y(L0[2]))>22)p+=`<circle cx="${x(q[1])}" cy="${y(q[2])}" r="2" fill="#7fa8ff"/><text x="${x(q[1])+4}" y="${y(q[2])-4}" style="fill:var(--ink2)">${q[0].slice(0,4)}</text>`});
   const L=Q[n-1];p+=`<circle cx="${x(L[1])}" cy="${y(L[2])}" r="4.5" fill="#fff" stroke="#7fa8ff" stroke-width="2"/><text x="${x(L[1])+7}" y="${y(L[2])+4}" style="fill:var(--ink);font-weight:700">${L[0].slice(0,4)}/${+L[0].slice(5)}</text>`;
   return `<div class="rchart"><svg viewBox="0 0 ${W} ${H}" height="${H}">${g}${p}</svg></div>`+(out.length?`<div class="lsrc" style="margin-top:2px">${tx(`失業率が8%を超えた月（${out[0][0].slice(0,4)}/${+out[0][0].slice(5)}〜${out[out.length-1][0].slice(0,4)}/${+out[out.length-1][0].slice(5)}）は枠外`,`Months with unemployment above 8% (${out[0][0]} to ${out[out.length-1][0]}) are off the chart`)}</div>`:"");
+}
+// growth: real GDP (quarterly, % at an annual rate) and the Atlanta Fed's GDPNow for the quarter being tracked
+const qLab=q=>{const [y,n]=q.split("-Q");return tx(`${["1〜3","4〜6","7〜9","10〜12"][n-1]}月期`,`Q${n} ${y}`)};
+function renderGDP(){
+  const el=$("gdp"),G=MAC&&MAC.gdp,N=MAC&&MAC.gdpnow;
+  if(!G||!G.length){el.hidden=true;return}
+  const en=EN(),W=Math.max(260,el.clientWidth-28),L=G[G.length-1],ev=N&&N.evo&&N.evo.length?N.evo:null,nl=ev?ev[ev.length-1]:null;
+  const qq=k=>k.replace(/-(\d)$/,"-Q$1");  // "2026-Q2" from BEA's "2026-Q2" (already) or "2026-2"
+  const lastQ=qq(L[0]),nq=N&&N.quarter,ahead=nq&&nq>lastQ;
+  const sg=v=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(1)}%`;
+  const h1=ahead&&nl?(en?`GDPNow ${qLab(nq)} ${sg(nl[1])}`:`GDPNow ${qLab(nq)} ${sg(nl[1])}`):(en?`GDP ${qLab(lastQ)} ${sg(L[1])}`:`GDP ${qLab(lastQ)} ${sg(L[1])}`);
+  const h2=ahead?(en?`GDP ${qLab(lastQ)} ${sg(L[1])} (annual rate)`:`${qLab(lastQ)}のGDPは${sg(L[1])}（年率）`):"";
+  const cut=String(new Date().getUTCFullYear()-4)+"-Q1";
+  const bars=G.map(([k,v])=>[qq(k),v]).filter(q=>q[0]>=cut).map(([k,v])=>{const [y,n]=k.split("-Q");return [Date.UTC(+y,n*3-2,15),v]});
+  // the nowcast as a lighter bar in the next quarter's place
+  let chart=tsChart([{c:"#7fa8ff",p:bars}],W,{H:140,bars:true,sign:true,unit:"%",zero:true});
+  if(ahead&&nl){const [y,n]=nq.split("-Q");chart=tsChart([{c:"#7fa8ff",p:bars.concat([[Date.UTC(+y,n*3-2,15),nl[1]]])}],W,{H:140,bars:true,sign:true,unit:"%",zero:true,lastC:"#ffb547"})}
+  let evo="";
+  if(ahead&&ev&&ev.length>1)evo=`<div class="rcap"><span>${tx(`GDPNow ${qLab(nq)}の推移`,`GDPNow for ${qLab(nq)}, each update`)}</span></div>`+tsChart([{c:"#ffb547",p:ev.map(q=>[dms(q[0]),q[1]])}],W,{H:120,unit:"%",zero:true,days:true})
+    +`<div class="lsrc" style="margin-top:2px">${tx("最新の更新","Latest update")} ${+nl[0].slice(5,7)}/${+nl[0].slice(8)}：${esc(nl[2]).replace(/\n/g," ")}</div>`;
+  const T=N&&N.track&&N.track.length?N.track.slice(-6).reverse():[];
+  const tr=T.length?`<div class="rcap"><span>${tx("GDPNow の実績","GDPNow track record")}</span></div><div class="mtab" style="margin-top:2px"><div class="lq hd"><span></span><span>${tx("直前の予測","Last nowcast")}</span><span>${tx("速報値","Advance")}</span></div>${T.map(([q,a,b])=>`<div class="lq"><span class="k">${qLab(q)}<small>${q.slice(0,4)}</small></span><span class="v">${sg(a)}</span><span class="c">${sg(b)}</span></div>`).join("")}</div>`:"";
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>${tx("景気","Growth")}</h2><span class="asof">${tx("実質GDP 前期比年率","Real GDP, annual rate")}</span></div>${headHTML("gdpHead",[h1,h2])}
+    <div class="rcap"><span>${tx("実質GDP（四半期）","Real GDP (quarterly)")}</span></div>${legend([[tx("GDP","GDP"),"#7fa8ff"]].concat(ahead?[["GDPNow","#ffb547"]]:[]))}${chart}${evo}${tr}
+    <div class="lsrc">${tx("出典","Sources")} BEA / ${tx("アトランタ連銀","Atlanta Fed")} GDPNow</div>`;
 }
 function renderInfl(){
   const el=$("infl"),B=MAC&&MAC.bls,P=MAC&&MAC.pce||{};
@@ -1128,7 +1158,7 @@ async function loadMarkets(){
     fetch(`data/oas.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>OASD=j).catch(()=>OASD=null),
     fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
     fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null)]);
-  renderNums();renderRates();renderCmdty();renderLiq();renderInfl();renderJobs();
+  renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
