@@ -133,7 +133,8 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .sigline{font-size:12px;color:var(--ink2);margin-top:8px}
 .sigline em{font-style:normal;font-weight:800;font-size:10px;color:#fff;background:var(--sell);border-radius:4px;padding:1px 5px;margin-right:5px}
 /* the paper's first article: the day's confirmed MRI as in the MRI app, and the comment on it */
-.mtop .mt{font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1.15;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.mtop .mt{display:flex;align-items:baseline;gap:10px;font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1.15;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.mtop .mts{font-size:12.5px;font-weight:500;letter-spacing:0;color:var(--muted)}
 .mtop .mrow{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:12px}
 .mtop .mrl{font-size:15px;font-weight:600;color:var(--ink2);letter-spacing:.03em;white-space:nowrap}
 .mtop .mrow .lvl{margin-top:8px;font-size:18px;padding:5px 15px}
@@ -308,7 +309,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v57";
+const APP_VER="fi-v58";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -561,7 +562,8 @@ function renderMriTop(){
   // the comment comes with the day's article (paper.json "mri"), only for the same session
   const cm=STORY&&STORY.date===ymd&&STORY.mri;
   el.hidden=false;
-  el.innerHTML=`<div class="mt">${mdN(day)} 確定値</div>
+  const wd="日月火水木金土"[new Date(Date.UTC(Math.floor(day/1e4),Math.floor(day/100)%100-1,day%100)).getUTCDay()];
+  el.innerHTML=`<div class="mt">確定値<span class="mts">${mdN(day)}（${wd}）米国市場の引け</span></div>
     <div class="mrow"><div><div class="mrl">Market Risk Level</div><span class="lvl" style="background:var(${lv[2]});color:${lv[3]}">${lv[1]}</span></div>
       <div class="mv"><div><span class="ml">MRI</span><span class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</span></div><div class="chg">前日比 ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
     <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
