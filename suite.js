@@ -15,7 +15,11 @@
     const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
     (o.hide||[]).forEach(sel=>document.querySelectorAll(sel).forEach(el=>el.setAttribute("data-suite-hide","")));
     tabs.classList.add("suite5");
-    [["apps","アプリ"],["books","書籍"]].forEach(([k,l])=>{const b=document.createElement("button");b.type="button";b.dataset.suite=k;b.textContent=l;b.setAttribute("aria-pressed","false");tabs.appendChild(b)});
+    // labels follow the app's language (each app sets <html lang> when JP / EN is switched)
+    const L={apps:["アプリ","Apps"],books:["書籍","Books"]},en=()=>document.documentElement.lang==="en";
+    ["apps","books"].forEach(k=>{const b=document.createElement("button");b.type="button";b.dataset.suite=k;b.setAttribute("aria-pressed","false");tabs.appendChild(b)});
+    const label=()=>tabs.querySelectorAll("[data-suite]").forEach(b=>b.textContent=L[b.dataset.suite][en()?1:0]);label();
+    new MutationObserver(label).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
     const box=document.createElement("div");box.className="suite-box";box.hidden=true;
     const at=document.querySelector(o.after||"#app");(at&&at.parentNode?at:tabs).parentNode.insertBefore(box,(at&&at.parentNode?at:tabs).nextSibling);
     const frames={};
