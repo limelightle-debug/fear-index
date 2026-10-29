@@ -397,7 +397,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v126";
+const APP_VER="fi-v127";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -980,9 +980,13 @@ function renderRates(){
   el.hidden=false;
   const W=pw(el);
   const d10=CV.prev&&CV.prev.y["10Y"]!=null?n["10Y"]-CV.prev.y["10Y"]:0,a10=Math.abs(d10),pth=pathOf(n["2Y"]-n["3M"])[0];
-  const rh=EN()?[`US 10Y ${a10<.01?"flat at":d10>0?(a10>=.1?"jumps to":"up to"):(a10>=.1?"drops to":"down to")} ${n["10Y"].toFixed(2)}%`,`${st[0]}, rate path: ${pth}`]
+  let rh=EN()?[`US 10Y ${a10<.01?"flat at":d10>0?(a10>=.1?"jumps to":"up to"):(a10>=.1?"drops to":"down to")} ${n["10Y"].toFixed(2)}%`,`${st[0]}, rate path: ${pth}`]
     :[`米10年債 ${n["10Y"].toFixed(2)}%${a10<.01?"で横ばい":`に${a10>=.1?"大幅":""}${d10>0?"上昇":"低下"}`}`,`${st[0]}、2年−3ヶ月は${pth}`];
-  el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>${headHTML("ratesHead",rh)}${note("rates",autoRates())}
+  // the evening edition: the headline from the pre-open 10-year yield (paper.json "ratesEveHead" overrides it)
+  const fq=EVE()&&FUT.markets&&FUT.markets.us10y;
+  if(fq){const v=fq.price,dv=fq.chg||0,a=Math.abs(dv);rh=EN()?[`US 10Y ${a<.01?"flat at":dv>0?"up to":"down to"} ${v.toFixed(2)}% pre-open`,`${st[0]}, rate path: ${pth}`]
+    :[`米10年債 寄り前は${v.toFixed(2)}%${a<.01?"で横ばい":`に${a>=.1?"大幅":""}${dv>0?"上昇":"低下"}`}`,`${st[0]}、2年−3ヶ月は${pth}`]}
+  el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>${headHTML(fq?"ratesEveHead":"ratesHead",rh)}${note("rates",autoRates())}
     ${EVE()&&FUT.markets&&FUT.markets.us10y?`<div class="rcap"><span>${tx("寄り前の利回り","Pre-open yields")}</span><span class="asof">${preLab()}</span></div><div class="rsum rx2">${[[tx("2年","2Y"),"us2y"],[tx("10年","10Y"),"us10y"]].filter(([,k])=>FUT.markets[k]).map(([l,k])=>{const q=FUT.markets[k],dv=q.chg;return `<div>${l}<b>${q.price.toFixed(3)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(3)}</small>`}</div>`}).join("")}</div><div class="rcap"><span>${tx("前日の米国債（財務省）","Last session (Treasury)")}</span></div>`:""}
     <div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
     <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span><span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(n["2Y"]-n["3M"])}</b><em class="path" style="color:${pathOf(n["2Y"]-n["3M"])[1]}">${pathOf(n["2Y"]-n["3M"])[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
