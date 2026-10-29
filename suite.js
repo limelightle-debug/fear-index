@@ -6,7 +6,8 @@
   const BASE=new URL(".",document.currentScript.src).href;   // .../fear-index/
   const css=`.suite-frame{display:block;width:100%;border:0;background:transparent;margin-top:10px}
     html.suite-on [data-suite-hide]{display:none!important}
-    #tabs.suite5 button{font-size:12.5px;padding-left:2px;padding-right:2px;letter-spacing:0}`;
+    #tabs.suite5{flex:1 1 100%;width:100%}
+    #tabs.suite5 button{flex:1 1 0;min-width:0;font-size:12.5px;padding-left:2px;padding-right:2px;letter-spacing:0}`;
   function mount(o){
     // inside the institute's own frame (MRI tab) the institute already has these tabs
     if(/[?&]embed\b/.test(location.search))return;
