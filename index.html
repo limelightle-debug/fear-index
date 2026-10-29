@@ -403,7 +403,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v132";
+const APP_VER="fi-v133";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -671,16 +671,14 @@ function renderIdxEve(el,st,asof){
   const mood=EN()?(up===ok.length?"all higher":dn===ok.length?"all lower":up>dn?"mostly higher":dn>up?"mostly lower":"mixed"):(up===ok.length?"全面高":dn===ok.length?"全面安":up>dn?"総じて高い":dn>up?"総じて安い":"高安まちまち");
   const auto=EN()?[`US futures ${mood}`,lead?`${lead.en} ${lead.pct>=0?"up":"down"} ${Math.abs(lead.pct).toFixed(1)}%`:""]
     :[`米株先物 ${mood}`,lead?`${lead.ja.replace(/（.*）/,"")}が${Math.abs(lead.pct).toFixed(1)}%${lead.pct>=0?"高":"安"}`:""];
-  const fh=SP(STORY,"futHead"),[h1,h2]=Array.isArray(fh)&&fh.length?fh:auto,fc=SP(STORY,"fut");
+  // the evening article (paper.json "bodyEve"): only what the previous session left that tonight needs, at the start,
+  // then tonight's releases, earnings and futures; "fut" (a note on the futures alone) when there is none
+  const fh=SP(STORY,"futHead"),[h1,h2]=Array.isArray(fh)&&fh.length?fh:auto,fc=SP(STORY,"bodyEve")||SP(STORY,"fut");
   const tile=x=>{const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2}),nm=EN()?x.en:x.ja;
     return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${nm}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
       :`<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${nm}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`};
-  // the morning article, rewritten for the evening (paper.json "bodyEve": past tense for what has come out, tonight's
-  // schedule), else as it was written
-  const body=st&&(SP(STORY,"bodyEve")||SP(st,"body")||(st.sections||[]).map(x=>x[1]).join(""));
   el.innerHTML=`<div class="ph"><h2>${tx("株価指数先物","Index futures")}</h2><span class="asof">${preLab()}</span></div><div class="head">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div><div style="height:8px"></div>${fc?`<div class="ccm"><p>${esc(fc)}</p></div>`:""}<div class="tiles">${F.map(tile).join("")}</div>
     <div class="rxn">${tx("前日の清算値からの騰落。半導体は先物がないため、半導体ETF（SOXX）の寄り前の値。","Change from the previous settlement. Semiconductors: no future trades, so the SOXX ETF's pre-market quote.")}</div>`
-    +(body?`<div class="rcap" style="margin-top:14px"><span>${tx("前日の米国市場","The last US session")}</span><span class="asof">${asof}</span></div><div class="ccm"><p>${esc(body)}</p></div>`:"")
     +(st&&st.sources&&st.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div></div>`:"");
 }
 // page 2: the scene of the day, judged as in the Mind app, and the three readings behind it
