@@ -368,7 +368,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v108";
+const APP_VER="fi-v109";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -1058,6 +1058,8 @@ function renderJobs(){
   const prevU=B.unrate[B.unrate.length-2],prevJ=(B.jolts||[])[B.jolts.length-2];
   let rows=r(tx("雇用者数","Nonfarm payrolls"),tx(`${moLab(lp[0])} 非農業部門・前月比`,`${moLab(lp[0])}, change`),man(lp[1]),"")
     +r(tx("失業率","Unemployment rate"),moLab(ur[0]),ur[1].toFixed(1)+"%",d(ur[1],prevU&&prevU[1],1,"pt"));
+  if(B.ahe&&B.ahe.length>13){const a=B.ahe,L2=a[a.length-1],mm=(L2[1]/a[a.length-2][1]-1)*100,yy=(lastOf(yoyOf(a))||[])[1];
+    rows+=r(tx("平均時給","Avg. hourly earnings"),tx(`${moLab(L2[0])} 前年比 ${pct1(yy)}`,`${moLab(L2[0])}, ${pct1(yy)} on the year`),"$"+L2[1].toFixed(2),pct1(mm))}
   if(jo)rows+=r(tx("求人率","Job openings rate"),tx(`${moLab(jo[0])} JOLTS`,`${moLab(jo[0])}, JOLTS`),jo[1].toFixed(1)+"%",d(jo[1],prevJ&&prevJ[1],1,"pt"));
   if(cl){const md=`${+cl[0].slice(5,7)}/${+cl[0].slice(8)}`;rows+=r(tx("新規申請","Initial claims"),tx(`${md} までの週`,`week to ${md}`),kk(cl[1]),clp?d(cl[1]/1e3,clp[1]/1e3,0,en?"K":"千"):"")}
   if(ccl){const md=`${+ccl[0].slice(5,7)}/${+ccl[0].slice(8)}`;rows+=r(tx("継続申請","Continuing claims"),tx(`${md} までの週`,`week to ${md}`),en?`${(ccl[2]/1e6).toFixed(2)}M`:`${(ccl[2]/1e4).toFixed(0)}万件`,(()=>{const i=CL.indexOf(ccl),pv=CL.slice(0,i).reverse().find(q=>q[2]);return pv?d(ccl[2]/1e4,pv[2]/1e4,1,en?"":"万"):""})())}
@@ -1076,6 +1078,10 @@ function renderJobs(){
     ${tsChart([{c:"#7fa8ff",p:toT(pay.filter(q=>q[0]>=cut))}],W,{H:130,dec:0,bars:true,sign:true})}
     <div class="rcap"><span>${tx("求人率と失業率","Job openings and unemployment")}</span></div>${legend([[tx("求人率","Openings rate"),"#7fd6a4"],[tx("失業率","Unemployment"),"#ff8a7a"]])}
     ${tsChart([{c:"#7fd6a4",p:toT((B.jolts||[]).filter(q=>q[0]>=cut))},{c:"#ff8a7a",p:toT(B.unrate.filter(q=>q[0]>=cut))}],W,{H:130,unit:"%",gap:[0,1]})}${vu}
+    ${B.ahe&&B.ahe.length>24?(()=>{const wy=yoyOf(B.ahe).filter(q=>q[0]>=cut),cy=yoyOf(B.cpi).filter(q=>q[0]>=cut),lw=lastOf(wy),lc=cy.find(q=>q[0]===(lw&&lw[0]));
+      const real=lw&&lc?lw[1]-lc[1]:null;
+      return `<div class="rcap"><span>${tx("平均時給と物価（前年比）","Hourly earnings and prices (on the year)")}</span></div>${legend([[tx("平均時給","Earnings"),"#7fd6a4"],["CPI","#ff8a7a"]])}`+tsChart([{c:"#7fd6a4",p:toT(wy)},{c:"#ff8a7a",p:toT(cy)}],W,{H:130,unit:"%",gap:[0,1]})
+        +(real!=null?`<div class="rstate"><span class="pill" style="color:${real>=0?"#5fd08e":"#ff6b6b"};border-color:${real>=0?"#5fd08e55":"#ff6b6b55"};background:${real>=0?"#5fd08e14":"#ff6b6b14"}"><i></i>${real>=0?tx("賃金が物価を上回る","Wages ahead of prices"):tx("物価が賃金を上回る","Prices ahead of wages")}</span><span class="sp">${moLab(lw[0])} ${tx("実質","real")}<b>${real>0?"+":real<0?"−":"±"}${Math.abs(real).toFixed(1)}pt</b></span></div>`:"")})():""}
     ${B.jolts&&B.jolts.length>12?`<div class="rcap"><span>${tx(`ベヴァリッジ曲線（${B.jolts[0][0].slice(0,4)}年から）`,`Beveridge curve (since ${B.jolts[0][0].slice(0,4)})`)}</span></div>${beveridge(B.unrate,B.jolts,W)}`:""}
     ${cw.length>1?`<div class="rcap"><span>${tx("新規申請（千件、週次）","Initial claims (thousands, weekly)")}</span></div>${tsChart([{c:"#ffb547",p:cw.map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:120,dec:0})}`:""}
     ${cw.filter(q=>q[2]).length>1?`<div class="rcap"><span>${tx("継続申請（万件、週次）","Continuing claims (millions, weekly)")}</span></div>${tsChart([{c:"#e58cff",p:cw.filter(q=>q[2]).map(q=>[dms(q[0]),en?q[2]/1e6:q[2]/1e4]),w:1.4}],W,{H:120,dec:en?2:0})}`:""}
