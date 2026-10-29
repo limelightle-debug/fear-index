@@ -280,10 +280,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .book b{display:block;font-size:15px}
 .book span{display:block;font-size:12px;color:var(--accent)}
 .foot{margin-top:18px;text-align:center;font-size:11px;color:var(--muted)}
-/* MRI tab: the MRI app in a frame, edge to edge under the tabs, scrolling inside */
-#mriframe{display:block;border:0;background:var(--bg);margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));width:calc(100% + max(16px,env(safe-area-inset-left,0px)) + max(16px,env(safe-area-inset-right,0px)));height:70vh}
-html.mritab,html.mritab body{overflow:hidden;overscroll-behavior:none}
-html.mritab .wrap{padding-bottom:0}html.mritab .foot,html.mritab .ifoot{display:none}
+
 /* the last panel: why each panel is in the paper and what to look at, in the paper's order */
 .guide dl{margin:0}.guide dt{font-size:12px;font-weight:700;color:var(--ink);letter-spacing:.04em;margin-top:12px}.guide dt:first-child{margin-top:2px}
 .guide dd{margin:3px 0 0;font-size:13.5px;line-height:1.64;color:var(--ink2)}
@@ -319,7 +316,6 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <div class="langseg" id="lang" role="group" aria-label="Language"><button type="button" data-lang="ja">JP</button><button type="button" data-lang="en">EN</button></div>
     <div class="seg" id="tabs" role="group" aria-label="表示">
       <button type="button" data-tab="paper">恐怖新聞</button>
-      <button type="button" data-tab="mri">MRI</button>
       <button type="button" data-tab="apps">アプリ</button>
       <button type="button" data-tab="books">書籍</button>
     </div>
@@ -336,8 +332,6 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="nums" hidden></section>
     <section class="panel guide" id="guide"></section>
   </div>
-
-  <div id="t-mri" hidden><iframe id="mriframe" title="Market Risk Index"></iframe></div>
 
   <div id="t-apps" hidden>
     <section class="panel" id="apps"></section>
@@ -356,7 +350,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v92";
+const APP_VER="fi-v93";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -382,7 +376,8 @@ const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vi
   ["帳簿と物差し","https://amzn.asia/d/03aL6HY1","icons/book-chobo.jpg","根",[25.5,73,21,6.5]],["失敗の魔術師","https://amzn.asia/d/0hWKU73R","icons/book-shippai.jpg","根",[56,73,21,6.5]],
   ["兵法に学べ","https://amzn.asia/d/02BQOi5d","icons/book-heiho.jpg","根",[25.5,81.5,18,6.5]],["相場のアノマリーを斬る","https://amzn.asia/d/0boQWl0D","icons/book-anomaly.jpg","根",[49,81.5,36,6.5]]];
 const store={get:(k,d)=>{try{return localStorage.getItem("fi."+k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem("fi."+k,v)}catch(e){}}};
-const state={tab:EMBED||store.get("tab","apps")};
+// the MRI tab is gone (MRI is its own app, from the アプリ tab): a stored "mri" opens the paper
+const state={tab:EMBED||store.get("tab","paper")};if(!["paper","apps","books"].includes(state.tab))state.tab="paper";
 const DATA={};
 
 const pc=(v,d=1)=>`${v>=0?"+":"−"}${Math.abs(v*100).toFixed(d)}%`;
@@ -528,18 +523,13 @@ function renderBooks(){
     <div class="bmap">${BOOKS.filter(x=>!x[5]).map(bookRow).join("")}</div>`;
   $("books-en").innerHTML=`<div class="ph"><h2>${tx("英語版","English edition")}</h2><span class="asof">${tx("English edition","")}</span></div><div class="bmap solo">${BOOKS.filter(x=>x[5]).map(bookRow).join("")}</div>`;
 }
-const TABL={paper:["恐怖新聞","Fear Paper"],mri:["MRI","MRI"],apps:["アプリ","Apps"],books:["書籍","Books"]};
+const TABL={paper:["恐怖新聞","Fear Paper"],apps:["アプリ","Apps"],books:["書籍","Books"]};
 function renderTabs(){
   document.querySelectorAll("#tabs button").forEach(b=>{b.textContent=TABL[b.dataset.tab][EN()?1:0];b.setAttribute("aria-pressed",b.dataset.tab===state.tab)});
   document.querySelectorAll("#lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===LANG));
   $("ttl").textContent=tx("恐怖指数研究所","Fear Index Research Institute");
-  ["paper","mri","apps","books"].forEach(k=>$("t-"+k).hidden=state.tab!==k);
-  // the MRI app loads the first time its tab opens, then stays, so switching back is instant
-  const on=state.tab==="mri",f=$("mriframe");document.documentElement.classList.toggle("mritab",on);
-  if(on){if(!f.src)f.src="../mri-app/?embed=1";fitMri()}
+  ["paper","apps","books"].forEach(k=>$("t-"+k).hidden=state.tab!==k);
 }
-function fitMri(){const f=$("mriframe");if(state.tab!=="mri")return;f.style.height=Math.max(300,window.innerHeight-document.querySelector(".top").getBoundingClientRect().bottom)+"px"}
-window.addEventListener("resize",fitMri);
 function renderEd(){
   const d=new Date();
   $("ed").innerHTML=EN()?d.toLocaleDateString("en-US",{weekday:"short",year:"numeric",month:"short",day:"numeric"}):`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD(d.getDay())}）`;
@@ -953,7 +943,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(
 document.addEventListener("click",e=>{const b=e.target.closest("[data-lang]");if(!b||b.dataset.lang===LANG)return;
   LANG=b.dataset.lang;document.documentElement.lang=LANG;if(!EMBED)try{localStorage.setItem("lang",LANG)}catch(err){}
   renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderIdx();renderNews();renderMriTop();renderRates();renderCmdty();renderNums();renderKokoro();
-  const f=$("mriframe");if(f.src)f.src=f.src});
+});
 renderEd();renderTabs();renderApps();renderBooks();renderGuide();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
