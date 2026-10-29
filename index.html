@@ -319,7 +319,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v75";
+const APP_VER="fi-v76";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -672,17 +672,17 @@ function curveChart(c,W){
 }
 // the period of the rates history charts (spread, real yield, OAS): one switch for all three, kept per viewer
 const RP=[["1Y","1年",1],["3Y","3年",3],["5Y","5年",5]];
-let RPK=store.get("rp","5Y");if(!RP.some(r=>r[0]===RPK))RPK="5Y";
-// the switch sits over each history chart; all of them move together
-const rpSeg=()=>`<div class="seg rpseg">${RP.map(([k,l])=>`<button type="button" data-rp="${k}" aria-pressed="${k===RPK}">${l}</button>`).join("")}</div>`;
-const rCut=S=>{if(!S||!S.length)return S;const y=RP.find(r=>r[0]===RPK)[2],L=S[S.length-1][0],c=String(+L.slice(0,4)-y)+L.slice(4);return S.filter(q=>q[0]>=c)};
+// each chart keeps its own period (sp: spread, rl: real yield, hy: high yield OAS)
+const RPK={};["sp","rl","hy"].forEach(c=>{const v=store.get("rp."+c,"5Y");RPK[c]=RP.some(r=>r[0]===v)?v:"5Y"});
+const rpSeg=c=>`<div class="seg rpseg">${RP.map(([k,l])=>`<button type="button" data-rp="${c}:${k}" aria-pressed="${k===RPK[c]}">${l}</button>`).join("")}</div>`;
+const rCut=(S,c)=>{if(!S||!S.length)return S;const y=RP.find(r=>r[0]===RPK[c])[2],L=S[S.length-1][0],from=String(+L.slice(0,4)-y)+L.slice(4);return S.filter(q=>q[0]>=from)};
 // ticks along the bottom: years, or for a year or less the quarters (1月 shown as the year)
 const rTicks=S=>{const out=[],short=S.length&&(+S[S.length-1][0].slice(0,4)*12+ +S[S.length-1][0].slice(4,6))-(+S[0][0].slice(0,4)*12+ +S[0][0].slice(4,6))<=13;
   S.forEach((q,i)=>{if(!i)return;const p=S[i-1][0];
     if(short){const m=+q[0].slice(4,6);if(m!==+p.slice(4,6)&&m%3===1)out.push([i,m===1?q[0].slice(0,4):m+"月"])}
     else if(q[0].slice(0,4)!==p.slice(0,4))out.push([i,q[0].slice(0,4)])});return out};
 function spreadChart(S,W){
-  S=rCut(S);
+  S=rCut(S,"sp");
   const H=128,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.flatMap(q=>[q[1],q[2]]).filter(v=>v!=null);
   const lo=Math.min(-.5,Math.floor(Math.min(...vs)*2)/2),hi=Math.max(.5,Math.ceil(Math.max(...vs)*2)/2);
   const x=i=>ML+i/(n-1)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH,z=y(0);
@@ -706,8 +706,8 @@ function spreadChart(S,W){
 // later), the estimate from that session's bond ETF moves (markets.json, as in the MRI app) stands in, marked 推定値,
 // until the official one replaces it. Durations are approximate: TIP 6.6, IEF 7.0, HYG 3.1, LQD 8.2.
 // one series day by day ([yyyymmdd, value]) as a line with a soft fill, years along the bottom, the last value at the end
-function histChart(S,W,col,id){
-  S=rCut(S);
+function histChart(S,W,col,id,c){
+  S=rCut(S,c);
   const H=118,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.map(q=>q[1]);
   const lo=Math.floor(Math.min(...vs)*2)/2,hi=Math.ceil(Math.max(...vs)*2)/2||lo+.5;
   const x=i=>ML+i/(n-1)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH;
@@ -735,8 +735,8 @@ function ratesMore(){
   return `<div class="rcap"><span>10年実質金利・インフレ期待・OAS</span></div><div class="rsum rx2">
     ${I?row("実質金利",I.real10,oi?dR:null,I.real10_d1)+row("インフレ期待",I.be10,oi&&dN!=null?dN-dR:null,I.be10_d1):""}${O?row("OAS HY",O.hy,oo?cr("hyg"):null,O.hy_d1)+row("OAS IG",O.ig,oo?cr("lqd"):null,O.ig_d1):""}</div>
     <div class="rxn">HY＝ハイイールド債、IG＝投資適格債。矢印は前日比。</div>
-    ${I&&I.hist&&I.hist.length>1?`${rpSeg()}<div class="rcap"><span>10年実質金利の推移</span></div><div class="rchart">${histChart(I.hist,RW,RC.now,"rlf")}</div>`:""}
-    ${O&&O.hist&&O.hist.length>1?`${rpSeg()}<div class="rcap"><span>OAS ハイイールドの推移</span></div><div class="rchart">${histChart(O.hist,RW,RC.now,"hyf")}</div>`:""}`;
+    ${I&&I.hist&&I.hist.length>1?`${rpSeg("rl")}<div class="rcap"><span>10年実質金利の推移</span></div><div class="rchart">${histChart(I.hist,RW,RC.now,"rlf","rl")}</div>`:""}
+    ${O&&O.hist&&O.hist.length>1?`${rpSeg("hy")}<div class="rcap"><span>OAS ハイイールドの推移</span></div><div class="rchart">${histChart(O.hist,RW,RC.now,"hyf","hy")}</div>`:""}`;
 }
 function renderRates(){
   const el=$("rates");
@@ -757,7 +757,7 @@ function renderRates(){
     <div class="rsum">${[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
     <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">10年−2年<b>${sg(s2)}</b></span><span class="sp">10年−3ヶ月<b>${sg(s3)}</b></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>イールドカーブ</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>最新</span><span><i style="border-color:${RC.m3}"></i>3ヶ月前</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>6ヶ月前</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
-    ${rpSeg()}
+    ${rpSeg("sp")}
     <div class="rcap"><span>長短金利差の推移</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>10年−2年</span><span><i style="border-color:${RC.m3}"></i>10年−3ヶ月</span></span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}`;
 }
 function renderNews(){
@@ -853,7 +853,7 @@ async function load(){
   if(!Object.keys(DATA).length)$("empty").textContent="データを読み込めませんでした";
   renderPaper();
 }
-document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){RPK=r.dataset.rp;store.set("rp",RPK);renderRates()}});
+document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);renderRates()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
 renderEd();renderTabs();renderApps();renderBooks();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
