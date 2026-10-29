@@ -314,7 +314,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v68";
+const APP_VER="fi-v69";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -636,7 +636,7 @@ function renderFX(){
 let CV=null;
 const RC={now:"#f2f2f7",m3:"#7fa8ff",m6:"#8a8aa6"};
 function curveChart(c,W){
-  const H=170,ML=28,MR=40,MT=10,MB=20,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors.filter(([k])=>k!=="20Y");  // no 20Y on the curve
+  const H=170,ML=28,MR=40,MT=10,MB=20,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors.filter(([k])=>k!=="20Y"&&k!=="5Y");  // no 5Y or 20Y on the curve
   const xs=v=>Math.sqrt(v),x0=xs(T[0][1]),x1=xs(T[T.length-1][1]),x=v=>ML+(xs(v)-x0)/(x1-x0)*PW;
   const all=[c.now,c.m3,c.m6].flatMap(q=>T.map(([k])=>q.y[k]).filter(v=>v!=null));
   const lo=Math.floor(Math.min(...all)*2)/2,hi=Math.ceil(Math.max(...all)*2)/2,y=v=>MT+(hi-v)/(hi-lo)*PH;
