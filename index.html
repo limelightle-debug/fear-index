@@ -403,7 +403,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v136";
+const APP_VER="fi-v138";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -745,13 +745,13 @@ function mriHeadline(mri,r,p){
 }
 // the realtime MRI's comment from the numbers: the value and time, the move from the last close, the score that moved
 // most, the band, and the distance to SELL 80 and BUY 8 (before 9:30 ET the reading includes pre-open estimates)
-function autoMriLive(r,p,at){
+function autoMriLive(r,p,at,frozen){
   const m=r[7]*100,dm=m-p[7]*100,lv=level(r[7]),same=level(p[7])===lv,en=EN();
   const C=[["VIX",r[4]-p[4]],["SKEW",r[5]-p[5]],["CAPE",r[6]-p[6]]].sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0],cv=Math.abs(C[1]*100).toFixed(1);
   let pre=true;if(at){const f=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"numeric",hourCycle:"h23"}).formatToParts(at),h=+f.find(x=>x.type==="hour").value,mi=+f.find(x=>x.type==="minute").value;pre=h*60+mi<570||h>=16}
   const t=at?fmtJ(at):"",a=Math.abs(dm).toFixed(2),toS=(80-m).toFixed(2),toB=(m-8).toFixed(2);
-  if(en)return `${pre?"In realtime, including pre-open estimates":"In realtime, during the session"}, the MRI was ${m.toFixed(2)} at ${t} Japan time, ${dm>=0?"up":"down"} ${a}pt from the last close of ${(p[7]*100).toFixed(2)}. The ${C[0]} score ${C[1]>=0?"rose":"fell"} ${cv}pt, the largest move, and the MRI is ${same?"still in":"now in"} ${lv[1]}. `+(m>=80?`It is above SELL 80 by ${(m-80).toFixed(2)}pt.`:m<=8?`It is below BUY 8 by ${(8-m).toFixed(2)}pt.`:`SELL 80 is ${toS}pt away, BUY 8 ${toB}pt.`);
-  return `${pre?"寄り前の推定を含むリアルタイムで":"取引中のリアルタイムで"}、MRIは日本時間${t.replace(":","時")}分に${m.toFixed(2)}と、前日確定の${(p[7]*100).toFixed(2)}から${a}pt${dm>=0?"上がった":"下がった"}。いちばん動いたのは${C[0]}スコアで${cv}pt${C[1]>=0?"上げ":"下げ"}、${lv[1]}圏${same?"にとどまる":"に入った"}。`+(m>=80?`SELLの80を${(m-80).toFixed(2)}pt上回っている。`:m<=8?`BUYの8を${(8-m).toFixed(2)}pt下回っている。`:`SELLの80まではあと${toS}pt、BUYの8からは${toB}pt離れている。`);
+  if(en)return `${frozen?"On pre-open estimates":pre?"In realtime, including pre-open estimates":"In realtime, during the session"}, the MRI was ${m.toFixed(2)} at ${t} Japan time, ${dm>=0?"up":"down"} ${a}pt from the last close of ${(p[7]*100).toFixed(2)}. The ${C[0]} score ${C[1]>=0?"rose":"fell"} ${cv}pt, the largest move, and the MRI is ${same?"still in":"now in"} ${lv[1]}. `+(m>=80?`It is above SELL 80 by ${(m-80).toFixed(2)}pt.`:m<=8?`It is below BUY 8 by ${(8-m).toFixed(2)}pt.`:`SELL 80 is ${toS}pt away, BUY 8 ${toB}pt.`);
+  return `${frozen?"寄り前の推定で":pre?"寄り前の推定を含むリアルタイムで":"取引中のリアルタイムで"}、MRIは日本時間${t.replace(":","時")}分に${m.toFixed(2)}と、前日確定の${(p[7]*100).toFixed(2)}から${a}pt${dm>=0?"上がった":"下がった"}。いちばん動いたのは${C[0]}スコアで${cv}pt${C[1]>=0?"上げ":"下げ"}、${lv[1]}圏${same?"にとどまる":"に入った"}。`+(m>=80?`SELLの80を${(m-80).toFixed(2)}pt上回っている。`:m<=8?`BUYの8を${(8-m).toFixed(2)}pt下回っている。`:`SELLの80まではあと${toS}pt、BUYの8からは${toB}pt離れている。`);
 }
 // a panel's bold two-line headline; the article for the session can supply its own (paper.json key, [line1, line2])
 const headHTML=(key,auto)=>{const o=STORY&&SP(STORY,key),[h1,h2]=Array.isArray(o)&&o.length?o:auto;
@@ -764,8 +764,10 @@ function renderMriTop(){
   // out for that session: paper.json preAt on the live day (US Eastern date)
   const etDay=iso=>{const t=new Date(iso),f=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(t);return +f.replace(/-/g,"")};
   const lr=mri.liveDay&&mri.daily.find(x=>x[0]===mri.liveDay&&x[7]!=null);
-  const live=!!(lr&&STORY&&STORY.preAt&&etDay(STORY.preAt)===mri.liveDay);
-  const r=live?lr:rows[rows.length-1],p=live?rows[rows.length-1]:rows[rows.length-2],day=r[0];
+  // the evening edition freezes the reading before the open (futures.json "mri", carried in paper.json "futSnap")
+  const snap=EVE()&&FUT.mri&&FUT.mri.row&&FUT.mri.prev?FUT.mri:null;
+  const live=!!(snap||lr&&STORY&&STORY.preAt&&etDay(STORY.preAt)===mri.liveDay);
+  const r=snap?snap.row:live?lr:rows[rows.length-1],p=snap?snap.prev:live?rows[rows.length-1]:rows[rows.length-2],day=r[0];
   const m=r[7],lv=level(m),dm=(m-p[7])*100,ymd=String(day).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3");
   // the comment comes with the day's article (paper.json "mri"), only for the same session; the evening edition's
   // realtime reading is "mriLive" (and "mriLiveHead")
@@ -773,14 +775,14 @@ function renderMriTop(){
   try{auto=mriHeadline(mri,r,p)}catch(e){auto=[`MRI ${(m*100).toFixed(2)}`,""]}
   // the realtime reading moves every few minutes, so its headline and comment are built from the numbers on screen
   // (a written comment would go stale within the hour)
-  const at=live&&mri.live&&mri.live.vix&&mri.live.vix.at?new Date(mri.live.vix.at):(live?new Date(mri.updatedAt):null);
-  if(live){cm=autoMriLive(r,p,at);mh=null}
+  const at=snap?new Date(snap.at):live&&mri.live&&mri.live.vix&&mri.live.vix.at?new Date(mri.live.vix.at):(live?new Date(mri.updatedAt):null);
+  if(live){cm=autoMriLive(r,p,at,!!snap);mh=null}
   else{cm=STORY&&sameDay(ymd)&&SP(STORY,"mri");mh=STORY&&sameDay(ymd)&&SP(STORY,"mriHead")}
   const [h1,h2]=Array.isArray(mh)&&mh.length?mh:auto;
   el.hidden=false;
   const Y=Math.floor(day/1e4),Mo=Math.floor(day/100)%100,Dd=day%100;
   const hm=at?(EN()?fmtJ(at)+" Japan time":"日本時間 "+fmtJ(at)):"";
-  el.innerHTML=live?`<div class="ph"><h2>${tx("MRI リアルタイム","MRI, realtime")}</h2><span class="asof">${hm}</span></div>`
+  el.innerHTML=live?`<div class="ph"><h2>${snap?tx("MRI 寄り前","MRI, pre-open"):tx("MRI リアルタイム","MRI, realtime")}</h2><span class="asof">${hm}</span></div>`
     :`<div class="ph"><h2>${tx("MRI 確定値","MRI, confirmed")}</h2><span class="asof">${dayLab(Mo,Dd,wdOf(Y,Mo,Dd))} ${CLOSE()}</span></div>`;
   el.innerHTML+=`
     <div class="head mhd">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div>
@@ -1480,6 +1482,7 @@ async function loadMarkets(){
     fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
     fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null),
     fetch(`../mri-app/data/fedwatch.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FW=j).catch(()=>FW=null)]);
+  applyPre();
   renderFedw();renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();
 }
 async function loadTemp(){
@@ -1487,12 +1490,19 @@ async function loadTemp(){
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
   renderKokoro();renderMriTop();renderNums();renderEye();
 }
+// the evening edition carries the data it was written on, frozen before the US open (paper.json "pre": futures.json
+// with the pre-open MRI, markets.json, indices.json, fedwatch.json), so its numbers stay with its text all night
+function applyPre(){
+  const P=STORY&&STORY.preAt&&STORY.pre;if(!P)return;
+  if(P.futures&&P.futures.items)FUT=P.futures;if(P.markets&&P.markets.items)MK=P.markets;if(P.indices&&P.indices.indices)IDX=P.indices;if(P.fedwatch&&P.fedwatch.meetings)FW=P.fedwatch;
+}
 async function loadPaper(){
   await Promise.all([
     fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
     fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{STORY=j;if(j&&j.preAt&&!(new Date(j.preAt)>new Date(j.revisedAt||j.writtenAt||0)))delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
     fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null)]);
-  renderIdx();renderNews();renderMriTop();renderNums();renderEye();renderCmdty();renderRates();
+  applyPre();
+  renderIdx();renderNews();renderMriTop();renderNums();renderEye();renderCmdty();renderRates();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
