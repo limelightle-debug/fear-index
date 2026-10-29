@@ -205,7 +205,10 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tline{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-top:8px}
 .tline a{color:var(--accent);text-decoration:none;white-space:nowrap}
 /* the issue: date and time the paper came out, large, in its own panel on top */
-.issue{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px}
+.issue{padding:10px 14px 10px 10px}.issue .irow{display:flex;align-items:center;gap:12px}
+.issue .pts{list-style:none;margin:10px 0 0 4px;padding:9px 0 0;border-top:1px solid var(--line)}
+.issue .pts li{position:relative;padding-left:15px;font-size:15px;font-weight:700;line-height:1.55;margin-top:3px}
+.issue .pts li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--sell)}
 /* the title piece: the institute's picture with 恐怖新聞 across it, as on a paper's front page */
 .issue .mast{display:block;width:150px;height:58px;flex:none;border-radius:9px}
 .issue .ib{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:0}
@@ -314,7 +317,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v70";
+const APP_VER="fi-v71";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -497,7 +500,10 @@ function renderIssue(st){
   // a revised edition (after the after-hours earnings) shows the revision time instead
   const t=new Date(st&&(st.revisedAt||st.writtenAt)||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
   const w="日月火水木金土"[j.getUTCDay()], hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
-  $("issue").innerHTML=`<img class="mast" src="icons/masthead.png" alt="恐怖新聞" width="150" height="58"><div class="ib"><div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?(st.revisedAt?"改訂版":"発刊"):"数字の更新"}</span></div></div>`;
+  // the day's points to watch (paper.json "points"), picked from what the paper carries below
+  const P=st&&Array.isArray(st.points)?st.points.slice(0,3):[];
+  $("issue").innerHTML=`<div class="irow"><img class="mast" src="icons/masthead.png" alt="恐怖新聞" width="150" height="58"><div class="ib"><div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?(st.revisedAt?"改訂版":"発刊"):"数字の更新"}</span></div></div></div>`
+    +(P.length?`<ul class="pts">${P.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"");
 }
 function renderIdx(){
   const el=$("idx");
