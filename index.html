@@ -367,7 +367,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v104";
+const APP_VER="fi-v105";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -971,6 +971,26 @@ const lastOf=A=>A&&A.length?A[A.length-1]:null;
 const pct1=v=>v==null?"":`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(1)}%`;
 const moLab=k=>{const m=+k.slice(5);return tx(`${m}月`,MON[m-1])};
 let MAC=null;
+// Beveridge curve: the unemployment rate (across) against the job openings rate (up), month by month, older
+// months fainter; the dashed diagonal is where the two are equal (above it, more openings than unemployed)
+function beveridge(U,V,W){
+  const um=new Map(U),P=V.filter(q=>um.has(q[0])).map(q=>[q[0],um.get(q[0]),q[1]]),out=P.filter(q=>q[1]>8),Q=P.filter(q=>q[1]<=8);
+  if(Q.length<6)return"";
+  const H=Math.round(Math.min(300,W*.78)),ML=30,MR=16,MT=10,MB=26,PW=W-ML-MR,PH=H-MT-MB;
+  const xs=Q.map(q=>q[1]),ys=Q.map(q=>q[2]),lo=Math.floor(Math.min(...xs,...ys)),hi=Math.ceil(Math.max(...xs,...ys));
+  const x=v=>ML+(v-lo)/(hi-lo)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH,n=Q.length;
+  let g="";
+  for(let v=lo;v<=hi;v++)g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity=".06"/><line x1="${x(v)}" x2="${x(v)}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".06"/><text x="${ML-5}" y="${y(v)+3}" text-anchor="end">${v}</text><text x="${x(v)}" y="${MT+PH+13}" text-anchor="middle">${v}</text>`;
+  g+=`<line x1="${x(lo)}" y1="${y(lo)}" x2="${x(hi)}" y2="${y(hi)}" stroke="#fff" stroke-opacity=".35" stroke-dasharray="3 3"/><text x="${x(hi)-4}" y="${y(hi)+12}" text-anchor="end">${tx("求人率=失業率","openings = unemployment")}</text>`;
+  g+=`<text x="${ML+PW}" y="${H-2}" text-anchor="end">${tx("失業率 %","Unemployment %")}</text><text x="${ML+4}" y="${MT+9}">${tx("求人率 %","Openings %")}</text>`;
+  let p="";
+  for(let i=1;i<n;i++){const a=.12+.88*(i/(n-1))**1.6;p+=`<line x1="${x(Q[i-1][1]).toFixed(1)}" y1="${y(Q[i-1][2]).toFixed(1)}" x2="${x(Q[i][1]).toFixed(1)}" y2="${y(Q[i][2]).toFixed(1)}" stroke="#7fa8ff" stroke-opacity="${a.toFixed(2)}" stroke-width="${i>n-13?2:1.2}"/>`}
+  // a label at each January for the last few years, and the latest month
+  const L0=Q[n-1];
+  Q.forEach((q,i)=>{if(q[0].endsWith("-01")&&i>n-62&&Math.hypot(x(q[1])-x(L0[1]),y(q[2])-y(L0[2]))>22)p+=`<circle cx="${x(q[1])}" cy="${y(q[2])}" r="2" fill="#7fa8ff"/><text x="${x(q[1])+4}" y="${y(q[2])-4}" style="fill:var(--ink2)">${q[0].slice(0,4)}</text>`});
+  const L=Q[n-1];p+=`<circle cx="${x(L[1])}" cy="${y(L[2])}" r="4.5" fill="#fff" stroke="#7fa8ff" stroke-width="2"/><text x="${x(L[1])+7}" y="${y(L[2])+4}" style="fill:var(--ink);font-weight:700">${L[0].slice(0,4)}/${+L[0].slice(5)}</text>`;
+  return `<div class="rchart"><svg viewBox="0 0 ${W} ${H}" height="${H}">${g}${p}</svg></div>`+(out.length?`<div class="lsrc" style="margin-top:2px">${tx(`失業率が8%を超えた月（${out[0][0].slice(0,4)}/${+out[0][0].slice(5)}〜${out[out.length-1][0].slice(0,4)}/${+out[out.length-1][0].slice(5)}）は枠外`,`Months with unemployment above 8% (${out[0][0]} to ${out[out.length-1][0]}) are off the chart`)}</div>`:"");
+}
 function renderInfl(){
   const el=$("infl"),B=MAC&&MAC.bls,P=MAC&&MAC.pce||{};
   if(!B||!B.cpi){el.hidden=true;return}
@@ -1025,6 +1045,7 @@ function renderJobs(){
     ${tsChart([{c:"#7fa8ff",p:toT(pay.filter(q=>q[0]>=cut))}],W,{H:130,dec:0,bars:true,sign:true})}
     <div class="rcap"><span>${tx("求人率と失業率","Job openings and unemployment")}</span></div>${legend([[tx("求人率","Openings rate"),"#7fd6a4"],[tx("失業率","Unemployment"),"#ff8a7a"]])}
     ${tsChart([{c:"#7fd6a4",p:toT((B.jolts||[]).filter(q=>q[0]>=cut))},{c:"#ff8a7a",p:toT(B.unrate.filter(q=>q[0]>=cut))}],W,{H:130,unit:"%",gap:[0,1]})}${vu}
+    ${B.jolts&&B.jolts.length>12?`<div class="rcap"><span>${tx(`ベヴァリッジ曲線（${B.jolts[0][0].slice(0,4)}年から）`,`Beveridge curve (since ${B.jolts[0][0].slice(0,4)})`)}</span></div>${beveridge(B.unrate,B.jolts,W)}`:""}
     ${cw.length>1?`<div class="rcap"><span>${tx("新規失業保険申請（千件、週次）","Initial claims (thousands, weekly)")}</span></div>${tsChart([{c:"#ffb547",p:cw.map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:120,dec:0})}`:""}
     <div class="mtab">${rows}</div>
     <div class="lsrc">${tx("出典","Sources")} BLS / ${tx("米労働省","US Labor Dept.")}</div>`;
