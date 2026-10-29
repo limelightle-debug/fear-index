@@ -368,7 +368,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v107";
+const APP_VER="fi-v108";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -1060,7 +1060,7 @@ function renderJobs(){
     +r(tx("失業率","Unemployment rate"),moLab(ur[0]),ur[1].toFixed(1)+"%",d(ur[1],prevU&&prevU[1],1,"pt"));
   if(jo)rows+=r(tx("求人率","Job openings rate"),tx(`${moLab(jo[0])} JOLTS`,`${moLab(jo[0])}, JOLTS`),jo[1].toFixed(1)+"%",d(jo[1],prevJ&&prevJ[1],1,"pt"));
   if(cl){const md=`${+cl[0].slice(5,7)}/${+cl[0].slice(8)}`;rows+=r(tx("新規申請","Initial claims"),tx(`${md} までの週`,`week to ${md}`),kk(cl[1]),clp?d(cl[1]/1e3,clp[1]/1e3,0,en?"K":"千"):"")}
-  if(ccl){const md=`${+ccl[0].slice(5,7)}/${+ccl[0].slice(8)}`;rows+=r(tx("継続受給","Continuing claims"),tx(`${md} までの週`,`week to ${md}`),en?`${(ccl[2]/1e6).toFixed(2)}M`:`${(ccl[2]/1e4).toFixed(0)}万人`,"")}
+  if(ccl){const md=`${+ccl[0].slice(5,7)}/${+ccl[0].slice(8)}`;rows+=r(tx("継続申請","Continuing claims"),tx(`${md} までの週`,`week to ${md}`),en?`${(ccl[2]/1e6).toFixed(2)}M`:`${(ccl[2]/1e4).toFixed(0)}万件`,(()=>{const i=CL.indexOf(ccl),pv=CL.slice(0,i).reverse().find(q=>q[2]);return pv?d(ccl[2]/1e4,pv[2]/1e4,1,en?"":"万"):""})())}
   const cw=CL?CL.filter(q=>q[0]>=cut+"-01"):[];
   // openings rate above the unemployment rate: more jobs than jobless (a tight market); compared on the same month
   let vu="";
@@ -1077,7 +1077,8 @@ function renderJobs(){
     <div class="rcap"><span>${tx("求人率と失業率","Job openings and unemployment")}</span></div>${legend([[tx("求人率","Openings rate"),"#7fd6a4"],[tx("失業率","Unemployment"),"#ff8a7a"]])}
     ${tsChart([{c:"#7fd6a4",p:toT((B.jolts||[]).filter(q=>q[0]>=cut))},{c:"#ff8a7a",p:toT(B.unrate.filter(q=>q[0]>=cut))}],W,{H:130,unit:"%",gap:[0,1]})}${vu}
     ${B.jolts&&B.jolts.length>12?`<div class="rcap"><span>${tx(`ベヴァリッジ曲線（${B.jolts[0][0].slice(0,4)}年から）`,`Beveridge curve (since ${B.jolts[0][0].slice(0,4)})`)}</span></div>${beveridge(B.unrate,B.jolts,W)}`:""}
-    ${cw.length>1?`<div class="rcap"><span>${tx("新規失業保険申請（千件、週次）","Initial claims (thousands, weekly)")}</span></div>${tsChart([{c:"#ffb547",p:cw.map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:120,dec:0})}`:""}
+    ${cw.length>1?`<div class="rcap"><span>${tx("新規申請（千件、週次）","Initial claims (thousands, weekly)")}</span></div>${tsChart([{c:"#ffb547",p:cw.map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:120,dec:0})}`:""}
+    ${cw.filter(q=>q[2]).length>1?`<div class="rcap"><span>${tx("継続申請（万件、週次）","Continuing claims (millions, weekly)")}</span></div>${tsChart([{c:"#e58cff",p:cw.filter(q=>q[2]).map(q=>[dms(q[0]),en?q[2]/1e6:q[2]/1e4]),w:1.4}],W,{H:120,dec:en?2:0})}`:""}
     <div class="mtab">${rows}</div>
     <div class="lsrc">${tx("出典","Sources")} BLS / ${tx("米労働省","US Labor Dept.")}</div>`;
 }
