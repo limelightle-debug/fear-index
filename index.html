@@ -432,7 +432,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v148";
+const APP_VER="fi-v149";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1540,8 +1540,10 @@ function renderLiq(){
 const fortuneDay=()=>{const j=new Date(Date.now()+(9-7)*36e5);return j.getUTCFullYear()*10000+(j.getUTCMonth()+1)*100+j.getUTCDate()};
 const dayIdx=d=>Math.floor(new Date(Math.floor(d/10000),Math.floor(d/100)%100-1,d%100).getTime()/864e5);
 function sceneOf({vix,daily,mri}){
-  const cut=fortuneDay(),rows=mri.daily.filter(r=>r[0]<cut&&r[0]!==mri.liveDay&&r[1]),day=rows[rows.length-1][0];
-  const days=daily.high.filter(x=>x[0]<cut).map(x=>[x[0],x[1]]);
+  // the scene of the paper's session: the last confirmed close, the same day the MRI card and the article show
+  // (it used to turn at 7:00 Japan time, out of step with the paper)
+  const rows=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[1]),day=rows[rows.length-1][0];
+  const days=daily.high.filter(x=>x[0]<=day).map(x=>[x[0],x[1]]);
   rows.forEach(x=>{if(x[0]>days[days.length-1][0])days.push([x[0],x[1]])});
   const {st,ev}=MindEngine.runEvents(days,vix.months),s=st[st.length-1];
   const S=signals(mri,day),sig=k=>S.find(x=>x.k===k).on;
@@ -1560,7 +1562,7 @@ function renderKokoro(){
   // the scene's words rotate by day, read with the scene's description
   const [ai,name,what,,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja])=>W[n]=[ja,g[0]]));
   const day=sessionDay(),own=STORY&&(!day||sameDay(day)),pick=own&&+STORY.kokoroWord,txt=own&&STORY.kokoro;
-  const wn=pick&&W[pick]?pick:words[dayIdx(fortuneDay())%words.length],[w,wg]=W[wn];
+  const sd=+String(day||"").replace(/-/g,"")||fortuneDay(),wn=pick&&W[pick]?pick:words[dayIdx(sd)%words.length],[w,wg]=W[wn];
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>心</h2><span class="asof">${ACT[ai]}・${esc(name[0])}</span></div>
     <figure class="kq"><p class="kw">「${esc(w)}」</p><figcaption>30の言葉より　${wn}　${esc(wg)}</figcaption></figure>
