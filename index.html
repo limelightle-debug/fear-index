@@ -153,6 +153,29 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .mtop .mrow .lvl{margin-top:8px;font-size:18px;padding:5px 15px}
 .mtop .mv{text-align:right}.mtop .mv .big{font-size:44px}.mtop .mv .ml{font-family:var(--f-tick);font-size:18px;font-weight:700;color:var(--ink2);margin-right:8px}
 .mtop .rlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+/* the three indicators behind the MRI, as in the MRI app: score (percentile), its move, the reading, ±1σ / ±2σ */
+.mtop .inds{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.mtop .indh{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:4px}
+.mtop .indh span{font-family:var(--f-tick);font-stretch:85%;font-size:11.5px;font-weight:600;color:var(--muted)}
+.mtop .ind{margin-bottom:10px}.mtop .ind:last-child{margin-bottom:0}
+.mtop .ind+.ind{border-top:1px solid var(--line);padding-top:9px}
+.mtop .ind .itop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.mtop .ind .nm{font-size:13px;font-weight:700;color:var(--ink2)}
+.mtop .ind .nm small{font-family:var(--f-tick);font-stretch:82%;font-weight:600;color:var(--muted);font-size:13px;margin-left:8px}
+.mtop .ind .nm .rd{font-style:normal;font-weight:600;color:var(--ink2);margin-left:8px}
+.mtop .ind .pc{font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:16px}
+.mtop .ind .dc{display:block;text-align:right;font-family:var(--f-tick);font-stretch:82%;font-size:12.5px;color:var(--ink2);white-space:nowrap;margin:-1px 0 3px}
+.mtop .ann{position:relative;height:13px;margin:17px 0 2px}
+.mtop .ann span{position:absolute;transform:translateX(-50%);font-size:9px;color:var(--muted);font-style:italic;white-space:nowrap}
+.mtop .ann span.b{font-weight:700;color:var(--ink2);top:-22px;font-size:12.5px;letter-spacing:.02em}
+.mtop .track{position:relative;height:20px;background:#0c0c22;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.mtop .track .fill{position:absolute;inset:0 auto 0 0;opacity:.85}
+.mtop .track .sl{position:absolute;top:0;bottom:0;width:1px;z-index:2;opacity:.9}
+.mtop .sig{position:relative;height:22px}.mtop .sig.wt{height:33px}
+.mtop .sig div{position:absolute;transform:translateX(-50%);text-align:center;line-height:1.35;font-family:var(--f-tick);font-stretch:82%}
+.mtop .sig b{display:block;font-size:10px}.mtop .sig small{display:block;font-size:9px;opacity:.75}
+.mtop .sig .stg{display:inline-block;margin-top:2px;font-style:normal;font-family:var(--f-body);font-stretch:100%;font-weight:800;font-size:7px;line-height:1;letter-spacing:.04em;color:#fff;background:#F44336;border-radius:2px;padding:1.5px 3px}
+.mtop .sig .stg:not(.on){opacity:.28}.mtop .sig .stg.on{box-shadow:0 0 6px 1px rgba(244,67,54,.8)}
 .mtop .cm{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
 .ccm{margin:2px 0 6px}
 .mtop .ccm{margin-top:8px}
@@ -399,7 +422,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v139";
+const APP_VER="fi-v140";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -786,7 +809,28 @@ function renderMriTop(){
       <div class="mv"><div><span class="ml">MRI</span><span class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</span></div><div class="chg">${live?tx("前日確定比","vs last close"):tx("前日比","vs prev.")} ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
     <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
       <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
-    <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>`;
+    <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>`+mriInds(r,p,live?hm:`${Mo}/${Dd} 終値`);
+}
+// the three indicators behind the MRI (row [date, VIX, SKEW, CAPE, VIX score, SKEW score, CAPE score, MRI, ...]),
+// drawn as in the MRI app: each score is a percentile, coloured by the MRI's bands, with ±1σ / ±2σ marks;
+// a CAPE score beyond +1σ / +2σ lights the technical bubble's SELL tags
+function mriInds(r,p,asof){
+  const ANN={skew:[[8,"Run-away"],[30,"Passive"],[50,"Position",1],[72,"Active"],[92,"All-in"]],
+    vix:[[8,"Panic"],[28,"Fear"],[50,"Emotion",1],[72,"Greed"],[92,"Euphoria"]],
+    cape:[[8,"Crash"],[28,"Crack"],[50,"Valuation",1],[72,"Froth"],[92,"Bubble"]]};
+  // Φ(−2)=2.275%, Φ(−1)=15.866%
+  const SIG=[[2.275,"−2σ","2.28%","--amber"],[15.866,"−1σ","15.87%","--l2"],[84.134,"+1σ","84.13%","--l2"],[97.725,"+2σ","97.72%","--amber"]];
+  const row=(k,name,raw,dr,v,dv)=>{const c=`var(${level(v)[2]})`;return `<div class="ind">
+    <div class="itop"><span class="nm">${name}<small>${raw.toFixed(2)}${dr!=null?`<em class="rd">${sg(dr)}</em>`:""}</small></span><span class="pc" style="color:${c}">${(v*100).toFixed(2)}%</span></div>
+    ${dv!=null?`<span class="dc">前日比 ${sg(dv*100)}pt</span>`:""}
+    <div class="ann">${ANN[k].map(([x,t,b])=>`<span class="${b?"b":""}" style="left:${x}%">${t}</span>`).join("")}<span style="left:50%">Neutral</span></div>
+    <div class="track"><div class="fill" style="width:${Math.min(Math.max(v,0)*100,100)}%;background:${c}"></div>${SIG.map(([x,,,cc])=>`<div class="sl" style="left:${x}%;background:var(${cc})"></div>`).join("")}</div>
+    <div class="sig${k==="cape"?" wt":""}">${SIG.map(([x,a,b,cc],i)=>`<div style="left:${x}%;color:var(${cc})"><b>${a}</b><small>${b}</small>${k==="cape"&&i>=2?`<em class="stg${v*100>=x?" on":""}">SELL</em>`:""}</div>`).join("")}</div>
+  </div>`};
+  const d=(i)=>p&&p[i]!=null&&r[i]!=null?r[i]-p[i]:null;
+  if(r[4]==null||r[5]==null||r[6]==null)return"";
+  return `<div class="inds"><div class="indh">インジケーター<span>${esc(asof||"")}</span></div>`
+    +row("skew","SKEW",r[2],d(2),r[5],d(5))+row("vix","VIX",r[1],d(1),r[4],d(4))+row("cape","CAPE",r[3],d(3),r[6],d(6))+`</div>`;
 }
 function renderTemp(){
   const el=$("temp");
