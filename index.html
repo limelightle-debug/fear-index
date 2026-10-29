@@ -367,7 +367,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v103";
+const APP_VER="fi-v104";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -947,6 +947,12 @@ function tsChart(S,W,o={}){
   for(let v=lo;v<=hi+1e-9;v+=st)g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity="${Math.abs(v)<1e-9&&lo<0?.3:.06}"/><text x="${ML-5}" y="${y(v)+3}" text-anchor="end">${(Math.abs(v)<1e-9?0:+v.toFixed(st<1?(st<.25?1:2):0))}</text>`;
   for(let yr=new Date(t0).getUTCFullYear()+1;Date.UTC(yr,0,1)<=t1;yr++){const xx=x(Date.UTC(yr,0,1));g+=`<line x1="${xx}" x2="${xx}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".08"/><text x="${xx}" y="${H-5}" text-anchor="middle">${yr}</text>`}
   (o.ref||[]).forEach(v=>{g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity=".4" stroke-dasharray="3 3"/>`});
+  if(o.gap){const A=S[o.gap[0]].p,Bm=new Map(S[o.gap[1]].p.map(q=>[q[0],q[1]])),Q=A.filter(q=>Bm.has(q[0])).map(q=>[q[0],q[1],Bm.get(q[0])]);
+    for(let i=1;i<Q.length;i++){const [t0,a0,b0]=Q[i-1],[t1,a1,b1]=Q[i],d0=a0-b0,d1=a1-b1;
+      const poly=(ts,as,bs,c)=>{g+=`<polygon points="${ts.map((t,k)=>`${x(t).toFixed(1)},${y(as[k]).toFixed(1)}`).concat(ts.slice().reverse().map((t,k)=>`${x(t).toFixed(1)},${y(bs[bs.length-1-k]).toFixed(1)}`)).join(" ")}" fill="${c}" opacity=".22"/>`};
+      const col=d=>d>=0?"#5fd08e":"#ff6b6b";
+      if(d0*d1<0){const f=d0/(d0-d1),tm=t0+(t1-t0)*f,vm=a0+(a1-a0)*f;poly([t0,tm],[a0,vm],[b0,vm],col(d0));poly([tm,t1],[vm,a1],[vm,b1],col(d1))}
+      else poly([t0,t1],[a0,a1],[b0,b1],col(d0+d1))}}
   let p="";const ends=[];
   S.forEach((sr,k)=>{const P=sr.p;
     if(o.bars&&k===0){const bw=Math.max(1.5,PW/P.length*.7);P.forEach(([t,v])=>{p+=`<rect x="${(x(t)-bw/2).toFixed(1)}" y="${Math.min(y(v),y(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(.5,Math.abs(y(v)-y(0))).toFixed(1)}" fill="${sr.c}" opacity="${v<0?.9:.75}"/>`})}
@@ -993,7 +999,7 @@ function renderJobs(){
   const cl=CL&&CL.length?CL[CL.length-1]:null,clp=CL&&CL.length>1?CL[CL.length-2]:null,ccl=CL?[...CL].reverse().find(q=>q[2]):null;
   const kk=v=>en?`${Math.round(v/1e3)}K`:`${(v/1e4).toFixed(1)}万件`;
   const h1=en?`Payrolls ${man(lp[1])}, unemployment ${ur[1].toFixed(1)}%`:`雇用者 ${man(lp[1])}　失業率${ur[1].toFixed(1)}%`;
-  const h2=[cl?(en?`Initial claims ${kk(cl[1])}`:`新規失業保険申請 ${kk(cl[1])}`):"",jo?(en?`job openings rate ${jo[1].toFixed(1)}%`:`求人率 ${jo[1].toFixed(1)}%`):""].filter(Boolean).join(en?", ":"、");
+  let VU=null;
   const cut=String(new Date().getUTCFullYear()-2)+"-"+String(new Date().getUTCMonth()+1).padStart(2,"0");
   const W=Math.max(260,el.clientWidth-28);
   const r=(k,sub,val,c1)=>`<div class="lq"><span class="k">${k}<small>${sub}</small></span><span class="v">${val}</span><span class="c">${c1||""}</span></div>`;
@@ -1005,12 +1011,20 @@ function renderJobs(){
   if(cl){const md=`${+cl[0].slice(5,7)}/${+cl[0].slice(8)}`;rows+=r(tx("新規申請","Initial claims"),tx(`${md} までの週`,`week to ${md}`),kk(cl[1]),clp?d(cl[1]/1e3,clp[1]/1e3,0,en?"K":"千"):"")}
   if(ccl){const md=`${+ccl[0].slice(5,7)}/${+ccl[0].slice(8)}`;rows+=r(tx("継続受給","Continuing claims"),tx(`${md} までの週`,`week to ${md}`),en?`${(ccl[2]/1e6).toFixed(2)}M`:`${(ccl[2]/1e4).toFixed(0)}万人`,"")}
   const cw=CL?CL.filter(q=>q[0]>=cut+"-01"):[];
+  // openings rate above the unemployment rate: more jobs than jobless (a tight market); compared on the same month
+  let vu="";
+  if(B.jolts&&B.jolts.length){const um=new Map(B.unrate),Q=B.jolts.filter(q=>um.has(q[0])).map(q=>[q[0],q[1],um.get(q[0])]),L=Q[Q.length-1];
+    if(L){const gp=L[1]-L[2],above=gp>0;let k=Q.length-1;while(k>0&&(Q[k-1][1]-Q[k-1][2]>0)===above)k--;
+      const since=k>0?Q[k][0]:null,st=above?[tx("求人率が失業率を上回る","Openings above unemployment"),"#5fd08e"]:gp<0?[tx("求人率が失業率を下回る","Openings below unemployment"),"#ff6b6b"]:[tx("求人率と失業率が同じ","Openings equal unemployment"),"#ffb547"];
+      vu=`<div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">${moLab(L[0])} ${tx("差","gap")}<b>${gp>0?"+":gp<0?"−":"±"}${Math.abs(gp).toFixed(1)}pt</b></span>${since?`<span class="note">${tx(`${since.slice(0,4)}/${+since.slice(5)} から`,`since ${MON[+since.slice(5)-1]} ${since.slice(0,4)}`)}</span>`:""}</div>`;
+      VU={above,gp,m:L[0]}}}
+  const h2=[VU?(en?`openings rate ${VU.above?"above":"below"} unemployment (${VU.gp>0?"+":"−"}${Math.abs(VU.gp).toFixed(1)}pt)`:`求人率が失業率を${VU.above?"上回る":"下回る"}（${VU.gp>0?"+":"−"}${Math.abs(VU.gp).toFixed(1)}pt）`):"",cl?(en?`claims ${kk(cl[1])}`:`新規申請 ${kk(cl[1])}`):""].filter(Boolean).join(en?", ":"、");
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>${tx("雇用","Jobs")}</h2><span class="asof">${tx(`${moLab(lp[0])}分まで`,`through ${moLab(lp[0])}`)}</span></div>${headHTML("jobsHead",[h1,h2])}
     <div class="rcap"><span>${tx("雇用者数の増減（千人）","Payroll change (thousands)")}</span></div>
     ${tsChart([{c:"#7fa8ff",p:toT(pay.filter(q=>q[0]>=cut))}],W,{H:130,dec:0,bars:true,sign:true})}
-    <div class="rcap"><span>${tx("失業率と求人率","Unemployment and job openings")}</span></div>${legend([[tx("失業率","Unemployment"),"#ff8a7a"],[tx("求人率","Openings rate"),"#7fd6a4"]])}
-    ${tsChart([{c:"#ff8a7a",p:toT(B.unrate.filter(q=>q[0]>=cut))},{c:"#7fd6a4",p:toT((B.jolts||[]).filter(q=>q[0]>=cut))}],W,{H:130,unit:"%"})}
+    <div class="rcap"><span>${tx("求人率と失業率","Job openings and unemployment")}</span></div>${legend([[tx("求人率","Openings rate"),"#7fd6a4"],[tx("失業率","Unemployment"),"#ff8a7a"]])}
+    ${tsChart([{c:"#7fd6a4",p:toT((B.jolts||[]).filter(q=>q[0]>=cut))},{c:"#ff8a7a",p:toT(B.unrate.filter(q=>q[0]>=cut))}],W,{H:130,unit:"%",gap:[0,1]})}${vu}
     ${cw.length>1?`<div class="rcap"><span>${tx("新規失業保険申請（千件、週次）","Initial claims (thousands, weekly)")}</span></div>${tsChart([{c:"#ffb547",p:cw.map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:120,dec:0})}`:""}
     <div class="mtab">${rows}</div>
     <div class="lsrc">${tx("出典","Sources")} BLS / ${tx("米労働省","US Labor Dept.")}</div>`;
