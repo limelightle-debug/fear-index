@@ -314,7 +314,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v69";
+const APP_VER="fi-v70";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -574,7 +574,7 @@ function renderMriTop(){
     <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
       <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
     <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>
-    ${cm?`<div class="cm"><b>コメント</b><p>${esc(cm)}</p></div>`:""}`;
+    ${cm?`<div class="cm"><p>${esc(cm)}</p></div>`:""}`;
 }
 function renderTemp(){
   const el=$("temp");
