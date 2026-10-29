@@ -288,6 +288,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
     <section class="panel" id="news" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
     <section class="panel" id="nums" hidden></section>
+    <section class="panel" id="rates" hidden></section>
   </div>
 
   <div id="t-mri" hidden><iframe id="mriframe" title="Market Risk Index"></iframe></div>
@@ -309,7 +310,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v58";
+const APP_VER="fi-v59";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -757,7 +758,7 @@ async function loadMarkets(){
   await Promise.all([
     fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MK=j).catch(()=>MK=null),
     fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null)]);
-  renderNums();
+  renderNums();renderRates();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
