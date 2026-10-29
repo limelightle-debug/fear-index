@@ -184,6 +184,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .mtab{margin-top:10px}
 .mtab .lq{grid-template-columns:minmax(0,1fr) auto 64px}
 .lq .k{overflow:hidden;text-overflow:ellipsis}
+.lq .k small{white-space:normal;line-height:1.35}
 .mtab.lq4 .lq{grid-template-columns:minmax(0,1fr) auto 58px 58px;gap:6px}
 .eye .ep{padding:10px 0 2px;border-top:1px solid var(--line)}
 .eye .ep:first-of-type{border-top:0}
@@ -393,7 +394,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v116";
+const APP_VER="fi-v117";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -560,7 +561,7 @@ const GUIDE=[
  ["景気","実質GDP（前期比年率）の四半期の推移と、アトランタ連銀の GDPNow。GDPNow は発表を待たずに今の四半期を見積もるもので、新しい指標が出るたびに更新される。その推移が上向きか下向きかが、景気の勢いの変化を先に映す。","Growth","Real GDP by quarter (annualised) and the Atlanta Fed's GDPNow, which estimates the current quarter before it is published and updates with each new release. Whether its path bends up or down shows the change in momentum early."],
  ["インフレ","CPI、PCE、PPI の前年比。FRB が目標にする 2% との距離と、前月比の勢いを見る。コアは値動きの大きい食品とエネルギーを除いたもので、物価の地合いを表す。PPI は企業の仕入れ値で、消費者物価の先を映しやすい。","Inflation","CPI, PCE and PPI on the year. See how far they are from the Fed's 2% target and the pace on the month. Core leaves out volatile food and energy and shows the underlying trend. PPI, the prices businesses pay, tends to run ahead of consumer prices."],
  ["雇用","雇用者数の増減、失業率、求人率、平均時給、失業保険の申請。求人率が失業率を上回っているあいだは人手不足で、下回ると雇用は緩み始める。ベヴァリッジ曲線は失業率と求人率の組み合わせを月ごとに結んだもの。点線より上が人手不足の側。平均時給は物価と比べ、上回れば実質賃金はプラス。新規申請は毎週出る、景気の変化にいちばん早く反応する数字。","Jobs","Payrolls, unemployment, job openings, hourly earnings and jobless claims. While openings run above unemployment the market is tight; below it, it starts to loosen. The Beveridge curve joins the two month by month; above the dashed line is the tight side. Hourly earnings against prices show real wages. Weekly claims are the quickest to react to a turn."],
- ["ドル流動性","FRB の総資産と銀行の準備預金、リバースレポ、M2。市場に出回るお金の量で、準備預金が減り続けると、株などリスク資産の足元が細りやすい。M2 の前年比はお金の増え方の勢いを表す。","Dollar liquidity","The Fed's balance sheet and bank reserves, the reverse repo and M2: the amount of money in the system. When reserves keep falling, the footing of stocks and other risk assets tends to thin. M2 on the year shows how fast money is growing."],
+ ["ドル流動性","FRB のバランスシートが準備預金を生み、その外側にリバースレポという緩衝材がある。ドルが吸われるとき、まず緩衝材が減り、尽きると準備預金という本体が直接削られる。準備預金の下限は誰にも分からず、2019年9月には1.4兆ドルで短期金利が跳ねた。SOFR が IORB を上回るのは、資金の綱が張っている合図。M2 は内側ではなく、市中のお金の増え方を表す（『金利の重力』第十七章）。","Dollar liquidity","The Fed's balance sheet creates bank reserves; outside them sits a buffer, the reverse repo. When dollars are drawn out, the buffer goes first; once it is gone, reserves, the body, are drained directly. No one knows where their floor is: in September 2019 short rates spiked with $1.4T. SOFR above IORB is the sign the rope is pulled tight. M2 shows money outside the system, in the economy."],
  ["数字","すべての数字を、毎日同じ順番で。慣れると、どこが動いたかが一目でわかる。","The numbers","Every number, in the same order every day. Once you are used to it, what moved jumps out."]];
 function renderGuide(){
   $("guide").innerHTML=`<div class="ph"><h2>${tx("この新聞の読み方","How to read this paper")}</h2></div><dl>${GUIDE.map(g=>`<dt>${EN()?g[2]:g[0]}</dt><dd>${EN()?g[3]:g[1]}</dd>`).join("")}</dl>`;
@@ -1017,6 +1018,9 @@ function renderEye(){
   if(LQ&&(LQ.m2||LQ.fed)){const M=LQ.m2&&LQ.m2.hist?yoyOf(LQ.m2.hist):[],my=lastOf(M),Fh=LQ.fed&&LQ.fed.hist||[],lf=lastOf(Fh),f13=Fh.length>13?Fh[Fh.length-14]:null,dr=lf&&f13?(lf[2]-f13[2])/1e6:null;
     if(my)H.push(en?`Money is ${my[1]>=5?"expanding":my[1]>=0?"growing modestly":"shrinking"}, M2 ${sg(my[1],1,"%")} on the year.`:`マネーはM2が前年比${sg(my[1],1,"%")}と${my[1]>=5?"拡大している":my[1]>=0?"緩やかに増えている":"縮んでいる"}。`);
     if(dr!=null&&Math.abs(dr)>.05){F.push(en?`Bank reserves have ${dr>0?"grown":"fallen"} $${Math.abs(dr*1e3).toFixed(0)}B in 13 weeks.`:`準備預金は13週で${Math.abs(dr*1e4).toFixed(0)}億ドル${dr>0?"増えた":"減った"}。`);W(1,dr>0?1:-1,tx("流動性","liquidity"))}
+    {const rl=LQ.rrp&&LQ.rrp.hist&&LQ.rrp.hist.length?LQ.rrp.hist[LQ.rrp.hist.length-1][1]:null;
+      if(rl!=null&&rl<50)H.push(en?"Yet inside the system the buffer, the reverse repo, has run dry, and dollars now come straight out of bank reserves.":"だが金融の内側では、緩衝材のリバースレポが尽き、ドルは準備預金という本体から直接抜かれている。")}
+    {const S=LQ.money&&LQ.money.spread;if(S&&S.length){const v=S[S.length-1][2];if(v>0)U.push(en?`SOFR sat ${Math.abs(v*100).toFixed(0)}bp above IORB, a sign cash is tight.`:`SOFRはIORBを${Math.abs(v*100).toFixed(0)}bp上回り、資金の綱が張っている。`)}}
     if(LQ.fed&&LQ.fed.reserves){const d=LQ.fed.reserves[1]/1e3;U.push(en?`Reserves ${sg(d,0,"B")} on the week.`:`準備預金は前週比${sg(d*10,0,"億ドル")}。`)}}
   // 恐怖: last in 鷹の目 as the conclusion of the picture, first in 虫の目 as today's move
   if(TEMP&&TEMP.mri){const rows=TEMP.mri.daily.filter(r=>r[0]!==TEMP.mri.liveDay&&r[7]!=null),r=rows[rows.length-1],q=rows[rows.length-2],m=r[7],lv=level(m),b=rows[Math.max(0,rows.length-22)],dm=(m-b[7])*100,d1=(m-q[7])*100;
@@ -1225,11 +1229,36 @@ function renderJobs(){
 // the overnight reverse repo (NY Fed, daily) and M2 (H.6), from the MRI app's data/liquidity.json
 let LQ=null;
 function liqCharts(){
-  const el=$("liq"),W=Math.max(260,el.clientWidth-28),F=LQ.fed,R=LQ.rrp,M=LQ.m2;let h="";
-  if(F&&F.hist&&F.hist.length>4){h+=`<div class="rcap"><span>${tx("FRB総資産と準備預金（兆ドル）","Fed assets and reserves ($T)")}</span></div>${legend([[tx("総資産","Total assets"),"#7fa8ff"],[tx("準備預金","Reserves"),"#7fd6a4"]])}`
-    +tsChart([{c:"#7fa8ff",p:F.hist.map(q=>[dms(q[0]),q[1]/1e6])},{c:"#7fd6a4",p:F.hist.map(q=>[dms(q[0]),q[2]/1e6])}],W,{H:140,dec:2})}
-  if(R&&R.hist&&R.hist.length>20)h+=`<div class="rcap"><span>${tx("リバースレポ（10億ドル）","Overnight reverse repo ($B)")}</span></div>`+tsChart([{c:"#ffb547",p:R.hist.map(q=>[dms(q[0]),q[1]]),w:1.3}],W,{H:110,dec:0});
-  if(M&&M.hist){const yy=yoyOf(M.hist);h+=yy.length>=12?`<div class="rcap"><span>${tx("M2 前年比","M2, change on a year")}</span></div>`+tsChart([{c:"#b59cff",p:toT(yy)}],W,{H:110,unit:"%",zero:true}):`<div class="rcap"><span>${tx("M2（兆ドル）","M2 ($T)")}</span></div>`+tsChart([{c:"#b59cff",p:toT(M.hist.map(([k,v])=>[k,v/1e3]))}],W,{H:110,dec:1})}
+  // 『金利の重力』 第十七章 の見取り図: the balance sheet makes reserves (the body); the reverse repo is the buffer
+  // outside it, drained first; once it is gone, dollars come straight out of reserves, whose floor no one knows
+  // (2019: rates spiked with 1.4 trillion). SOFR above IORB is the sign the rope is pulled tight.
+  const el=$("liq"),W=Math.max(260,el.clientWidth-28),F=LQ.fed,R=LQ.rrp,M=LQ.m2,Y=LQ.money,en=EN();let h="",rows="";
+  const T=v=>en?`$${v.toFixed(2)}T`:`${v.toFixed(2)}兆ドル`,B=v=>en?`$${v.toFixed(v<10?1:0)}B`:`${(v*10).toLocaleString("en-US",{maximumFractionDigits:v<10?1:0})}億ドル`;
+  const pill=(t,c)=>`<span class="tag" style="color:${c};background:${c}1f">${t}</span>`,C={r:"#ff6b6b",a:"#ffb547",g:"#5fd08e",b:"#6ec3ff"};
+  const row=(k,sub,v,p)=>`<div class="lq"><span class="k">${k}<small>${sub}</small></span><span class="v">${v}</span><span class="c">${p}</span></div>`;
+  const ym=s=>`${s.slice(0,4)}/${+s.slice(5,7)}`;
+  if(R&&R.hist&&R.hist.length){const L=R.hist[R.hist.length-1],pk=R.hist.reduce((a,q)=>q[1]>a[1]?q:a,R.hist[0]);
+    rows+=row(tx("緩衝材 リバースレポ","Buffer: reverse repo"),tx(`ピーク ${T(pk[1]/1e3)}（${ym(pk[0])}）`,`peak ${T(pk[1]/1e3)} (${ym(pk[0])})`),B(L[1]),L[1]<50?pill(tx("枯渇","drained"),C.r):L[1]<300?pill(tx("細る","thinning"),C.a):pill(tx("残る","still there"),C.g))}
+  if(F&&F.hist&&F.hist.length>13){const L=F.hist[F.hist.length-1],r=L[2]/1e6,q=F.hist[F.hist.length-14],d=(L[2]-q[2])/1e3;
+    rows+=row(tx("本体 準備預金","Body: reserves"),tx(`13週 ${d>=0?"+":"−"}${B(Math.abs(d)).replace(/ドル$/,"")}　2019年の逼迫時 1.4兆ドル`,`13W ${d>=0?"+":"−"}${B(Math.abs(d))}; 2019 squeeze at $1.4T`),T(r),d<-50?pill(tx("削られる","draining"),C.a):d>50?pill(tx("積み増し","rebuilding"),C.g):pill(tx("横ばい","steady"),C.b))}
+  if(Y&&Y.spread&&Y.spread.length){const S=Y.spread,L=S[S.length-1],m30=S.slice(-21).reduce((a,q)=>a+q[2],0)/Math.min(21,S.length),mx=S.slice(-252).reduce((a,q)=>q[2]>a[2]?q:a,S[0]);
+    const bp=v=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v*100).toFixed(0)}bp`;
+    rows+=row(tx("綱の張り SOFR−IORB","Strain: SOFR − IORB"),tx(`1ヶ月平均 ${bp(m30)}　1年の最大 ${bp(mx[2])}（${+mx[0].slice(5,7)}/${+mx[0].slice(8)}）`,`1M avg ${bp(m30)}; 1Y high ${bp(mx[2])}`),bp(L[2]),L[2]>0?pill(tx("逼迫","tight"),C.r):L[2]>-.05?pill(tx("張りつめ","taut"),C.a):pill(tx("落ち着き","calm"),C.g))}
+  if(F&&F.hist&&F.hist.length>20){const H=F.hist.slice(-80),lo=H.reduce((a,q)=>q[1]<a[1]?q:a,H[0]),L=F.hist[F.hist.length-1],d=(L[1]-lo[1])/1e3,q=F.hist[Math.max(0,F.hist.length-5)],d4=(L[1]-q[1])/1e3;
+    rows+=row(tx("FRB 総資産","Fed total assets"),lo[0]!==L[0]?tx(`底 ${ym(lo[0])} ${T(lo[1]/1e6)} から ${d>=0?"+":"−"}${B(Math.abs(d))}`,`low ${ym(lo[0])} ${T(lo[1]/1e6)}, ${d>=0?"+":"−"}${B(Math.abs(d))} since`):tx("1年半の最低","18-month low"),T(L[1]/1e6),d4>5?pill(tx("拡大","growing"),C.b):d4<-5?pill(tx("縮小","shrinking"),C.a):pill(tx("横ばい","flat"),C.b))}
+  if(Y&&Y.repo&&Y.repo.length){const R30=Y.repo.filter(q=>dms(q[0])>=Date.now()-30*864e5),tot=R30.reduce((a,q)=>a+q[1],0);
+    if(tot>.05)rows+=row(tx("SRF（常設レポ）","Standing repo"),tx("この30日の利用","taken, last 30 days"),B(tot),pill(tx("利用あり","in use"),C.a))}
+  if(rows)h+=`<div class="rcap"><span>${tx("配管の状態","The plumbing")}</span></div><div class="mtab" style="margin-top:2px">${rows}</div>`;
+  if(F&&F.hist&&F.hist.length>4){const cut=Date.now()-366*864e5,P=F.hist.filter(q=>dms(q[0])>=cut);
+    h+=`<div class="rcap"><span>${tx("FRB総資産（兆ドル、1年）","Fed total assets ($T, 1 year)")}</span></div>`+tsChart([{c:"#7fa8ff",p:P.map(q=>[dms(q[0]),q[1]/1e6]),w:1.8}],W,{H:140,dec:2})}
+  if(F&&F.hist&&R&&R.hist){const s0=F.hist[0][0],wk=new Map();R.hist.forEach(q=>{if(q[0]>=s0){const k=q[0].slice(0,8)+String(Math.min(28,Math.ceil(+q[0].slice(8)/7)*7)).padStart(2,"0");wk.set(k,q)}});
+    h+=`<div class="rcap"><span>${tx(`準備預金とリバースレポ（兆ドル、${s0.slice(0,4)}年から）`,`Reserves and reverse repo ($T, since ${s0.slice(0,4)})`)}</span></div>${legend([[tx("準備預金","Reserves"),"#7fd6a4"],[tx("リバースレポ","Reverse repo"),"#ffb547"]])}`
+      +tsChart([{c:"#7fd6a4",p:F.hist.map(q=>[dms(q[0]),q[2]/1e6]),w:1.8},{c:"#ffb547",p:[...wk.values()].map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:150,dec:1,zero:true,ref:[1.4]})
+      +`<div class="lsrc" style="margin-top:2px">${tx("点線は2019年9月に短期金利が跳ねたときの準備預金 1.4兆ドル","Dashed: reserves of $1.4T when short rates spiked in September 2019")}</div>`}
+  if(Y&&Y.spread&&Y.spread.length>20){const cut=Date.now()-366*864e5;
+    h+=`<div class="rcap"><span>${tx("SOFR − IORB（bp、1年）","SOFR − IORB (bp, 1 year)")}</span></div>`+tsChart([{c:"#ff8a7a",p:Y.spread.filter(q=>dms(q[0])>=cut).map(q=>[dms(q[0]),q[2]*100]),w:1.2}],W,{H:110,dec:0,zero:true})
+      +`<div class="lsrc" style="margin-top:2px">${tx("0 を上回ると、銀行が準備預金に付く金利より高く資金を取り合っている。IORB は政策金利の上限−0.10","Above 0, banks pay more for cash than reserves earn. IORB: top of the target range less 0.10")}</div>`}
+  if(M&&M.hist){const yy=yoyOf(M.hist);h+=yy.length>=12?`<div class="rcap"><span>${tx("M2 前年比","M2, change on a year")}</span></div>`+tsChart([{c:"#b59cff",p:toT(yy)}],W,{H:110,unit:"%",zero:true}):""}
   return h;
 }
 function renderLiq(){
@@ -1255,6 +1284,9 @@ function renderLiq(){
     rows+=row("M2",tx(`${mo}月 季節調整済み`,`${MON[mo-1]} (SA)`),lvl(v),pc(mm),cl(mm),pc(yy),cl(yy));
     h2+=(h2?(en?", ":"、"):"")+(en?`M2 ${pc(yy)} on the year`:`M2は前年比${pc(yy)}`)}
   if(!h1&&h2){h1=h2;h2=""}
+  {const rl=R&&R.hist&&R.hist.length?R.hist[R.hist.length-1][1]:null,Fh=F&&F.hist||[],d13=Fh.length>13?(Fh[Fh.length-1][2]-Fh[Fh.length-14][2])/1e3:0,sp=LQ.money&&LQ.money.spread&&LQ.money.spread.length?LQ.money.spread[LQ.money.spread.length-1][2]:null;
+    if(rl!=null&&rl<50){h1=d13<-50?tx("緩衝材は尽き、本体が削られる","The buffer is gone; the body is draining"):tx("緩衝材は尽きている","The buffer is gone");
+      h2=[F?tx(`準備預金 ${(F.reserves[0]/1e6).toFixed(2)}兆ドル`,`reserves $${(F.reserves[0]/1e6).toFixed(2)}T`):"",sp!=null?tx(`SOFRはIORBを${Math.abs(sp*100).toFixed(0)}bp${sp>0?"上回る":"下回る"}`,`SOFR ${Math.abs(sp*100).toFixed(0)}bp ${sp>0?"above":"below"} IORB`):""].filter(Boolean).join(tx("、",", "))}}
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>${tx("ドル流動性","Dollar liquidity")}</h2><span class="asof">${tx("週次・月次","Weekly and monthly")}</span></div>${headHTML("liqHead",[h1,h2])}
     ${liqCharts()}
