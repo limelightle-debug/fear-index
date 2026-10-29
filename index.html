@@ -170,6 +170,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .nr .v{font-family:var(--f-tick);font-stretch:82%;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .nr .c{font-family:var(--f-tick);font-stretch:85%;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .nr .c.up{color:#5fd08e}.nr .c.dn{color:#ff7b7b}
+.nr .k small{font-family:var(--f-tick);font-size:10.5px;color:var(--muted);margin-left:6px}
 .nr .tag{font-family:var(--f-body);font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px}
 /* rates: 3M, 2Y, 10Y, 30Y, the spreads and the curve's state; the curve now / 3 / 6 months ago; both spreads over 5 years */
 .rsum{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
@@ -317,7 +318,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v71";
+const APP_VER="fi-v72";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -750,28 +751,40 @@ function renderNews(){
   el.innerHTML=`<div class="ph"><h2>主なニュース</h2></div><div class="nws">${N.map(([t,x])=>`<b>${esc(t)}</b><p>${esc(x)}</p>`).join("")}</div>`;
 }
 function renderNums(){
+  // the paper's market data page: one long list in a fixed order, the same every day (numbers shown above repeat here)
   const el=$("nums"),it={};(MK&&MK.items||[]).forEach(x=>it[x.k]=x);
-  if(!Object.keys(it).length){el.hidden=true;return}
+  const L=IDX&&IDX.indices||[],SE=IDX&&IDX.sectors||[],M=TEMP&&TEMP.mri;
+  if(!Object.keys(it).length&&!L.length&&!M&&!CV){el.hidden=true;return}
   const f=(v,d)=>v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
-  const sgn=v=>v>0?"+":v<0?"−":"±";
-  const row=(k,name,val,chg,cls)=>`<div class="nr"><span class="k">${name}</span><span class="v">${val}</span><span class="c ${cls}">${chg}</span></div>`;
-  const R=(k,name)=>{const x=it[k];if(!x)return"";const yen=x.unit==="円",usd=x.unit==="ドル";
-    const val=(usd?"$":"")+f(x.price,x.dec)+(yen?"円":"");
-    return row(k,name,val,x.pct==null?"":`${sgn(x.pct)}${Math.abs(x.pct).toFixed(2)}%`,x.pct>0?"up":x.pct<0?"dn":"")};
-  // yields: the level and the change in points; the spread with the curve's state
-  const Y=(k,name)=>{const x=it[k];if(!x)return"";return row(k,name,f(x.price,2)+"%",x.chg==null?"":`${sgn(x.chg)}${Math.abs(x.chg).toFixed(2)}`,"")};
-  let spread="";
-  if(it.us10y&&it.us2y){const sp=it.us10y.price-it.us2y.price;
-    let inv=sp<0,after=false;if(CV&&CV.spread){const S=CV.spread;let ln=-1;for(let i=S.length-1;i>=0;i--)if(S[i][1]<0||(S[i][2]!=null&&S[i][2]<0)){ln=i;break}
-      if(ln>=0&&!inv){const a=S[ln][0],b=S[S.length-1][0];after=((+b.slice(0,4)-+a.slice(0,4))*12+(+b.slice(4,6)-+a.slice(4,6)))<12}}
-    const tag=inv?["逆イールド","#ff6b6b"]:after?["解消直後","#ffb547"]:["順イールド","#7fd6a4"];
-    spread=row("sp","長短差（10年−2年）",`${sgn(sp)}${Math.abs(sp).toFixed(2)}`,`<span class="tag" style="color:${tag[1]};background:${tag[1]}1f">${tag[0]}</span>`,"")}
+  const sgn=v=>v>.0000001?"+":v<-.0000001?"−":"±",cl=v=>v>0?"up":v<0?"dn":"";
+  const row=(name,val,chg,cls)=>`<div class="nr"><span class="k">${name}</span><span class="v">${val}</span><span class="c ${cls||""}">${chg}</span></div>`;
+  const P=(name,val,pct)=>row(name,val,pct==null?"":`${sgn(pct)}${Math.abs(pct).toFixed(2)}%`,cl(pct));
+  const D=(name,val,d,dec=2,u="")=>row(name,val,d==null?"":`${sgn(d)}${Math.abs(d).toFixed(dec)}${u}`,"");
+  const G=(t,body)=>body?`<div class="ng">${t}</div>${body}`:"";
+  // 恐怖指数: the confirmed day of the MRI app
+  let fear="";
+  if(M){const rows=M.daily.filter(r=>r[0]!==M.liveDay&&r[7]!=null),r=rows[rows.length-1],q=rows[rows.length-2];
+    fear=D("MRI",(r[7]*100).toFixed(2),(r[7]-q[7])*100,2,"pt")+D("VIX",r[1].toFixed(2),r[1]-q[1])+D("SKEW",r[2].toFixed(2),r[2]-q[2])+D("CAPE（シラーPER）",r[3].toFixed(2),r[3]-q[3])}
+  const idx=["SPX","NDX","DJI","RUT","SOX"].map(k=>L.find(x=>x.k===k)).filter(Boolean).map(x=>P(x.ja,f(x.price,x.k==="DJI"?0:2),x.pct)).join("");
+  const sec=SE.map(x=>P(`${x.ja}<small>${x.k}</small>`,"$"+f(x.price,2),x.pct)).join("");
+  // 金利: the Treasury's par yields (as in the rates panel), changes in points from the day before
+  let rates="";
+  if(CV&&CV.now){const n=CV.now.y,pv=CV.prev&&CV.prev.y,d=k=>pv&&pv[k]!=null?n[k]-pv[k]:null;
+    const S=CV.spread,s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"];let ln=-1;for(let i=S.length-1;i>=0;i--)if(S[i][1]<0||(S[i][2]!=null&&S[i][2]<0)){ln=i;break}
+    const after=ln>=0&&s2>=0&&s3>=0&&((+S[S.length-1][0].slice(0,4)-+S[ln][0].slice(0,4))*12+(+S[S.length-1][0].slice(4,6)-+S[ln][0].slice(4,6)))<12;
+    const tag=(s2<0||s3<0)?["逆イールド","#ff6b6b"]:after?["解消直後","#ffb547"]:["順イールド","#7fd6a4"];
+    rates=[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>D(`米${l}債`,n[k].toFixed(2)+"%",d(k))).join("")
+      +row("長短差（10年−2年）",`${sgn(s2)}${Math.abs(s2).toFixed(2)}`,`<span class="tag" style="color:${tag[1]};background:${tag[1]}1f">${tag[0]}</span>`)
+      +row("長短差（10年−3ヶ月）",`${sgn(s3)}${Math.abs(s3).toFixed(2)}`,"");
+    const I=CV.infl,O=CV.oas,dd=(a,b)=>a!=null&&b!=null?a-b:null;
+    if(I)rates+=D("10年実質金利",I.real10.toFixed(2)+"%",dd(I.real10,I.real10_d1))+D("10年インフレ期待",I.be10.toFixed(2)+"%",dd(I.be10,I.be10_d1));
+    if(O)rates+=D("OAS ハイイールド",O.hy.toFixed(2)+"%",dd(O.hy,O.hy_d1))+D("OAS 投資適格",O.ig.toFixed(2)+"%",dd(O.ig,O.ig_d1))}
+  const R=k=>{const x=it[k];if(!x)return"";const yen=x.unit==="円",usd=x.unit==="ドル";return P(x.ja,(usd?"$":"")+f(x.price,x.dec)+(yen?"円":""),x.pct)};
+  const fx=["usdjpy","eurjpy","gbpjpy","audjpy","eurusd","dxy"].map(R).join(""),cm=["gold","silver","wti","natgas","copper"].map(R).join(""),cr=["btc","eth"].map(R).join("");
   const t=(it.usdjpy||it.gold||{}).time;
   el.hidden=false;
-  el.innerHTML=`<div class="ph" style="justify-content:flex-end"><span class="asof">${ETLabel(t)}</span></div>
-    <div class="ng">金利</div>${Y("us10y","米10年債")}${Y("us2y","米2年債")}${spread}
-    <div class="ng">為替</div>${R("usdjpy","ドル円")}${R("eurjpy","ユーロ円")}${R("gbpjpy","ポンド円")}${R("dxy","ドルインデックス")}
-    <div class="ng">コモディティ</div>${R("gold","金")}${R("wti","原油（WTI）")}${R("copper","銅")}${R("btc","ビットコイン")}`;
+  el.innerHTML=`<div class="ph"><h2>数字</h2><span class="asof">${ETLabel(t)||""}</span></div>
+    ${G("恐怖指数",fear)}${G("株価指数",idx)}${G("S&amp;P500 セクター",sec)}${G("金利",rates)}${G("為替",fx)}${G("コモディティ",cm)}${G("暗号資産",cr)}`;
 }
 // 心: the scene of the day judged as in Mind (US closes before 7:00 Japan time), and Mind's word and bias for the day
 const fortuneDay=()=>{const j=new Date(Date.now()+(9-7)*36e5);return j.getUTCFullYear()*10000+(j.getUTCMonth()+1)*100+j.getUTCDate()};
@@ -809,13 +822,13 @@ async function loadMarkets(){
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderKokoro();renderMriTop();
+  renderKokoro();renderMriTop();renderNums();
 }
 async function loadPaper(){
   await Promise.all([
     fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
     fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>STORY=j).catch(()=>STORY=null)]);
-  renderIdx();renderNews();renderMriTop();
+  renderIdx();renderNews();renderMriTop();renderNums();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
