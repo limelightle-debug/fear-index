@@ -183,7 +183,9 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .rstate .sp b{font-family:var(--f-tick);font-stretch:82%;font-size:15px;color:var(--ink);margin-left:4px}
 .rstate .note{width:100%;color:var(--muted);font-size:11.5px}
 .rchart{margin-top:6px}
-.rxs{margin-top:4px}.rxs .rx:first-child{border-top:0}.nr.rx{grid-template-columns:minmax(0,1fr) auto 58px}.rx .c em{font-family:var(--f-body);font-style:normal;font-size:10.5px;font-weight:700;color:#ffb547;border:1px solid #ffb54766;border-radius:999px;padding:1px 7px;white-space:nowrap}
+.rx2{margin-top:6px}.rx2 div{letter-spacing:0;white-space:nowrap}
+.rx2 em{display:inline-block;margin-top:4px;font-family:var(--f-body);font-style:normal;font-size:9.5px;font-weight:700;color:#ffb547;border:1px solid #ffb54766;border-radius:999px;padding:0 6px;line-height:1.5}
+.rxn{font-size:11px;color:var(--muted);margin-top:6px}
 .rchart svg{display:block;width:100%;overflow:visible}
 .rchart text{font-family:var(--f-tick);font-stretch:85%;font-size:10px;fill:var(--muted)}
 .rcap{display:flex;align-items:baseline;justify-content:space-between;margin-top:16px;font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
@@ -312,7 +314,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v65";
+const APP_VER="fi-v66";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -702,10 +704,13 @@ function ratesMore(){
   const DUR={tip:6.6,ief:7,hyg:3.1,lqd:8.2},pc=k=>it[k]&&it[k].pct!=null?it[k].pct:null;
   const cr=k=>pc(k)==null||pc("ief")==null?null:-(pc(k)-pc("ief")*DUR[k]/DUR.ief)/DUR[k];
   const dR=pc("tip")==null?null:-pc("tip")/DUR.tip,dN=it.us10y&&it.us10y.chg!=null?it.us10y.chg:null;
-  const row=(name,v,d)=>v==null?"":`<div class="nr rx"><span class="k">${name}</span><span class="v">${(v+(d||0)).toFixed(2)}%</span><span class="c">${d==null?"":"<em>推定値</em>"}</span></div>`;
+  // cards as the yields above: the value, its change from 3 months earlier, and 推定値 while it is an estimate
+  const row=(name,v,d,v3)=>{if(v==null)return"";const x=v+(d||0),dv=v3==null?null:x-v3;
+    return `<div>${name}<b>${x.toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}${d==null?"":"<em>推定値</em>"}</div>`};
   const oi=I&&newer(I)&&dR!=null,oo=O&&newer(O);
-  return `<div class="rcap"><span>実質金利・インフレ期待・OAS</span></div><div class="rxs">
-    ${I?row("10年実質金利",I.real10,oi?dR:null)+row("10年インフレ期待",I.be10,oi&&dN!=null?dN-dR:null):""}${O?row("OAS ハイイールド",O.hy,oo?cr("hyg"):null)+row("OAS 投資適格",O.ig,oo?cr("lqd"):null):""}</div>
+  return `<div class="rcap"><span>10年実質金利・インフレ期待・OAS</span></div><div class="rsum rx2">
+    ${I?row("実質金利",I.real10,oi?dR:null,I.real10_m3)+row("インフレ期待",I.be10,oi&&dN!=null?dN-dR:null,I.be10_m3):""}${O?row("OAS HY",O.hy,oo?cr("hyg"):null,O.hy_m3)+row("OAS IG",O.ig,oo?cr("lqd"):null,O.ig_m3):""}</div>
+    <div class="rxn">HY＝ハイイールド債、IG＝投資適格債。矢印は3ヶ月前比。</div>
     ${I&&I.hist&&I.hist.length>1?`<div class="rcap"><span>10年実質金利の推移</span></div><div class="rchart">${histChart(I.hist,RW,"#7fa8ff","rlf")}</div>`:""}
     ${O&&O.hist&&O.hist.length>1?`<div class="rcap"><span>OAS ハイイールドの推移</span></div><div class="rchart">${histChart(O.hist,RW,"#ff8a65","hyf")}</div>`:""}`;
 }
