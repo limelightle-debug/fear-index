@@ -42,6 +42,10 @@ a{color:inherit}
 .num{font-family:var(--f-tick);font-stretch:82%;font-variant-numeric:tabular-nums}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 0 8px}
 .brand{display:flex;align-items:center;gap:10px}
+.top{position:sticky}.top .langseg{position:absolute;right:0;top:14px;display:flex;background:var(--chip);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
+html[lang=en] .top h1{font-size:17px;padding-right:96px}
+.langseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:700 12px/1 var(--f-body);letter-spacing:.04em;padding:7px 9px;border-radius:6px;cursor:pointer}
+.langseg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.4)}
 .avatar{width:44px;height:44px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
 h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15}
 .ed{font-size:12px;color:var(--muted);margin-top:2px}
@@ -308,10 +312,11 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <div class="brand">
       <img class="avatar" src="icons/app.png" alt="" width="44" height="44">
       <div>
-        <h1>恐怖指数研究所</h1>
+        <h1 id="ttl">恐怖指数研究所</h1>
         <div class="ed" id="ed">読み込み中…</div>
       </div>
     </div>
+    <div class="langseg" id="lang" role="group" aria-label="Language"><button type="button" data-lang="ja">JP</button><button type="button" data-lang="en">EN</button></div>
     <div class="seg" id="tabs" role="group" aria-label="表示">
       <button type="button" data-tab="paper">恐怖新聞</button>
       <button type="button" data-tab="mri">MRI</button>
@@ -329,10 +334,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="cmdty" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
     <section class="panel" id="nums" hidden></section>
-    <section class="panel guide">
-      <div class="ph"><h2>この新聞の読み方</h2></div>
-      <dl><dt>注目点</dt><dd>その日いちばん目を向けるべき2〜3点。ここだけ読めば、その朝の要点がつかめる。</dd><dt>MRI 確定値</dt><dd>恐怖新聞の一面。VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。</dd><dt>主要指数と記事</dt><dd>米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。</dd><dt>主なニュース</dt><dd>動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。</dd><dt>金利</dt><dd>株の値段の重し。10年債は株価の割引率、2年債は利上げと利下げの見通しを映す。逆イールドとその解消は景気の節目の目印で、この新聞では解消から1年を「解消直後」として追う。</dd><dt>実質金利・インフレ期待</dt><dd>10年債の利回りを、インフレの分と、物価を除いた本当の金利に分けたもの。実質金利の上昇は、PER の高い株ほど重しになる。</dd><dt>OAS</dt><dd>社債の上乗せ金利。お金の貸し手が不安になると広がる。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。</dd><dt>コモディティ・ドル</dt><dd>金は不安、原油はインフレと景気、銅は景気、ビットコインはリスクを取る気分、ドルは世界のお金の向きを映す。</dd><dt>心</dt><dd>数字を読んだあとに、その日の局面で陥りやすい考えのクセを確かめる。</dd><dt>数字</dt><dd>すべての数字を、毎日同じ順番で。慣れると、どこが動いたかが一目でわかる。</dd></dl>
-    </section>
+    <section class="panel guide" id="guide"></section>
   </div>
 
   <div id="t-mri" hidden><iframe id="mriframe" title="Market Risk Index"></iframe></div>
@@ -354,8 +356,19 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v91";
+const APP_VER="fi-v92";
 const $=id=>document.getElementById(id);
+// language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
+let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
+document.documentElement.lang=LANG;
+const EN=()=>LANG==="en",tx=(ja,en)=>EN()?en:ja;
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const WD=n=>(EN()?["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]:[..."日月火水木金土"])[n];
+const dayLab=(m,d,w)=>EN()?`${WD(w)} ${MON[m-1]} ${d}`:`${m}/${d}（${WD(w)}）`;   // m 1-12, w weekday 0-6
+const wdOf=(y,m,d)=>new Date(Date.UTC(y,m-1,d)).getUTCDay();
+const CLOSE=()=>tx("米国市場引け","US close");
+// the day's article in the reader's language (paper.json "en"), falling back to the Japanese
+const SP=(st,k)=>st&&(EN()&&st.en&&st.en[k]!=null?st.en[k]:st[k]);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
   ["mri","Market Risk Index","VIX・SKEW・CAPE から天井と底を推定する MRI と、そのシグナル",`${BASE}/mri-app/`,"icons/app-mri.png"],
@@ -478,26 +491,48 @@ const MAP=[
   ["心","心理","黒鳥と踊れ",[["mind","今大切な格言と、陥りやすいバイアス","第四・五章"]]],
   ["技","判定と実行","黒鳥と翔べ",[["vix","VIX イベント。底を捉える","第九章"],["tqqq","弾を選ぶ","第十一章"]]],
   ["体","設計と運用","黒鳥に備えろ",[["ndx","ポートフォリオの主軸を選ぶ。環境認識","第十四章"]]]];
+// the same in English, by position: [role, title, [what it does, chapter] per app]
+const MAP_EN=[["Watch","Track the black swan's shadow",[["Catch the market's top","Ch. 3"]]],["Mind","Dance with the black swan",[["Today's words and the biases to watch","Ch. 4-5"]]],
+  ["Judge and act","Fly with the black swan",[["VIX events. Catch the bottom","Ch. 9"],["Choose your ammunition","Ch. 11"]]],["Design and run","Prepare for the black swan",[["Choose the core of the portfolio. Read the environment","Ch. 14"]]]];
 function renderApps(){
   const A=Object.fromEntries(APPS.map(a=>[a[0],a]));
-  const card=([k,role,ch])=>{const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}${ch?`<i class="ch">${ch}</i>`:""}</b><span>${role}</span></div><em>›</em></a>`};
+  const card=([k,role,ch],en)=>{if(EN()&&en)[role,ch]=en;const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}${ch?`<i class="ch">${ch}</i>`:""}</b><span>${role}</span></div><em>›</em></a>`};
   // seen from another app (its アプリ tab), the institute itself comes first: the way back to the paper
-  const home=EMBED?`<a class="node home" href="${BASE}/fear-index/"><img src="icons/app.png" alt="" width="44" height="44"><div><b>恐怖指数研究所</b><span>毎朝の恐怖新聞</span></div><em>›</em></a>`:"";
-  $("apps").innerHTML=`<div class="ph"><h2>アプリ</h2><span class="asof">『VIXの声を聴け』に沿って</span></div>${home}`+
-    MAP.map(([k,role,title,items],i)=>`${i?`<div class="arrow">↓</div>`:""}<div class="layer"><div class="lh"><b class="kan">${k}</b><b>${role}</b><span>${title}</span></div>${items.map(card).join("")}</div>`).join("");
+  const home=EMBED?`<a class="node home" href="${BASE}/fear-index/"><img src="icons/app.png" alt="" width="44" height="44"><div><b>${tx("恐怖指数研究所","Fear Index Research Institute")}</b><span>${tx("毎朝の恐怖新聞","The Fear Paper, every morning")}</span></div><em>›</em></a>`:"";
+  $("apps").innerHTML=`<div class="ph"><h2>${tx("アプリ","Apps")}</h2><span class="asof">${tx("『VIXの声を聴け』に沿って","Following “Listen to VIX”")}</span></div>${home}`+
+    MAP.map(([k,role,title,items],i)=>{const E=MAP_EN[i];if(EN()){role=E[0];title=E[1]}
+      return `${i?`<div class="arrow">↓</div>`:""}<div class="layer"><div class="lh"><b class="kan">${k}</b><b>${role}</b><span>${title}</span></div>${items.map((x,j)=>card(x,E[2][j])).join("")}</div>`}).join("");
 }
 function bookRow([b,url,cv,layer]){
-  return `<a class="book" href="${url}" target="_blank" rel="noopener">${cv?`<img class="cv" src="${cv}" alt="" width="44" height="64">`:`<div class="cv">${b}</div>`}<div>${layer?`<i class="ly">${layer}</i>`:""}<b>${/^[\x00-\x7F]+$/.test(b)?b:`『${b}』`}</b><span>Amazon で見る</span></div><em>›</em></a>`;
+  return `<a class="book" href="${url}" target="_blank" rel="noopener">${cv?`<img class="cv" src="${cv}" alt="" width="44" height="64">`:`<div class="cv">${b}</div>`}<div>${layer?`<i class="ly">${layer}</i>`:""}<b>${/^[\x00-\x7F]+$/.test(b)?b:`『${b}』`}</b><span>${tx("Amazon で見る","View on Amazon")}</span></div><em>›</em></a>`;
+}
+// the last panel: why each panel is in the paper and what to look at, in the paper's order
+const GUIDE=[
+ ["注目点","その日いちばん目を向けるべき2〜3点。ここだけ読めば、その朝の要点がつかめる。","Points to watch","The two or three things to look at first. Read only these and you have the morning."],
+ ["MRI 確定値","恐怖新聞の一面。VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。","MRI, confirmed","The front page. Fear and froth in the market as one number, from VIX, SKEW and CAPE. Look less at the value than at how far it is from SELL 80 and BUY 8, and how it moved from the day before."],
+ ["主要指数と記事","米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。","Markets and the story","How US stocks moved. The S&amp;P 500 is the whole market, the Nasdaq 100 and chips are where the moves are, the Russell 2000 is small caps that feel the economy. When only one of them moves a lot, the market is lopsided."],
+ ["主なニュース","動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。","News","Why it moved. See which news lines up with which move."],
+ ["金利","株の値段の重し。10年債は株価の割引率、2年債は利上げと利下げの見通しを映す。逆イールドとその解消は景気の節目の目印で、この新聞では解消から1年を「解消直後」として追う。","Rates","The weight on stock prices. The 10-year is the discount rate for stocks; the 2-year mirrors where rate hikes and cuts are expected. An inverted curve and its end mark turns in the economy; this paper follows the year after it ends as “just uninverted”."],
+ ["実質金利・インフレ期待","10年債の利回りを、インフレの分と、物価を除いた本当の金利に分けたもの。実質金利の上昇は、PER の高い株ほど重しになる。","Real yield and breakeven","The 10-year yield split into the part for inflation and the real rate after it. A rising real yield weighs most on stocks with high P/Es."],
+ ["OAS","社債の上乗せ金利。お金の貸し手が不安になると広がる。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。","OAS","The extra yield on corporate bonds. It widens when lenders get nervous. A sharp widening in high yield tends to come with a stock sell-off, or a little before it."],
+ ["コモディティ・ドル","金は不安、原油はインフレと景気、銅は景気、ビットコインはリスクを取る気分、ドルは世界のお金の向きを映す。","Commodities and the dollar","Gold reads fear, crude inflation and growth, copper growth, bitcoin the appetite for risk, the dollar where the world's money is going."],
+ ["心","数字を読んだあとに、その日の局面で陥りやすい考えのクセを確かめる。","心 (Mind)","After the numbers, check the habit of mind this stage of the market tends to bring out."],
+ ["数字","すべての数字を、毎日同じ順番で。慣れると、どこが動いたかが一目でわかる。","The numbers","Every number, in the same order every day. Once you are used to it, what moved jumps out."]];
+function renderGuide(){
+  $("guide").innerHTML=`<div class="ph"><h2>${tx("この新聞の読み方","How to read this paper")}</h2></div><dl>${GUIDE.map(g=>`<dt>${EN()?g[2]:g[0]}</dt><dd>${EN()?g[3]:g[1]}</dd>`).join("")}</dl>`;
 }
 function renderBooks(){
   // the tree (tap a title to open its Amazon page), then the same books as a list; the English edition sits in its own panel below
-  $("books").innerHTML=`<div class="ph"><h2>書籍体系図</h2><span class="asof">Gold Locks / 恐怖指数研究所</span></div>
+  $("books").innerHTML=`<div class="ph"><h2>${tx("書籍体系図","The book map")}</h2><span class="asof">Gold Locks / ${tx("恐怖指数研究所","Fear Index Research Institute")}</span></div>
     <div class="tree"><div class="tin"><img src="icons/book-map.jpg" alt="書籍体系図" width="1200" height="902" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='icons/book-map.jpg?r='+Date.now()}">${BOOKS.filter(x=>x[4]).map(([b,url,,,r])=>`<a href="${url}" target="_blank" rel="noopener" aria-label="『${b}』" style="left:${r[0]}%;top:${r[1]}%;width:${r[2]}%;height:${r[3]}%"></a>`).join("")}</div></div>
     <div class="bmap">${BOOKS.filter(x=>!x[5]).map(bookRow).join("")}</div>`;
-  $("books-en").innerHTML=`<div class="ph"><h2>英語版</h2><span class="asof">English edition</span></div><div class="bmap solo">${BOOKS.filter(x=>x[5]).map(bookRow).join("")}</div>`;
+  $("books-en").innerHTML=`<div class="ph"><h2>${tx("英語版","English edition")}</h2><span class="asof">${tx("English edition","")}</span></div><div class="bmap solo">${BOOKS.filter(x=>x[5]).map(bookRow).join("")}</div>`;
 }
+const TABL={paper:["恐怖新聞","Fear Paper"],mri:["MRI","MRI"],apps:["アプリ","Apps"],books:["書籍","Books"]};
 function renderTabs(){
-  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tab===state.tab));
+  document.querySelectorAll("#tabs button").forEach(b=>{b.textContent=TABL[b.dataset.tab][EN()?1:0];b.setAttribute("aria-pressed",b.dataset.tab===state.tab)});
+  document.querySelectorAll("#lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===LANG));
+  $("ttl").textContent=tx("恐怖指数研究所","Fear Index Research Institute");
   ["paper","mri","apps","books"].forEach(k=>$("t-"+k).hidden=state.tab!==k);
   // the MRI app loads the first time its tab opens, then stays, so switching back is instant
   const on=state.tab==="mri",f=$("mriframe");document.documentElement.classList.toggle("mritab",on);
@@ -506,8 +541,8 @@ function renderTabs(){
 function fitMri(){const f=$("mriframe");if(state.tab!=="mri")return;f.style.height=Math.max(300,window.innerHeight-document.querySelector(".top").getBoundingClientRect().bottom)+"px"}
 window.addEventListener("resize",fitMri);
 function renderEd(){
-  const d=new Date(),w="日月火水木金土"[d.getDay()];
-  $("ed").innerHTML=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${w}）`;
+  const d=new Date();
+  $("ed").innerHTML=EN()?d.toLocaleDateString("en-US",{weekday:"short",year:"numeric",month:"short",day:"numeric"}):`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WD(d.getDay())}）`;
 }
 
 /* ---------- data: each app's own published data (same site) ---------- */
@@ -517,10 +552,10 @@ let IDX=null, STORY=null;
 const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const nyLabel=t=>{  // Cboe "2026-10-27T16:14:59" or Nasdaq "Oct 27, 2026": the day, and the close or the time
   let m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);
-  if(m){const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3])),w="日月火水木金土"[d.getUTCDay()],hm=+m[4]*60+ +m[5];
-    return `${+m[2]}/${+m[3]}（${w}）${hm>=960?"米国市場引け":`米国市場 ${m[4]}:${m[5]} 時点`}`}
+  if(m){const hm=+m[4]*60+ +m[5];
+    return `${dayLab(+m[2],+m[3],wdOf(+m[1],+m[2],+m[3]))} ${hm>=960?CLOSE():tx(`米国市場 ${m[4]}:${m[5]} 時点`,`US market ${m[4]}:${m[5]} ET`)}`}
   m=String(t||"").match(/^([A-Z][a-z]{2}) (\d+), (\d{4})/);
-  if(m){const mo="JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3,d=new Date(Date.UTC(+m[3],mo,+m[2]));return `${mo+1}/${+m[2]}（${"日月火水木金土"[d.getUTCDay()]}）米国市場引け`}
+  if(m){const mo="JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3,d=new Date(Date.UTC(+m[3],mo,+m[2]));return `${dayLab(mo+1,+m[2],d.getUTCDay())} ${CLOSE()}`}
   return "";
 };
 // tile colour: grey at 0, full green or red at ±3% (as in the Nasdaq 100 heatmap)
@@ -529,8 +564,10 @@ const tileColor=(v,full=3)=>{if(v==null)return"rgb(54,59,68)";const t=Math.min(1
 const SHORT={SPX:"S&P500",NDX:"ナスダック100",DJI:"ダウ",RUT:"小型株",SOX:"半導体"};
 function headline(L){
   const ok=L.filter(x=>x.pct!=null),up=ok.filter(x=>x.pct>0).length,dn=ok.filter(x=>x.pct<0).length;
-  const mood=up===ok.length?"全面高":dn===ok.length?"全面安":up>dn?"総じて高い":dn>up?"総じて安い":"高安まちまち";
   const lead=[...ok].sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct))[0];
+  if(EN()){const mood=up===ok.length?"all higher":dn===ok.length?"all lower":up>dn?"mostly higher":dn>up?"mostly lower":"mixed";
+    return [`US stocks ${mood}`,lead?`${lead.en} moved the most, ${lead.pct>=0?"up":"down"} ${Math.abs(lead.pct).toFixed(1)}%`:""]}
+  const mood=up===ok.length?"全面高":dn===ok.length?"全面安":up>dn?"総じて高い":dn>up?"総じて安い":"高安まちまち";
   return [`米国株 ${mood}`,lead?`${SHORT[lead.k]||lead.ja}が${Math.abs(lead.pct).toFixed(1)}%${lead.pct>=0?"高":"安"}と最も大きく動いた`:""];
 }
 const fmtPct=v=>v==null?"-":(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2)+"%";
@@ -538,25 +575,25 @@ const fmtPct=v=>v==null?"-":(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2)+"%";
 function renderIssue(st){
   // a revised edition (after the after-hours earnings) shows the revision time instead
   const t=new Date(st&&(st.revisedAt||st.writtenAt)||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
-  const w="日月火水木金土"[j.getUTCDay()], hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
+  const w=WD(j.getUTCDay()), hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
   // the day's points to watch (paper.json "points"), picked from what the paper carries below
-  const P=st&&Array.isArray(st.points)?st.points.slice(0,3):[];
-  $("issue").innerHTML=`<div class="irow"><img class="mast" src="icons/masthead.png" alt="恐怖新聞" width="150" height="58"><div class="ib"><div class="id">${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small></div><div class="it"><b>${hm}</b><span>${st?(st.revisedAt?"改訂版":"発刊"):"数字の更新"}</span></div></div></div>`
+  const P=st&&Array.isArray(SP(st,"points"))?SP(st,"points").slice(0,3):[];
+  $("issue").innerHTML=`<div class="irow"><img class="mast" src="icons/masthead.png" alt="恐怖新聞" width="150" height="58"><div class="ib"><div class="id">${EN()?`${MON[j.getUTCMonth()]} ${j.getUTCDate()}<small> ${w}</small>`:`${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small>`}</div><div class="it"><b>${hm}</b><span>${st?(st.revisedAt?tx("改訂版","Revised"):tx("発刊","Published")):tx("数字の更新","Updated")}</span></div></div></div>`
     +(P.length?`<ul class="pts">${P.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"");
 }
 function renderIdx(){
   const el=$("idx");
-  if(!IDX||!IDX.indices||!IDX.indices.length){el.innerHTML=`<div class="soon">${IDX===false?"データを読み込めませんでした":"読み込み中…"}</div>`;return}
+  if(!IDX||!IDX.indices||!IDX.indices.length){el.innerHTML=`<div class="soon">${IDX===false?tx("データを読み込めませんでした","Could not load the data"):tx("読み込み中…","Loading…")}</div>`;return}
   const L=[...IDX.indices].sort((a,b)=>ORDER.indexOf(a.k)-ORDER.indexOf(b.k));
   const t0=(L.find(x=>x.k==="SPX")||L[0]).time, asof=nyLabel(t0);
   // the written article for the same session, when there is one; otherwise a headline from the numbers
   const day=(String(t0).match(/^\d{4}-\d\d-\d\d/)||[""])[0], st=STORY&&STORY.date===day?STORY:null;
-  let [h1,h2]=headline(L); if(st){h1=st.headline;h2=""}
+  let [h1,h2]=headline(L); if(st){h1=SP(st,"headline");h2=""}
   renderIssue(st);
-  el.innerHTML=`<div class="ph"><h2>主要指数</h2><span class="asof">${asof}</span></div><div class="head">${Array.isArray(h1)?esc(h1[0])+(h1[1]?`<span class="h2b">${esc(h1[1])}</span>`:""):esc(h1)}</div>${h2?`<div class="sub">${h2}</div>`:`<div style="height:8px"></div>`}<div class="tiles">`+L.map(x=>
+  el.innerHTML=`<div class="ph"><h2>${tx("主要指数","Markets")}</h2><span class="asof">${asof}</span></div><div class="head">${Array.isArray(h1)?esc(h1[0])+(h1[1]?`<span class="h2b">${esc(h1[1])}</span>`:""):esc(h1)}</div>${h2?`<div class="sub">${h2}</div>`:`<div style="height:8px"></div>`}<div class="tiles">`+L.map(x=>
     {const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2});
-    return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${x.ja}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
-      :`<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`+(st?`<div class="story"><p>${esc(st.body||(st.sections||[]).map(x=>x[1]).join(""))}</p>${st.sources&&st.sources.length?`<div class="src">出典 ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div>`:""}</div>`:"");
+    return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${EN()?x.en:x.ja}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
+      :`<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${EN()?x.en:x.ja}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`}).join("")+`</div>`+(st?`<div class="story"><p>${esc(SP(st,"body")||(st.sections||[]).map(x=>x[1]).join(""))}</p>${st.sources&&st.sources.length?`<div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div>`:""}</div>`:"");
 }
 // page 2: the scene of the day, judged as in the Mind app, and the three readings behind it
 const ACT=["第一幕","第二幕","第三幕","第四幕"];
@@ -610,12 +647,12 @@ function renderMriTop(){
   const {mri}=TEMP,rows=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[7]!=null),r=rows[rows.length-1],p=rows[rows.length-2],day=r[0];
   const m=r[7],lv=level(m),dm=(m-p[7])*100,ymd=String(day).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3");
   // the comment comes with the day's article (paper.json "mri"), only for the same session
-  const cm=STORY&&STORY.date===ymd&&STORY.mri;
+  const cm=STORY&&STORY.date===ymd&&SP(STORY,"mri");
   el.hidden=false;
-  const wd="日月火水木金土"[new Date(Date.UTC(Math.floor(day/1e4),Math.floor(day/100)%100-1,day%100)).getUTCDay()];
-  el.innerHTML=`<div class="mt">確定値<span class="mts">${mdN(day)}（${wd}）米国市場引け</span></div>
+  const Y=Math.floor(day/1e4),Mo=Math.floor(day/100)%100,Dd=day%100;
+  el.innerHTML=`<div class="mt">${tx("確定値","Confirmed")}<span class="mts">${dayLab(Mo,Dd,wdOf(Y,Mo,Dd))} ${CLOSE()}</span></div>
     <div class="mrow"><div><div class="mrl">Market Risk Level</div><span class="lvl" style="background:var(${lv[2]});color:${lv[3]}">${lv[1]}</span></div>
-      <div class="mv"><div><span class="ml">MRI</span><span class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</span></div><div class="chg">前日比 ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
+      <div class="mv"><div><span class="ml">MRI</span><span class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</span></div><div class="chg">${tx("前日比","vs prev.")} ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
     <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
       <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
     <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>
@@ -653,19 +690,19 @@ function renderTemp(){
 // commodities: gold, WTI, copper, bitcoin as tiles coloured by the day's move (data/markets.json in the MRI app)
 let MK=null;
 const ETLabel=t=>{const m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);if(!m)return"";
-  const w="日月火水木金土"[new Date(Date.UTC(+m[1],+m[2]-1,+m[3])).getUTCDay()],h=+m[4];
-  return `${+m[2]}/${+m[3]}（${w}）${h>=16&&h<18?"米国市場引け":`${m[4]}:${m[5]} 時点（米東部）`}`};
+  const h=+m[4];
+  return `${dayLab(+m[2],+m[3],wdOf(+m[1],+m[2],+m[3]))} ${h>=16&&h<18?CLOSE():tx(`${m[4]}:${m[5]} 時点（米東部）`,`${m[4]}:${m[5]} ET`)}`};
 function renderCmdty(){
   // gold, crude, copper, bitcoin, the dollar index and the yen as tiles coloured by the day's move
   // (full colour at ±3%; ±1% for the dollar and the yen, which move less; ±5% for bitcoin)
   const el=$("cmdty"),it={};(MK&&MK.items||[]).forEach(x=>it[x.k]=x);
-  const L=[["gold","金",3],["wti","原油（WTI）",3],["copper","銅",3],["btc","ビットコイン",5],["dxy","ドルインデックス",1],["usdjpy","ドル円",1]].filter(([k])=>it[k]);
-  if(!L.length){el.hidden=true;return}
+  const T=[["gold","金",3],["wti","原油（WTI）",3],["copper","銅",3],["btc","ビットコイン",5],["dxy","ドルインデックス",1],["usdjpy","ドル円",1]].filter(([k])=>it[k]);
+  if(!T.length){el.hidden=true;return}
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>コモディティ・ドル</h2><span class="asof">${ETLabel((it.gold||it[L[0][0]]).time)}</span></div><div class="tiles ctiles">`+L.map(([k,name,full])=>{const x=it[k];
+  el.innerHTML=`<div class="ph"><h2>${tx("コモディティ・ドル","Commodities & dollar")}</h2><span class="asof">${ETLabel((it.gold||it[T[0][0]]).time)}</span></div><div class="tiles ctiles">`+T.map(([k,name,full])=>{const x=it[k];if(EN())name=x.en;
     const f=v=>v.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec}),usd=x.unit==="ドル",yen=x.unit==="円";
-    const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}${usd?"$":""}${f(Math.abs(x.chg))}${yen?"円":""}`;
-    return `<div class="tile" style="background:${tileColor(x.pct,full)}"><div class="tn">${name}</div><div class="tv">${usd?'<small style="margin:0 1px 0 0">$</small>':""}${f(x.price)}${yen?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
+    const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}${usd?"$":""}${f(Math.abs(x.chg))}${yen&&!EN()?"円":""}`;
+    return `<div class="tile" style="background:${tileColor(x.pct,full)}"><div class="tn">${name}</div><div class="tv">${usd?'<small style="margin:0 1px 0 0">$</small>':""}${f(x.price)}${yen&&!EN()?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
 }
 // currencies: the dollar index and the yen against the dollar, euro and pound (full colour at ±1%, they move less)
 function renderFX(){
@@ -709,15 +746,15 @@ function curveChart(c,W){
     ${end(c.now,RC.now)}${end(c.m3,RC.m3)}${end(c.m6,RC.m6)}</svg>`;
 }
 // the period of the rates history charts (spread, real yield, OAS): one switch for all three, kept per viewer
-const RP=[["1Y","1年",1],["3Y","3年",3],["5Y","5年",5]];
+const RP=[["1Y","1年",1],["3Y","3年",3],["5Y","5年",5]];  // label shown: 1年 / 1Y
 // each chart keeps its own period (sp: spread, rl: real yield, hy: high yield OAS)
 const RPK={};["sp","rl","hy"].forEach(c=>{const v=store.get("rp."+c,"5Y");RPK[c]=RP.some(r=>r[0]===v)?v:"5Y"});
-const rpSeg=c=>`<div class="seg rpseg">${RP.map(([k,l])=>`<button type="button" data-rp="${c}:${k}" aria-pressed="${k===RPK[c]}">${l}</button>`).join("")}</div>`;
+const rpSeg=c=>`<div class="seg rpseg">${RP.map(([k,l])=>`<button type="button" data-rp="${c}:${k}" aria-pressed="${k===RPK[c]}">${EN()?k:l}</button>`).join("")}</div>`;
 const rCut=(S,c)=>{if(!S||!S.length)return S;const y=RP.find(r=>r[0]===RPK[c])[2],L=S[S.length-1][0],from=String(+L.slice(0,4)-y)+L.slice(4);return S.filter(q=>q[0]>=from)};
 // ticks along the bottom: years, or for a year or less the quarters (1月 shown as the year)
 const rTicks=S=>{const out=[],short=S.length&&(+S[S.length-1][0].slice(0,4)*12+ +S[S.length-1][0].slice(4,6))-(+S[0][0].slice(0,4)*12+ +S[0][0].slice(4,6))<=13;
   S.forEach((q,i)=>{if(!i)return;const p=S[i-1][0];
-    if(short){const m=+q[0].slice(4,6);if(m!==+p.slice(4,6)&&m%3===1)out.push([i,m===1?q[0].slice(0,4):m+"月"])}
+    if(short){const m=+q[0].slice(4,6);if(m!==+p.slice(4,6)&&m%3===1)out.push([i,m===1?q[0].slice(0,4):EN()?MON[m-1]:m+"月"])}
     else if(q[0].slice(0,4)!==p.slice(0,4))out.push([i,q[0].slice(0,4)])});return out};
 function spreadChart(S,W){
   S=rCut(S,"sp");
@@ -783,13 +820,13 @@ function ratesMore(){
   const RW=Math.max(260,$("rates").clientWidth-28);
   // cards as the yields above: the value, the day's change, and 推定値 while it is an estimate
   // the maturity (or what it covers) over each name, so the 10-year cards and the corporate ones read apart
-  const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?"<em>推定値</em>":""}</div>`;
+  const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
   const RH=withEst(I&&I.hist,Z.real),HH=withEst(O&&O.hist,Z.hy);
-  return `<div class="rcap"><span>実質金利・インフレ期待・OAS</span></div><div class="rsum rx2">
-    ${row("実質金利",Z.real,"10年")}${row("インフレ期待",Z.be,"10年")}${row("OAS HY",Z.hy,"米社債")}${row("OAS IG",Z.ig,"米社債")}</div>
-    <div class="rxn">OAS は、米社債の利回りが国債をどれだけ上回るか。決まった年限の国債1本ではなく、社債ごとにお金が返ってくる時期に合わせた国債の利回り（国債カーブ）と比べ、指数全体で平均している。HY＝ハイイールド債（平均満期5年前後）、IG＝投資適格債（同10年前後）。矢印は前日比。</div>
-    ${RH&&RH.length>1?`<div class="rcap"><span>10年実質金利の推移</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?'<div class="rkey rleg">最後の点は推定値</div>':""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}
-    ${HH&&HH.length>1?`<div class="rcap"><span>OAS ハイイールドの推移</span>${rpSeg("hy")}</div>${Z.hy&&Z.hy.est?'<div class="rkey rleg">最後の点は推定値</div>':""}<div class="rchart">${histChart(HH,RW,RC.now,"hyf","hy")}</div>`:""}`;
+  return `<div class="rcap"><span>${tx("実質金利・インフレ期待・OAS","Real yield, breakeven, OAS")}</span></div><div class="rsum rx2">
+    ${row(tx("実質金利","Real yield"),Z.real,tx("10年","10Y"))}${row(tx("インフレ期待","Breakeven"),Z.be,tx("10年","10Y"))}${row("OAS HY",Z.hy,tx("米社債","US corp."))}${row("OAS IG",Z.ig,tx("米社債","US corp."))}</div>
+    <div class="rxn">${tx("OAS は、米社債の利回りが国債をどれだけ上回るか。決まった年限の国債1本ではなく、社債ごとにお金が返ってくる時期に合わせた国債の利回り（国債カーブ）と比べ、指数全体で平均している。HY＝ハイイールド債（平均満期5年前後）、IG＝投資適格債（同10年前後）。矢印は前日比。","OAS is how far US corporate bond yields sit above Treasuries: not against one Treasury maturity, but against the Treasury curve at the times each bond pays back, averaged over the index. HY = high yield (average maturity about 5 years), IG = investment grade (about 10 years). Arrows: change from the day before.")}</div>
+    ${RH&&RH.length>1?`<div class="rcap"><span>${tx("10年実質金利の推移","10Y real yield")}</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}
+    ${HH&&HH.length>1?`<div class="rcap"><span>${tx("OAS ハイイールドの推移","High yield OAS")}</span>${rpSeg("hy")}</div>${Z.hy&&Z.hy.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(HH,RW,RC.now,"hyf","hy")}</div>`:""}`;
 }
 function renderRates(){
   const el=$("rates");
@@ -800,24 +837,25 @@ function renderRates(){
   const d8=q=>new Date(Date.UTC(+q.slice(0,4),+q.slice(4,6)-1,+q.slice(6,8)));
   const mo=lastNeg<0?null:Math.floor((d8(last[0])-d8(S[lastNeg][0]))/2629.8e6);
   const when=lastNeg<0?"":`${S[lastNeg][0].slice(0,4)}/${+S[lastNeg][0].slice(4,6)}`;
-  const st=(s2<0||s3<0)?["逆イールド","#ff6b6b",""]:mo!=null&&mo<12?["解消直後","#ffb547",`逆イールドの解消（${when}）から${mo}ヶ月`]:["順イールド","#7fd6a4",mo!=null?`逆イールドの解消（${when}）から${mo}ヶ月`:""];
+  const since=mo==null?"":tx(`逆イールドの解消（${when}）から${mo}ヶ月`,`${mo} months since the inversion ended (${when})`);
+  const st=(s2<0||s3<0)?[tx("逆イールド","Inverted"),"#ff6b6b",""]:mo!=null&&mo<12?[tx("解消直後","Just uninverted"),"#ffb547",since]:[tx("順イールド","Normal"),"#7fd6a4",since];
   const ch=(k,ref)=>{const d=n[k]-ref.y[k];return `${d>=0?"+":"−"}${Math.abs(d).toFixed(2)}`};
   const sg=v=>`${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}`;
-  const [Y,M,D]=CV.date.split("-").map(Number),w="日月火水木金土"[new Date(Date.UTC(Y,M-1,D)).getUTCDay()];
+  const [Y,M,D]=CV.date.split("-").map(Number);
   el.hidden=false;
   const W=Math.max(260,el.clientWidth-28);
-  el.innerHTML=`<div class="ph"><h2>金利</h2><span class="asof">${M}/${D}（${w}）米国債</span></div>
-    <div class="rsum">${[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
-    <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">10年−2年<b>${sg(s2)}</b></span><span class="sp">10年−3ヶ月<b>${sg(s3)}</b></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
-    <div class="rcap"><span>イールドカーブ</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>最新</span><span><i style="border-color:${RC.m3}"></i>3ヶ月前</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>6ヶ月前</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
-    <div class="rcap"><span>長短金利差の推移</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>10年−2年</span><span><i style="border-color:${RC.m3}"></i>10年−3ヶ月</span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}`;
+  el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>
+    <div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
+    <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span><span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
+    <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
+    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span><i style="border-color:${RC.m3}"></i>${tx("10年−3ヶ月","10Y−3M")}</span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}`;
 }
 function renderNews(){
   const el=$("news"),day=IDX&&IDX.indices&&IDX.indices.length?(String((IDX.indices.find(x=>x.k==="SPX")||IDX.indices[0]).time).match(/^\d{4}-\d\d-\d\d/)||[""])[0]:"";
-  const N=STORY&&STORY.date===day&&STORY.news;
+  const N=STORY&&STORY.date===day&&SP(STORY,"news");
   if(!N||!N.length){el.hidden=true;return}
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>主なニュース</h2></div><div class="nws">${N.map(([t,x])=>`<b>${esc(t)}</b><p>${esc(x)}</p>`).join("")}</div>`;
+  el.innerHTML=`<div class="ph"><h2>${tx("主なニュース","News")}</h2></div><div class="nws">${N.map(([t,x])=>`<b>${esc(t)}</b><p>${esc(x)}</p>`).join("")}</div>`;
 }
 function renderNums(){
   // the paper's market data page: one long list in a fixed order, the same every day (numbers shown above repeat here)
@@ -834,26 +872,26 @@ function renderNums(){
   // 恐怖指数: the confirmed day of the MRI app
   let fear="";
   if(M){const rows=M.daily.filter(r=>r[0]!==M.liveDay&&r[7]!=null),r=rows[rows.length-1],q=rows[rows.length-2];
-    fear=D("MRI",(r[7]*100).toFixed(2),(r[7]-q[7])*100,2,"pt")+D("VIX",r[1].toFixed(2),r[1]-q[1])+D("SKEW",r[2].toFixed(2),r[2]-q[2])+D("CAPE（シラーPER）",r[3].toFixed(2),r[3]-q[3])}
-  const idx=["SPX","NDX","DJI","RUT","SOX"].map(k=>L.find(x=>x.k===k)).filter(Boolean).map(x=>P(x.ja,f(x.price,x.k==="DJI"?0:2),x.pct)).join("");
-  const sec=SE.map(x=>P(`${x.ja}<small>${x.k}</small>`,"$"+f(x.price,2),x.pct)).join("");
+    fear=D("MRI",(r[7]*100).toFixed(2),(r[7]-q[7])*100,2,"pt")+D("VIX",r[1].toFixed(2),r[1]-q[1])+D("SKEW",r[2].toFixed(2),r[2]-q[2])+D(tx("CAPE（シラーPER）","CAPE (Shiller P/E)"),r[3].toFixed(2),r[3]-q[3])}
+  const idx=["SPX","NDX","DJI","RUT","SOX"].map(k=>L.find(x=>x.k===k)).filter(Boolean).map(x=>P(EN()?x.en:x.ja,f(x.price,x.k==="DJI"?0:2),x.pct)).join("");
+  const sec=SE.map(x=>P(`${EN()?x.en:x.ja}<small>${x.k}</small>`,"$"+f(x.price,2),x.pct)).join("");
   // 金利: the Treasury's par yields (as in the rates panel), changes in points from the day before
   let rates="";
   if(CV&&CV.now){const n=CV.now.y,pv=CV.prev&&CV.prev.y,d=k=>pv&&pv[k]!=null?n[k]-pv[k]:null;
     const S=CV.spread,s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"];let ln=-1;for(let i=S.length-1;i>=0;i--)if(S[i][1]<0||(S[i][2]!=null&&S[i][2]<0)){ln=i;break}
     const after=ln>=0&&s2>=0&&s3>=0&&((+S[S.length-1][0].slice(0,4)-+S[ln][0].slice(0,4))*12+(+S[S.length-1][0].slice(4,6)-+S[ln][0].slice(4,6)))<12;
-    const tag=(s2<0||s3<0)?["逆イールド","#ff6b6b"]:after?["解消直後","#ffb547"]:["順イールド","#7fd6a4"];
-    rates=[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>D(`米${l}債`,n[k].toFixed(2)+"%",d(k))).join("")
-      +row("長短差（10年−2年）",`${sgn(s2)}${Math.abs(s2).toFixed(2)}`,`<span class="tag" style="color:${tag[1]};background:${tag[1]}1f">${tag[0]}</span>`)
-      +row("長短差（10年−3ヶ月）",`${sgn(s3)}${Math.abs(s3).toFixed(2)}`,"");
-    const Z=rLatest(),E=(name,x)=>!x?"":D(name+(x.est?'<em class="nest">推定値</em>':""),x.v.toFixed(2)+"%",x.dv);
-    rates+=E("10年実質金利",Z.real)+E("10年インフレ期待",Z.be)+E("OAS HY",Z.hy)+E("OAS IG",Z.ig)}
-  const R=k=>{const x=it[k];if(!x)return"";const yen=x.unit==="円",usd=x.unit==="ドル";return P(x.ja,(usd?"$":"")+f(x.price,x.dec)+(yen?"円":""),x.pct)};
+    const tag=(s2<0||s3<0)?[tx("逆イールド","Inverted"),"#ff6b6b"]:after?[tx("解消直後","Just uninverted"),"#ffb547"]:[tx("順イールド","Normal"),"#7fd6a4"];
+    rates=[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>D(tx(`米${l}債`,`US ${k}`),n[k].toFixed(2)+"%",d(k))).join("")
+      +row(tx("長短差（10年−2年）","Spread 10Y−2Y"),`${sgn(s2)}${Math.abs(s2).toFixed(2)}`,`<span class="tag" style="color:${tag[1]};background:${tag[1]}1f">${tag[0]}</span>`)
+      +row(tx("長短差（10年−3ヶ月）","Spread 10Y−3M"),`${sgn(s3)}${Math.abs(s3).toFixed(2)}`,"");
+    const Z=rLatest(),E=(name,x)=>!x?"":D(name+(x.est?`<em class="nest">${tx("推定値","est.")}</em>`:""),x.v.toFixed(2)+"%",x.dv);
+    rates+=E(tx("10年実質金利","10Y real yield"),Z.real)+E(tx("10年インフレ期待","10Y breakeven"),Z.be)+E("OAS HY",Z.hy)+E("OAS IG",Z.ig)}
+  const R=k=>{const x=it[k];if(!x)return"";const yen=x.unit==="円",usd=x.unit==="ドル";return P(EN()?x.en:x.ja,(usd?"$":"")+f(x.price,x.dec)+(yen&&!EN()?"円":""),x.pct)};
   const fx=["usdjpy","eurjpy","gbpjpy","audjpy","eurusd","dxy"].map(R).join(""),cm=["gold","silver","wti","natgas","copper"].map(R).join(""),cr=["btc","eth"].map(R).join("");
   const t=(it.usdjpy||it.gold||{}).time;
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>数字</h2><span class="asof">${ETLabel(t)||""}</span></div>
-    ${G("恐怖指数",fear)}${G("株価指数",idx)}${G("S&amp;P500 セクター",sec)}${G("金利",rates)}${G("為替",fx)}${G("コモディティ",cm)}${G("暗号資産",cr)}`;
+  el.innerHTML=`<div class="ph"><h2>${tx("数字","The numbers")}</h2><span class="asof">${ETLabel(t)||""}</span></div>
+    ${G(tx("恐怖指数","Fear gauges"),fear)}${G(tx("株価指数","Indices"),idx)}${G(tx("S&amp;P500 セクター","S&amp;P 500 sectors"),sec)}${G(tx("金利","Rates"),rates)}${G(tx("為替","Currencies"),fx)}${G(tx("コモディティ","Commodities"),cm)}${G(tx("暗号資産","Crypto"),cr)}`;
 }
 // 心: the scene of the day judged as in Mind (US closes before 7:00 Japan time), and Mind's word and bias for the day
 const fortuneDay=()=>{const j=new Date(Date.now()+(9-7)*36e5);return j.getUTCFullYear()*10000+(j.getUTCMonth()+1)*100+j.getUTCDate()};
@@ -874,12 +912,16 @@ function renderKokoro(){
   const el=$("kokoro"),M=window.MindData;
   if(!TEMP||!M||!window.MindEngine){el.hidden=true;return}
   let key;try{key=sceneOf(TEMP)}catch(e){el.hidden=true;return}
-  const [ai,name,,biases,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja])=>W[n]=ja));
+  const [ai,name,,biases,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja,en])=>W[n]=EN()&&en?en:ja));
   const di=dayIdx(fortuneDay()),w=W[words[di%words.length]],b=M.BIAS[biases[di%biases.length]];
   el.hidden=false;
-  el.innerHTML=`<div class="kh"><b>心</b><span>今の局面 <em>${name[0]}</em>（${ACT[ai]}）</span></div>
+  const bn=EN()&&b[2]?b[2]:b[0],bt=EN()&&b[3]?b[3]:b[1];
+  el.innerHTML=EN()?`<div class="kh"><b>心</b><span>The scene <em>${name[1]||name[0]}</em> (Act ${ai+1})</span></div>
+    <p class="kw">“${esc(w)}”</p>
+    <div class="kb"><small>Bias to watch</small><strong>${esc(bn)}</strong><p>${esc(bt)}</p></div>
+    <a class="kl" href="${BASE}/mind/">More in Mind ›</a>`:`<div class="kh"><b>心</b><span>今の局面 <em>${name[0]}</em>（${ACT[ai]}）</span></div>
     <p class="kw">「${esc(w)}」</p>
-    <div class="kb"><small>気をつけるバイアス</small><strong>${esc(b[0])}</strong><p>${esc(b[1])}</p></div>
+    <div class="kb"><small>気をつけるバイアス</small><strong>${esc(bn)}</strong><p>${esc(bt)}</p></div>
     <a class="kl" href="${BASE}/mind/">Mind で詳しく ›</a>`;
 }
 async function loadMarkets(){
@@ -908,7 +950,11 @@ async function load(){
 }
 document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);renderRates()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
-renderEd();renderTabs();renderApps();renderBooks();loadPaper();loadMarkets();loadTemp();
+document.addEventListener("click",e=>{const b=e.target.closest("[data-lang]");if(!b||b.dataset.lang===LANG)return;
+  LANG=b.dataset.lang;document.documentElement.lang=LANG;if(!EMBED)try{localStorage.setItem("lang",LANG)}catch(err){}
+  renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderIdx();renderNews();renderMriTop();renderRates();renderCmdty();renderNums();renderKokoro();
+  const f=$("mriframe");if(f.src)f.src=f.src});
+renderEd();renderTabs();renderApps();renderBooks();renderGuide();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>

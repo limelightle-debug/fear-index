@@ -18,18 +18,20 @@
     // labels follow the app's language (each app sets <html lang> when JP / EN is switched)
     const L={apps:["アプリ","Apps"],books:["書籍","Books"]},en=()=>document.documentElement.lang==="en";
     ["apps","books"].forEach(k=>{const b=document.createElement("button");b.type="button";b.dataset.suite=k;b.setAttribute("aria-pressed","false");tabs.appendChild(b)});
-    const label=()=>tabs.querySelectorAll("[data-suite]").forEach(b=>b.textContent=L[b.dataset.suite][en()?1:0]);label();
+    // on a language switch the open frames load again in the new language
+    const label=()=>{tabs.querySelectorAll("[data-suite]").forEach(b=>b.textContent=L[b.dataset.suite][en()?1:0]);
+      Object.entries(frames).forEach(([k,f])=>{const u=BASE+"?embed="+k+"&lang="+(en()?"en":"ja");if(f.src!==u)f.src=u})};
     new MutationObserver(label).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
     const box=document.createElement("div");box.className="suite-box";box.hidden=true;
     const at=document.querySelector(o.after||"#app");(at&&at.parentNode?at:tabs).parentNode.insertBefore(box,(at&&at.parentNode?at:tabs).nextSibling);
-    const frames={};
+    const frames={};label();
     const fit=f=>{try{const d=f.contentDocument;if(d&&d.body)f.style.height=d.documentElement.scrollHeight+"px"}catch(e){}};
     function open(k){
       tabs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.suite===k));
       document.documentElement.classList.add("suite-on");box.hidden=false;
       Object.entries(frames).forEach(([n,f])=>f.hidden=n!==k);
       if(!frames[k]){const f=document.createElement("iframe");f.className="suite-frame";f.title=k==="apps"?"アプリ":"書籍";
-        f.src=BASE+"?embed="+k;f.addEventListener("load",()=>{fit(f);try{new ResizeObserver(()=>fit(f)).observe(f.contentDocument.body)}catch(e){}});
+        f.src=BASE+"?embed="+k+"&lang="+(en()?"en":"ja");f.addEventListener("load",()=>{fit(f);try{new ResizeObserver(()=>fit(f)).observe(f.contentDocument.body)}catch(e){}});
         frames[k]=f;box.appendChild(f)}
       else fit(frames[k]);
       window.scrollTo(0,0);
