@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>
+// shown inside the other apps' 他のアプリ / 書籍 tabs (suite.js): ?embed=apps or ?embed=books shows that tab alone
+const EMBED=(location.search.match(/[?&]embed=(apps|books)\b/)||[])[1]||"";
+if(EMBED){document.documentElement.classList.add("embed");
+  document.addEventListener("click",e=>{const a=e.target.closest("a[href]");if(a&&!a.target)a.target="_top"},true)}
+</script>
 <title>恐怖指数研究所</title>
 <meta name="description" content="恐怖指数研究所の恐怖新聞：MRI・VIX・TQQQ・Nasdaq 100 を上から下まで一枚で">
 <link rel="manifest" href="manifest.webmanifest">
@@ -276,6 +282,8 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 /* the last panel: why each panel is in the paper and what to look at, in the paper's order */
 .guide dl{margin:0}.guide dt{font-size:12px;font-weight:700;color:var(--ink);letter-spacing:.04em;margin-top:12px}.guide dt:first-child{margin-top:2px}
 .guide dd{margin:3px 0 0;font-size:13.5px;line-height:1.64;color:var(--ink2)}
+/* embedded in another app: just the tab, no header, footer or side padding of its own */
+html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed .wrap{padding:0;max-width:none}html.embed body{background:transparent}
 /* ---- design system (applied last): type scale, change colours, pills ----
    numbers: hero 44 (MRI) / tiles and cards 24 / list rows 18 / small 13, all Archivo
    text: lead 26 (確定値, the date) / headline 20 / body 14 / panel title 13 / subhead 12 / meta 11.5 / pill 10.5
@@ -306,7 +314,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
     <div class="seg" id="tabs" role="group" aria-label="表示">
       <button type="button" data-tab="paper">恐怖新聞</button>
       <button type="button" data-tab="mri">MRI</button>
-      <button type="button" data-tab="apps">個別アプリ</button>
+      <button type="button" data-tab="apps">アプリ</button>
       <button type="button" data-tab="books">書籍</button>
     </div>
   </div>
@@ -345,7 +353,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v84";
+const APP_VER="fi-v85";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -360,7 +368,7 @@ const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vi
   ["帳簿と物差し","https://amzn.asia/d/03aL6HY1","icons/book-chobo.jpg","根",[25.5,73,21,6.5]],["失敗の魔術師","https://amzn.asia/d/0hWKU73R","icons/book-shippai.jpg","根",[56,73,21,6.5]],
   ["兵法に学べ","https://amzn.asia/d/02BQOi5d","icons/book-heiho.jpg","根",[25.5,81.5,18,6.5]],["相場のアノマリーを斬る","https://amzn.asia/d/0boQWl0D","icons/book-anomaly.jpg","根",[49,81.5,36,6.5]]];
 const store={get:(k,d)=>{try{return localStorage.getItem("fi."+k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem("fi."+k,v)}catch(e){}}};
-const state={tab:store.get("tab","apps")};
+const state={tab:EMBED||store.get("tab","apps")};
 const DATA={};
 
 const pc=(v,d=1)=>`${v>=0?"+":"−"}${Math.abs(v*100).toFixed(d)}%`;
@@ -472,7 +480,7 @@ const MAP=[
 function renderApps(){
   const A=Object.fromEntries(APPS.map(a=>[a[0],a]));
   const card=([k,role,ch])=>{const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}${ch?`<i class="ch">${ch}</i>`:""}</b><span>${role}</span></div><em>›</em></a>`};
-  $("apps").innerHTML=`<div class="ph"><h2>個別アプリ</h2><span class="asof">『VIXの声を聴け』に沿って</span></div>`+
+  $("apps").innerHTML=`<div class="ph"><h2>アプリ</h2><span class="asof">『VIXの声を聴け』に沿って</span></div>`+
     MAP.map(([k,role,title,items],i)=>`${i?`<div class="arrow">↓</div>`:""}<div class="layer"><div class="lh"><b class="kan">${k}</b><b>${role}</b><span>${title}</span></div>${items.map(card).join("")}</div>`).join("");
 }
 function bookRow([b,url,cv,layer]){
