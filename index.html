@@ -222,8 +222,9 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .app b{display:block;font-size:15px}
 .app span{display:block;font-size:12px;color:var(--muted);line-height:1.45}
 .app em{margin-left:auto;font-style:normal;color:var(--accent);font-size:18px}
-.tree{position:relative;margin:2px -14px 10px;background:#070712;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.tree img{display:block;width:100%;height:auto}
+.tree{position:relative;margin:2px -14px 10px;padding-top:6%;background:#070712;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+/* room above 空; the title links sit on .tin, so their % boxes still match the picture */
+.tin{position:relative}.tree img{display:block;width:100%;height:auto}
 .tree a{position:absolute;border-radius:6px}
 .tree a:active{background:rgba(127,168,255,.25)}
 .book .ly{display:inline-block;font-style:normal;font-size:10px;font-weight:700;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:0 6px;margin-bottom:2px}
@@ -295,7 +296,7 @@ html.mritab .wrap{padding-bottom:0}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v50";
+const APP_VER="fi-v51";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -431,7 +432,7 @@ function bookRow([b,url,cv,layer]){
 function renderBooks(){
   // the tree (tap a title to open its Amazon page), then the same books as a list; the English edition sits in its own panel below
   $("books").innerHTML=`<div class="ph"><h2>書籍体系図</h2><span class="asof">Gold Locks / 恐怖指数研究所</span></div>
-    <div class="tree"><img src="icons/book-map.jpg" alt="書籍体系図" width="1200" height="902" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='icons/book-map.jpg?r='+Date.now()}">${BOOKS.filter(x=>x[4]).map(([b,url,,,r])=>`<a href="${url}" target="_blank" rel="noopener" aria-label="『${b}』" style="left:${r[0]}%;top:${r[1]}%;width:${r[2]}%;height:${r[3]}%"></a>`).join("")}</div>
+    <div class="tree"><div class="tin"><img src="icons/book-map.jpg" alt="書籍体系図" width="1200" height="902" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='icons/book-map.jpg?r='+Date.now()}">${BOOKS.filter(x=>x[4]).map(([b,url,,,r])=>`<a href="${url}" target="_blank" rel="noopener" aria-label="『${b}』" style="left:${r[0]}%;top:${r[1]}%;width:${r[2]}%;height:${r[3]}%"></a>`).join("")}</div></div>
     <div class="bmap">${BOOKS.filter(x=>!x[5]).map(bookRow).join("")}</div>`;
   $("books-en").innerHTML=`<div class="ph"><h2>英語版</h2><span class="asof">English edition</span></div><div class="bmap solo">${BOOKS.filter(x=>x[5]).map(bookRow).join("")}</div>`;
 }
