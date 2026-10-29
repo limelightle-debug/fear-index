@@ -132,6 +132,16 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .mrichart text{font-family:var(--f-tick);font-stretch:85%;font-size:10px;fill:var(--muted)}
 .sigline{font-size:12px;color:var(--ink2);margin-top:8px}
 .sigline em{font-style:normal;font-weight:800;font-size:10px;color:#fff;background:var(--sell);border-radius:4px;padding:1px 5px;margin-right:5px}
+/* the paper's first article: the day's confirmed MRI as in the MRI app, and the comment on it */
+.mtop .mt{font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1.15;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.mtop .mrow{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:12px}
+.mtop .mrl{font-size:15px;font-weight:600;color:var(--ink2);letter-spacing:.03em;white-space:nowrap}
+.mtop .mrow .lvl{margin-top:8px;font-size:18px;padding:5px 15px}
+.mtop .mv{text-align:right}.mtop .mv .big{font-size:44px}.mtop .mv .ml{font-family:var(--f-tick);font-size:18px;font-weight:700;color:var(--ink2);margin-right:8px}
+.mtop .rlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+.mtop .cm{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.mtop .cm b{font-size:11.5px;font-weight:700;color:var(--accent)}
+.mtop .cm p{margin:3px 0 0;font-size:14px;line-height:1.64;text-indent:1em}
 .view{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
 .view b{font-size:11.5px;font-weight:700;color:var(--accent)}
 .view p{margin:3px 0 0;font-size:14px;line-height:1.64;text-indent:1em}
@@ -272,6 +282,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 
   <div id="t-paper">
     <section class="panel issue" id="issue"></section>
+    <section class="panel mtop" id="mritop" hidden></section>
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="news" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
@@ -297,7 +308,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v56";
+const APP_VER="fi-v57";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -542,6 +553,22 @@ function renderMRIp(){
     <div class="mrichart">${mriChart(R3,Math.max(260,el.clientWidth-28))}</div>
     ${view?`<div class="view"><b>見解</b><p>${esc(view)}</p></div>`:""}`;
 }
+function renderMriTop(){
+  const el=$("mritop");
+  if(!TEMP||!TEMP.mri){el.hidden=true;return}
+  const {mri}=TEMP,rows=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[7]!=null),r=rows[rows.length-1],p=rows[rows.length-2],day=r[0];
+  const m=r[7],lv=level(m),dm=(m-p[7])*100,ymd=String(day).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3");
+  // the comment comes with the day's article (paper.json "mri"), only for the same session
+  const cm=STORY&&STORY.date===ymd&&STORY.mri;
+  el.hidden=false;
+  el.innerHTML=`<div class="mt">${mdN(day)} 確定値</div>
+    <div class="mrow"><div><div class="mrl">Market Risk Level</div><span class="lvl" style="background:var(${lv[2]});color:${lv[3]}">${lv[1]}</span></div>
+      <div class="mv"><div><span class="ml">MRI</span><span class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</span></div><div class="chg">前日比 ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
+    <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
+      <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
+    <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>
+    ${cm?`<div class="cm"><b>コメント</b><p>${esc(cm)}</p></div>`:""}`;
+}
 function renderTemp(){
   const el=$("temp");
   if(!TEMP||!window.MindEngine){el.hidden=true;return}
@@ -733,13 +760,13 @@ async function loadMarkets(){
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderKokoro();
+  renderKokoro();renderMriTop();
 }
 async function loadPaper(){
   await Promise.all([
     fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
     fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>STORY=j).catch(()=>STORY=null)]);
-  renderIdx();renderNews();
+  renderIdx();renderNews();renderMriTop();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
