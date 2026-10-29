@@ -434,7 +434,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v145";
+const APP_VER="fi-v146";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -589,7 +589,7 @@ function bookRow([b,url,cv,layer]){
 // the last panel: why each panel is in the paper and what to look at, in the paper's order
 const GUIDE=[
  ["注目点","その日いちばん目を向けるべき2〜3点。ここだけ読めば、その朝の要点がつかめる。","Points to watch","The two or three things to look at first. Read only these and you have the morning."],
- ["鷹の目・魚の目・虫の目","この新聞の全部を3つの段落にまとめた冒頭のページ。鷹の目は高い空から全体の景色を、魚の目はこの1〜3ヶ月の流れと潮目を、虫の目はその日の細部を見る。3つを順に読むと、何が起きていて、どちらへ向かい、今日の何がそれを裏づけるかがつながる。","Hawk, fish and bug's eyes","The whole paper in three paragraphs at the top. The hawk sees the landscape from high above, the fish reads the current of the last one to three months, the bug looks at the day's detail. Read in turn, they tie together what is happening, where it is heading and what today confirms."],
+ ["虫の目・鷹の目・魚の目","この新聞の全部を3つの段落にまとめた冒頭のページ。虫の目はその日の細部を、鷹の目は高い空から全体の景色を、魚の目はこの1〜3ヶ月の流れと潮目を見る。3つを順に読むと、今日何が起き、それがどんな景色の中にあり、どちらへ向かうかがつながる。","Hawk, fish and bug's eyes","The whole paper in three paragraphs at the top. The hawk sees the landscape from high above, the fish reads the current of the last one to three months, the bug looks at the day's detail. Read in turn, they tie together what is happening, where it is heading and what today confirms."],
  ["MRI 確定値","VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。","MRI, confirmed","Fear and froth in the market as one number, from VIX, SKEW and CAPE. Look less at the value than at how far it is from SELL 80 and BUY 8, and how it moved from the day before."],
  ["主要指数と記事","米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。","Markets and the story","How US stocks moved. The S&amp;P 500 is the whole, the Nasdaq 100 and chips the centre of the action, the Russell 2000 the small caps that feel the economy. A day when only one moves a lot is a lopsided market."],
  ["主なニュース","動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。","News","Why it moved. See which news lines up with which move."],
@@ -1163,7 +1163,7 @@ function renderNums(){
   el.innerHTML=`<div class="ph"><h2>${tx("数字","The numbers")}</h2><span class="asof">${ETLabel(t)||""}</span></div>
     ${G(tx("恐怖指数","Fear gauges"),fear)}${G(tx("株価指数","Indices"),idx)}${G(tx("S&amp;P500 セクター","S&amp;P 500 sectors"),sec)}${G(tx("金利","Rates"),rates)}${G(tx("為替","Currencies"),fx)}${G(tx("コモディティ","Commodities"),cm)}${G(tx("暗号資産","Crypto"),cr)}`;
 }
-// 鷹の目・虫の目・魚の目: the whole paper as three short paragraphs at the top, written from the data the panels
+// 虫の目・鷹の目・魚の目 (shown in that order; paper.json "eye" stays [hawk, fish, bug]): the whole paper as three short paragraphs at the top, written from the data the panels
 // below use. 鷹の目 sees the big picture (where everything stands), 魚の目 reads the current (which way things have
 // moved over the last month or three), 虫の目 looks up close (the latest single reading of each). A topic with no
 // data is left out. The day's article can supply its own text (paper.json "eye": [hawk, fish, bug]).
@@ -1240,8 +1240,8 @@ function renderEye(){
   const h2=wind.down.length||wind.up.length?(en?[wind.down.length?`headwinds: ${wind.down.join(", ")}`:"",wind.up.length?`tailwinds: ${wind.up.join(", ")}`:""].filter(Boolean).join(" / "):[wind.down.length?`向かい風 ${wind.down.join("・")}`:"",wind.up.length?`追い風 ${wind.up.join("・")}`:""].filter(Boolean).join("　")):"";
   const P=(t,sub,body)=>`<div class="ep"><div class="et"><b>${t}</b><span>${sub}</span></div><p>${esc(body)}</p></div>`;
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>${tx("鷹の目・魚の目・虫の目","Hawk, fish and bug's eyes")}</h2><span class="asof">${tx("毎日更新","Updated daily")}</span></div>${headHTML("eyeHead",[h1,h2])}
-    ${P(tx("鷹の目","Hawk's eye"),tx("全体を見渡す","the big picture"),txt[0])}${P(tx("魚の目","Fish's eye"),tx("流れを読む","the current"),txt[1])}${P(tx("虫の目","Bug's eye"),tx("直近を見る","up close"),txt[2])}`;
+  el.innerHTML=`<div class="ph"><h2>${tx("虫の目・鷹の目・魚の目","Bug, hawk and fish's eyes")}</h2><span class="asof">${tx("毎日更新","Updated daily")}</span></div>${headHTML("eyeHead",[h1,h2])}
+    ${P(tx("虫の目","Bug's eye"),tx("直近を見る","up close"),txt[2])}${P(tx("鷹の目","Hawk's eye"),tx("全体を見渡す","the big picture"),txt[0])}${P(tx("魚の目","Fish's eye"),tx("流れを読む","the current"),txt[1])}`;
 }
 // FedWatch: what fed funds futures price for each FOMC meeting, worked out by CME's method (MRI app, data/fedwatch.json)
 let FW=null;
