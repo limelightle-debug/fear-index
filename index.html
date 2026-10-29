@@ -202,9 +202,12 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .kokoro .kh span{font-size:12px;color:var(--muted)}
 .kokoro .kh span em{font-style:normal;font-weight:700;color:var(--ink2)}
 .kokoro .kw{margin:10px 0 0;font-size:15px;font-weight:700;line-height:1.75}
-.kokoro .kb{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
-.kokoro .kb small{display:block;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.06em}
-.kokoro .kb strong{display:block;font-size:14px;margin-top:2px}
+.kokoro .kq{margin:0}.kokoro .kq .kw{margin:0}
+.kokoro .kq figcaption{margin-top:6px;text-align:right;font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+.kokoro .kbs{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.kokoro .kbs small{display:block;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.06em}
+.kokoro .kb{margin-top:6px}.kokoro .kb+.kb{margin-top:10px}
+.kokoro .kb strong{display:block;font-size:14px}
 .kokoro .kb p{margin:2px 0 0;font-size:13px;line-height:1.65;color:var(--ink2)}
 .kokoro .kl{display:block;text-align:right;margin-top:8px;font-size:12px;color:var(--accent);text-decoration:none}
 /* the day's other news, one line each with a tag */
@@ -434,7 +437,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v146";
+const APP_VER="fi-v147";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1557,17 +1560,15 @@ function renderKokoro(){
   const el=$("kokoro"),M=window.MindData;
   if(!TEMP||!M||!window.MindEngine){el.hidden=true;return}
   let key;try{key=sceneOf(TEMP)}catch(e){el.hidden=true;return}
-  const [ai,name,,biases,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja,en])=>W[n]=EN()&&en?en:ja));
-  const di=dayIdx(fortuneDay()),w=W[words[di%words.length]],b=M.BIAS[biases[di%biases.length]];
+  // the scene of the day (『VIXの声を聴け』 chapter 5): what is happening, a word from 30の言葉 (chapter 4) with its
+  // number and theme, and every bias the scene warns of
+  const [ai,name,what,biases,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja])=>W[n]=[ja,g[0]]));
+  const di=dayIdx(fortuneDay()),wn=words[di%words.length],[w,wg]=W[wn];
   el.hidden=false;
-  const bn=EN()&&b[2]?b[2]:b[0],bt=EN()&&b[3]?b[3]:b[1];
-  el.innerHTML=EN()?`<div class="ph"><h2>心 Mind</h2><span class="asof">Act ${ai+1}</span></div>${headHTML("kokoroHead",[`The scene: ${name[1]||name[0]}`,""])}
-    <p class="kw">“${esc(w)}”</p>
-    <div class="kb"><small>Bias to watch</small><strong>${esc(bn)}</strong><p>${esc(bt)}</p></div>
-    <a class="kl" href="${BASE}/mind/">More in Mind ›</a>`:`<div class="ph"><h2>心</h2><span class="asof">${ACT[ai]}</span></div>${headHTML("kokoroHead",[`今の局面は「${name[0]}」`,""])}
-    <p class="kw">「${esc(w)}」</p>
-    <div class="kb"><small>気をつけるバイアス</small><strong>${esc(bn)}</strong><p>${esc(bt)}</p></div>
-    <a class="kl" href="${BASE}/mind/">Mind で詳しく ›</a>`;
+  el.innerHTML=`<div class="ph"><h2>心</h2><span class="asof">${ACT[ai]}</span></div>${headHTML("kokoroHead",[`今の局面は「${name[0]}」`,""])}
+    <div class="ccm"><p>${esc(what[0])}</p></div>
+    <figure class="kq"><p class="kw">「${esc(w)}」</p><figcaption>30の言葉より　${wn}　${esc(wg)}</figcaption></figure>
+    <div class="kbs"><small>気をつけるバイアス</small>${biases.map(k=>M.BIAS[k]).filter(Boolean).map(b=>`<div class="kb"><strong>${esc(b[0])}</strong><p>${esc(b[1])}</p></div>`).join("")}</div>`;
 }
 async function loadMarkets(){
   await Promise.all([
