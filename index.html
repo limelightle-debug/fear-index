@@ -171,6 +171,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .nr .v{font-family:var(--f-tick);font-stretch:82%;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .nr .c{font-family:var(--f-tick);font-stretch:85%;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .nr .c.up{color:#5fd08e}.nr .c.dn{color:#ff7b7b}
+.nr .k .nest{font-family:var(--f-body);font-style:normal;font-size:9.5px;font-weight:700;color:#ffb547;border:1px solid #ffb54766;border-radius:999px;padding:0 5px;margin-left:6px;vertical-align:1px}
 .nr .k small{font-family:var(--f-tick);font-size:10.5px;color:var(--muted);margin-left:6px}
 .nr .tag{font-family:var(--f-body);font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px}
 /* rates: 3M, 2Y, 10Y, 30Y, the spreads and the curve's state; the curve now / 3 / 6 months ago; both spreads over 5 years */
@@ -321,7 +322,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v77";
+const APP_VER="fi-v78";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -723,23 +724,37 @@ function histChart(S,W,col,id,c){
     <path d="${d}L${x(n-1)},${MT+PH}L${x(0)},${MT+PH}Z" fill="url(#${id})"/><path d="${d}" fill="none" stroke="${col}" stroke-width="1.6"/>
     <circle cx="${x(n-1)}" cy="${y(L)}" r="3" fill="${col}"/><text x="${ML+PW+6}" y="${y(L)+3.5}" style="fill:${col};font-weight:700">${L.toFixed(2)}</text></svg>`;
 }
-function ratesMore(){
-  const I=CV&&CV.infl,O=CV&&CV.oas;if(!I&&!O)return"";
-  const RW=Math.max(260,$("rates").clientWidth-28),it={};(MK&&MK.items||[]).forEach(x=>it[x.k]=x);
+// the OAS: this app's data/oas.json (the morning paper's run reads FRED each day), else the MRI app's curve.json
+let OASD=null;
+function oasData(){if(OASD&&OASD.date)return{...OASD,hist:(OASD.hist||[]).map(r=>[r[0],r[1]])};return CV&&CV.oas}
+// the latest 10Y real yield, breakeven and OAS: the official value, or when the latest session is newer than the
+// official day, the estimate from that session's bond ETF moves (markets.json) on top of it, marked est
+// Durations are approximate: TIP 6.6, IEF 7.0, HYG 3.1, LQD 8.2.
+function rLatest(){
+  const I=CV&&CV.infl,O=oasData(),it={};(MK&&MK.items||[]).forEach(x=>it[x.k]=x);
   const mday=String((it.tip||it.us10y||{}).time||"").slice(0,10),newer=b=>b&&mday&&mday>b.date;
   const DUR={tip:6.6,ief:7,hyg:3.1,lqd:8.2},pc=k=>it[k]&&it[k].pct!=null?it[k].pct:null;
   const cr=k=>pc(k)==null||pc("ief")==null?null:-(pc(k)-pc("ief")*DUR[k]/DUR.ief)/DUR[k];
   const dR=pc("tip")==null?null:-pc("tip")/DUR.tip,dN=it.us10y&&it.us10y.chg!=null?it.us10y.chg:null;
-  // cards as the yields above: the value and the day's change (an estimate's change is from the official value
-  // it stands on), and 推定値 while it is an estimate
-  const row=(name,v,d,v1)=>{if(v==null)return"";const x=v+(d||0),dv=d!=null?d:v1==null?null:x-v1;
-    return `<div>${name}<b>${x.toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}${d==null?"":"<em>推定値</em>"}</div>`};
   const oi=I&&newer(I)&&dR!=null,oo=O&&newer(O);
+  // an estimate's change is from the official value it stands on
+  const one=(v,d,v1)=>v==null?null:{v:v+(d||0),dv:d!=null?d:v1==null?null:v-v1,est:d!=null,day:d!=null?mday:null};
+  return{I,O,real:I&&one(I.real10,oi?dR:null,I.real10_d1),be:I&&one(I.be10,oi&&dN!=null?dN-dR:null,I.be10_d1),
+    hy:O&&one(O.hy,oo?cr("hyg"):null,O.hy_d1),ig:O&&one(O.ig,oo?cr("lqd"):null,O.ig_d1)};
+}
+// a chart's series with the estimate as its last point, when the latest value is one
+const withEst=(H,x)=>!H||!x||!x.est||!x.day?H:[...H.filter(q=>q[0]<x.day.replace(/-/g,"")),[x.day.replace(/-/g,""),x.v]];
+function ratesMore(){
+  const Z=rLatest(),{I,O}=Z;if(!I&&!O)return"";
+  const RW=Math.max(260,$("rates").clientWidth-28);
+  // cards as the yields above: the value, the day's change, and 推定値 while it is an estimate
+  const row=(name,x)=>!x?"":`<div>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?"<em>推定値</em>":""}</div>`;
+  const RH=withEst(I&&I.hist,Z.real),HH=withEst(O&&O.hist,Z.hy);
   return `<div class="rcap"><span>10年実質金利・インフレ期待・OAS</span></div><div class="rsum rx2">
-    ${I?row("実質金利",I.real10,oi?dR:null,I.real10_d1)+row("インフレ期待",I.be10,oi&&dN!=null?dN-dR:null,I.be10_d1):""}${O?row("OAS HY",O.hy,oo?cr("hyg"):null,O.hy_d1)+row("OAS IG",O.ig,oo?cr("lqd"):null,O.ig_d1):""}</div>
+    ${row("実質金利",Z.real)}${row("インフレ期待",Z.be)}${row("OAS HY",Z.hy)}${row("OAS IG",Z.ig)}</div>
     <div class="rxn">HY＝ハイイールド債、IG＝投資適格債。矢印は前日比。</div>
-    ${I&&I.hist&&I.hist.length>1?`${rpSeg("rl")}<div class="rcap"><span>10年実質金利の推移</span></div><div class="rchart">${histChart(I.hist,RW,RC.now,"rlf","rl")}</div>`:""}
-    ${O&&O.hist&&O.hist.length>1?`${rpSeg("hy")}<div class="rcap"><span>OAS ハイイールドの推移</span></div><div class="rchart">${histChart(O.hist,RW,RC.now,"hyf","hy")}</div>`:""}`;
+    ${RH&&RH.length>1?`${rpSeg("rl")}<div class="rcap"><span>10年実質金利の推移</span>${Z.real&&Z.real.est?'<span class="rkey"><span>最後は推定値</span></span>':""}</div><div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}
+    ${HH&&HH.length>1?`${rpSeg("hy")}<div class="rcap"><span>OAS ハイイールドの推移</span>${Z.hy&&Z.hy.est?'<span class="rkey"><span>最後は推定値</span></span>':""}</div><div class="rchart">${histChart(HH,RW,RC.now,"hyf","hy")}</div>`:""}`;
 }
 function renderRates(){
   const el=$("rates");
@@ -796,9 +811,8 @@ function renderNums(){
     rates=[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>D(`米${l}債`,n[k].toFixed(2)+"%",d(k))).join("")
       +row("長短差（10年−2年）",`${sgn(s2)}${Math.abs(s2).toFixed(2)}`,`<span class="tag" style="color:${tag[1]};background:${tag[1]}1f">${tag[0]}</span>`)
       +row("長短差（10年−3ヶ月）",`${sgn(s3)}${Math.abs(s3).toFixed(2)}`,"");
-    const I=CV.infl,O=CV.oas,dd=(a,b)=>a!=null&&b!=null?a-b:null;
-    if(I)rates+=D("10年実質金利",I.real10.toFixed(2)+"%",dd(I.real10,I.real10_d1))+D("10年インフレ期待",I.be10.toFixed(2)+"%",dd(I.be10,I.be10_d1));
-    if(O)rates+=D("OAS ハイイールド",O.hy.toFixed(2)+"%",dd(O.hy,O.hy_d1))+D("OAS 投資適格",O.ig.toFixed(2)+"%",dd(O.ig,O.ig_d1))}
+    const Z=rLatest(),E=(name,x)=>!x?"":D(name+(x.est?'<em class="nest">推定値</em>':""),x.v.toFixed(2)+"%",x.dv);
+    rates+=E("10年実質金利",Z.real)+E("10年インフレ期待",Z.be)+E("OAS ハイイールド",Z.hy)+E("OAS 投資適格",Z.ig)}
   const R=k=>{const x=it[k];if(!x)return"";const yen=x.unit==="円",usd=x.unit==="ドル";return P(x.ja,(usd?"$":"")+f(x.price,x.dec)+(yen?"円":""),x.pct)};
   const fx=["usdjpy","eurjpy","gbpjpy","audjpy","eurusd","dxy"].map(R).join(""),cm=["gold","silver","wti","natgas","copper"].map(R).join(""),cr=["btc","eth"].map(R).join("");
   const t=(it.usdjpy||it.gold||{}).time;
@@ -836,7 +850,8 @@ function renderKokoro(){
 async function loadMarkets(){
   await Promise.all([
     fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MK=j).catch(()=>MK=null),
-    fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null)]);
+    fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null),
+    fetch(`data/oas.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>OASD=j).catch(()=>OASD=null)]);
   renderNums();renderRates();renderCmdty();
 }
 async function loadTemp(){
