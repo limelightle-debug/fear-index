@@ -322,7 +322,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v78";
+const APP_VER="fi-v79";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -622,10 +622,10 @@ const ETLabel=t=>{const m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d
   const w="日月火水木金土"[new Date(Date.UTC(+m[1],+m[2]-1,+m[3])).getUTCDay()],h=+m[4];
   return `${+m[2]}/${+m[3]}（${w}）${h>=16&&h<18?"米国市場引け":`${m[4]}:${m[5]} 時点（米東部）`}`};
 function renderCmdty(){
-  // gold, crude, bitcoin, the dollar index and the yen as tiles coloured by the day's move
+  // gold, crude, copper, bitcoin, the dollar index and the yen as tiles coloured by the day's move
   // (full colour at ±3%; ±1% for the dollar and the yen, which move less; ±5% for bitcoin)
   const el=$("cmdty"),it={};(MK&&MK.items||[]).forEach(x=>it[x.k]=x);
-  const L=[["gold","金",3],["wti","原油（WTI）",3],["btc","ビットコイン",5],["dxy","ドルインデックス",1],["usdjpy","ドル円",1]].filter(([k])=>it[k]);
+  const L=[["gold","金",3],["wti","原油（WTI）",3],["copper","銅",3],["btc","ビットコイン",5],["dxy","ドルインデックス",1],["usdjpy","ドル円",1]].filter(([k])=>it[k]);
   if(!L.length){el.hidden=true;return}
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>コモディティ・ドル</h2><span class="asof">${ETLabel((it.gold||it[L[0][0]]).time)}</span></div><div class="tiles ctiles">`+L.map(([k,name,full])=>{const x=it[k];
