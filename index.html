@@ -194,6 +194,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .rstate .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px 3px 8px;border:1px solid}
 .rstate .pill i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
 .rstate .sp b{font-family:var(--f-tick);font-stretch:82%;font-size:15px;color:var(--ink);margin-left:4px}
+.rstate .sp .path{font-style:normal;font-size:11.5px;font-weight:700;margin-left:6px}
 .rstate .note{width:100%;color:var(--muted);font-size:11.5px}
 .rchart{margin-top:6px}
 .rpseg{display:inline-flex;margin:0;padding:2px;gap:1px;border-radius:7px}.rpseg button{flex:none;font-size:11px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:0}
@@ -350,7 +351,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v95";
+const APP_VER="fi-v96";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -507,7 +508,7 @@ const GUIDE=[
  ["MRI 確定値","恐怖新聞の一面。VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。","MRI, confirmed","The front page. Fear and froth in the market as one number, from VIX, SKEW and CAPE. Look less at the value than at how far it is from SELL 80 and BUY 8, and how it moved from the day before."],
  ["主要指数と記事","米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。","Markets and the story","How US stocks moved. The S&amp;P 500 is the whole market, the Nasdaq 100 and chips are where the moves are, the Russell 2000 is small caps that feel the economy. When only one of them moves a lot, the market is lopsided."],
  ["主なニュース","動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。","News","Why it moved. See which news lines up with which move."],
- ["金利","株の値段の重し。10年債は株価の割引率、2年債は利上げと利下げの見通しを映す。逆イールドとその解消は景気の節目の目印で、この新聞では解消から1年を「解消直後」として追う。","Rates","The weight on stock prices. The 10-year is the discount rate for stocks; the 2-year mirrors where rate hikes and cuts are expected. An inverted curve and its end mark turns in the economy; this paper follows the year after it ends as “just uninverted”."],
+ ["金利","株の値段の重し。10年債は株価の割引率、2年債は利上げと利下げの見通しを映す。逆イールドとその解消は景気の節目の目印で、この新聞では解消から1年を「解消直後」として追う。2年−3ヶ月（= 2本の長短差の差）は、今の政策金利に対して市場が今後2年の利上げ・利下げをどれだけ織り込んでいるか。+0.15超で「利上げ寄り」、−0.15未満で「利下げ織り込み」、その間は「据え置き」。2本の長短差のチャートがクロスするのは、この符号が変わるとき。","Rates","The weight on stock prices. The 10-year is the discount rate for stocks; the 2-year mirrors where rate hikes and cuts are expected. An inverted curve and its end mark turns in the economy; this paper follows the year after it ends as “just uninverted”. 2Y−3M (the gap between the two spreads) is how much the market prices hikes or cuts over two years against today’s policy rate: above +0.15 “leaning to hikes”, below −0.15 “cuts priced”, in between “on hold”. The two spread lines cross when it changes sign."],
  ["実質金利・インフレ期待","10年債の利回りを、インフレの分と、物価を除いた本当の金利に分けたもの。実質金利の上昇は、PER の高い株ほど重しになる。","Real yield and breakeven","The 10-year yield split into the part for inflation and the real rate after it. A rising real yield weighs most on stocks with high P/Es."],
  ["OAS","社債の上乗せ金利。お金の貸し手が不安になると広がる。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。","OAS","The extra yield on corporate bonds. It widens when lenders get nervous. A sharp widening in high yield tends to come with a stock sell-off, or a little before it."],
  ["コモディティ・ドル","金は不安、原油はインフレと景気、銅は景気、ビットコインはリスクを取る気分、ドルは世界のお金の向きを映す。","Commodities and the dollar","Gold reads fear, crude inflation and growth, copper growth, bitcoin the appetite for risk, the dollar where the world's money is going."],
@@ -819,6 +820,8 @@ function ratesMore(){
     ${RH&&RH.length>1?`<div class="rcap"><span>${tx("10年実質金利の推移","10Y real yield")}</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}
     ${HH&&HH.length>1?`<div class="rcap"><span>${tx("OAS ハイイールドの推移","High yield OAS")}</span>${rpSeg("hy")}</div>${Z.hy&&Z.hy.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(HH,RW,RC.now,"hyf","hy")}</div>`:""}`;
 }
+// 2年−3ヶ月: where the market expects the policy rate over the next two years vs today (3M ≈ the policy rate)
+function pathOf(v){return v>.15?[tx("利上げ寄り","Leaning to hikes"),"#ff8a7a"]:v<-.15?[tx("利下げ織り込み","Cuts priced"),"#7fd6a4"]:[tx("据え置き","On hold"),"#9aa3c7"]}
 function renderRates(){
   const el=$("rates");
   if(!CV||!CV.now||!CV.m3){el.hidden=true;return}
@@ -837,7 +840,7 @@ function renderRates(){
   const W=Math.max(260,el.clientWidth-28);
   el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>
     <div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
-    <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span><span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
+    <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span><span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(n["2Y"]-n["3M"])}</b><em class="path" style="color:${pathOf(n["2Y"]-n["3M"])[1]}">${pathOf(n["2Y"]-n["3M"])[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
     <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span><i style="border-color:${RC.m3}"></i>${tx("10年−3ヶ月","10Y−3M")}</span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}`;
 }
@@ -874,7 +877,8 @@ function renderNums(){
     const tag=(s2<0||s3<0)?[tx("逆イールド","Inverted"),"#ff6b6b"]:after?[tx("解消直後","Just uninverted"),"#ffb547"]:[tx("順イールド","Normal"),"#7fd6a4"];
     rates=[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>D(tx(`米${l}債`,`US ${k}`),n[k].toFixed(2)+"%",d(k))).join("")
       +row(tx("長短差（10年−2年）","Spread 10Y−2Y"),`${sgn(s2)}${Math.abs(s2).toFixed(2)}`,`<span class="tag" style="color:${tag[1]};background:${tag[1]}1f">${tag[0]}</span>`)
-      +row(tx("長短差（10年−3ヶ月）","Spread 10Y−3M"),`${sgn(s3)}${Math.abs(s3).toFixed(2)}`,"");
+      +row(tx("長短差（10年−3ヶ月）","Spread 10Y−3M"),`${sgn(s3)}${Math.abs(s3).toFixed(2)}`,"")
+      +(()=>{const v=n["2Y"]-n["3M"],p=pathOf(v);return row(tx("2年−3ヶ月（政策金利の織り込み）","2Y−3M (rate path priced)"),`${sgn(v)}${Math.abs(v).toFixed(2)}`,`<span class="tag" style="color:${p[1]};background:${p[1]}1f">${p[0]}</span>`)})();
     const Z=rLatest(),E=(name,x)=>!x?"":D(name+(x.est?`<em class="nest">${tx("推定値","est.")}</em>`:""),x.v.toFixed(2)+"%",x.dv);
     rates+=E(tx("10年実質金利","10Y real yield"),Z.real)+E(tx("10年インフレ期待","10Y breakeven"),Z.be)+E("OAS HY",Z.hy)+E("OAS IG",Z.ig)}
   const R=k=>{const x=it[k];if(!x)return"";const yen=x.unit==="円",usd=x.unit==="ドル";return P(EN()?x.en:x.ja,(usd?"$":"")+f(x.price,x.dec)+(yen&&!EN()?"円":""),x.pct)};
