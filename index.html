@@ -394,7 +394,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v119";
+const APP_VER="fi-v120";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -679,7 +679,7 @@ function renderMRIp(){
     ${lit.length?`<div class="sigline">${lit.map(x=>`<em>${x.side.toUpperCase()}</em>${x.name} Lv.${x.lv} 点灯中（${String(x.since).slice(0,4)}/${+String(x.since).slice(4,6)}/${+String(x.since).slice(6,8)} から）`).join("<br>")}</div>`:""}
     <div class="scores">${[["VIX",r[4],r[1].toFixed(2)],["SKEW",r[5],r[2].toFixed(2)],["CAPE",r[6],r[3].toFixed(2)]].map(([n,v,raw])=>{const l=level(v);
       return `<div class="score" style="background:var(${l[2]});color:${l[3]}"><div class="sn">${n} スコア</div><div class="sv">${(v*100).toFixed(1)}</div><div class="sr">${n} ${raw}</div></div>`}).join("")}</div>
-    <div class="mrichart">${mriChart(R3,Math.max(260,el.clientWidth-28))}</div>
+    <div class="mrichart">${mriChart(R3,pw(el))}</div>
     ${view?`<div class="view"><b>見解</b><p>${esc(view)}</p></div>`:""}`;
 }
 // the MRI's headline from the numbers: a signal that came on (or reset) that day first, otherwise the move and
@@ -883,7 +883,7 @@ function rLatest(){
 const withEst=(H,x)=>!H||!x||!x.est||!x.day?H:[...H.filter(q=>q[0]<x.day.replace(/-/g,"")),[x.day.replace(/-/g,""),x.v]];
 function ratesMore(){
   const Z=rLatest(),{I,O}=Z;if(!I&&!O)return"";
-  const RW=Math.max(260,$("rates").clientWidth-28);
+  const RW=pw($("rates"));
   // cards as the yields above: the value, the day's change, and 推定値 while it is an estimate
   // the maturity (or what it covers) over each name, so the 10-year cards and the corporate ones read apart
   const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
@@ -911,7 +911,7 @@ function renderRates(){
   const sg=v=>`${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}`;
   const [Y,M,D]=CV.date.split("-").map(Number);
   el.hidden=false;
-  const W=Math.max(260,el.clientWidth-28);
+  const W=pw(el);
   const d10=CV.prev&&CV.prev.y["10Y"]!=null?n["10Y"]-CV.prev.y["10Y"]:0,a10=Math.abs(d10),pth=pathOf(n["2Y"]-n["3M"])[0];
   const rh=EN()?[`US 10Y ${a10<.01?"flat at":d10>0?(a10>=.1?"jumps to":"up to"):(a10>=.1?"drops to":"down to")} ${n["10Y"].toFixed(2)}%`,`${st[0]}, rate path: ${pth}`]
     :[`米10年債 ${n["10Y"].toFixed(2)}%${a10<.01?"で横ばい":`に${a10>=.1?"大幅":""}${d10>0?"上昇":"低下"}`}`,`${st[0]}、2年−3ヶ月は${pth}`];
@@ -1050,7 +1050,7 @@ let FW=null;
 function renderFedw(){
   const el=$("fedw");
   if(!FW||!FW.meetings||!FW.meetings.length){el.hidden=true;return}
-  const en=EN(),M=FW.meetings,[lo,hi]=FW.target,m0=M[0],W=Math.max(260,el.clientWidth-28);
+  const en=EN(),M=FW.meetings,[lo,hi]=FW.target,m0=M[0],W=pw(el);
   const md=s=>`${+s.slice(5,7)}/${+s.slice(8)}`,ymd=s=>en?`${MON[+s.slice(5,7)-1]} ${+s.slice(8)}, ${s.slice(0,4)}`:`${s.slice(0,4)}/${+s.slice(5,7)}/${+s.slice(8)}`;
   const up=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]>lo+1e-9).reduce((a,[,v])=>a+v,0),dn=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]<lo-1e-9).reduce((a,[,v])=>a+v,0);
   const mo=+m0.date.slice(5,7),L=M[M.length-1],mv=L.moves;
@@ -1070,6 +1070,8 @@ function renderFedw(){
     <div class="rcap"><span>${tx("会合ごとの確率（%）","Probabilities by meeting (%)")}</span></div>${tab}
     <div class="lsrc">${tx("CME FedWatch と同じ方法で、FF金利先物の価格から計算。価格は遅れて届くため、CME の表示と少しずれることがある。点線は今の政策金利の中央","Worked out from fed funds futures by CME FedWatch's method. Prices arrive delayed, so it can differ slightly from CME's own. Dashed: the middle of today's target range")}</div>`;
 }
+// a panel's drawing width: its own width, or while it is still hidden (first render) the paper's column
+const pw=el=>{const w=el.clientWidth||(el.parentElement&&el.parentElement.clientWidth)||document.documentElement.clientWidth-32;return Math.max(260,w-28)};
 // time series chart for the monthly and weekly pages: lines (or bars for the first series when o.bars), dates along
 // the bottom by year, a few gridlines, dashed reference lines (o.ref), the last value of each line at its end
 const dms=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d||15)};
@@ -1138,7 +1140,7 @@ const qLab=q=>{const [y,n]=q.split("-Q");return tx(`${["1〜3","4〜6","7〜9","
 function renderGDP(){
   const el=$("gdp"),G=MAC&&MAC.gdp,N=MAC&&MAC.gdpnow;
   if(!G||!G.length){el.hidden=true;return}
-  const en=EN(),W=Math.max(260,el.clientWidth-28),L=G[G.length-1],ev=N&&N.evo&&N.evo.length?N.evo:null,nl=ev?ev[ev.length-1]:null;
+  const en=EN(),W=pw(el),L=G[G.length-1],ev=N&&N.evo&&N.evo.length?N.evo:null,nl=ev?ev[ev.length-1]:null;
   const qq=k=>k.replace(/-(\d)$/,"-Q$1");  // "2026-Q2" from BEA's "2026-Q2" (already) or "2026-2"
   const lastQ=qq(L[0]),nq=N&&N.quarter,ahead=nq&&nq>lastQ;
   const sg=v=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(1)}%`;
@@ -1170,7 +1172,7 @@ function renderInfl(){
   const h1=tx(`CPI 前年比${pct1(v("cpi"))}　コア${pct1(v("core_cpi"))}`,`CPI ${pct1(v("cpi"))} on the year, core ${pct1(v("core_cpi"))}`);
   const h2=[Y.pce.length?tx(`PCE ${pct1(v("pce"))}、コアPCE ${pct1(v("core_pce"))}`,`PCE ${pct1(v("pce"))}, core PCE ${pct1(v("core_pce"))}`):"",Y.ppi.length?`PPI ${pct1(v("ppi"))}`:""].filter(Boolean).join(tx("、",", "));
   const cut=String(new Date().getUTCFullYear()-3)+"-01";
-  const W=Math.max(260,el.clientWidth-28),keys=["cpi","core_cpi","pce","core_pce","ppi"].filter(k=>Y[k].length);
+  const W=pw(el),keys=["cpi","core_cpi","pce","core_pce","ppi"].filter(k=>Y[k].length);
   const row=k=>{const m=lastOf(MM[k]||[]),yy=v(k);return `<div class="lq"><span class="k">${N[k]}<small>${moLab(mo(k))}</small></span><span class="v">${pct1(yy)}</span><span class="c">${m&&m[0]===mo(k)?pct1(m[1]):""}</span></div>`};
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>${tx("インフレ","Inflation")}</h2><span class="asof">${tx(`${moLab(mo("cpi"))}分まで`,`through ${moLab(mo("cpi"))}`)}</span></div>${headHTML("inflHead",[h1,h2])}
@@ -1189,7 +1191,7 @@ function renderJobs(){
   const h1=en?`Payrolls ${man(lp[1])}, unemployment ${ur[1].toFixed(1)}%`:`雇用者 ${man(lp[1])}　失業率${ur[1].toFixed(1)}%`;
   let VU=null;
   const cut=String(new Date().getUTCFullYear()-2)+"-"+String(new Date().getUTCMonth()+1).padStart(2,"0");
-  const W=Math.max(260,el.clientWidth-28);
+  const W=pw(el);
   const r=(k,sub,val,c1)=>`<div class="lq"><span class="k">${k}<small>${sub}</small></span><span class="v">${val}</span><span class="c">${c1||""}</span></div>`;
   const d=(a,b,dec=1,u="")=>b==null?"":`${a-b>0?"+":a-b<0?"−":"±"}${Math.abs(a-b).toFixed(dec)}${u}`;
   const prevU=B.unrate[B.unrate.length-2],prevJ=(B.jolts||[])[B.jolts.length-2];
@@ -1232,7 +1234,7 @@ function liqCharts(){
   // 『金利の重力』 第十七章 の見取り図: the balance sheet makes reserves (the body); the reverse repo is the buffer
   // outside it, drained first; once it is gone, dollars come straight out of reserves, whose floor no one knows
   // (2019: rates spiked with 1.4 trillion). SOFR above IORB is the sign the rope is pulled tight.
-  const el=$("liq"),W=Math.max(260,el.clientWidth-28),F=LQ.fed,R=LQ.rrp,M=LQ.m2,Y=LQ.money,en=EN();let h="",rows="";
+  const el=$("liq"),W=pw(el),F=LQ.fed,R=LQ.rrp,M=LQ.m2,Y=LQ.money,en=EN();let h="",rows="";
   const T=v=>en?`$${v.toFixed(2)}T`:`${v.toFixed(2)}兆ドル`,B=v=>en?`$${v.toFixed(v<10?1:0)}B`:`${(v*10).toLocaleString("en-US",{maximumFractionDigits:v<10?1:0})}億ドル`;
   const pill=(t,c)=>`<span class="tag" style="color:${c};background:${c}1f">${t}</span>`,C={r:"#ff6b6b",a:"#ffb547",g:"#5fd08e",b:"#6ec3ff"};
   const row=(k,sub,v,p)=>`<div class="lq"><span class="k">${k}<small>${sub}</small></span><span class="v">${v}</span><span class="c">${p}</span></div>`;
