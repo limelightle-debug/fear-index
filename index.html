@@ -273,6 +273,9 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 #mriframe{display:block;border:0;background:var(--bg);margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));width:calc(100% + max(16px,env(safe-area-inset-left,0px)) + max(16px,env(safe-area-inset-right,0px)));height:70vh}
 html.mritab,html.mritab body{overflow:hidden;overscroll-behavior:none}
 html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
+/* the last panel: why each panel is in the paper and what to look at, in the paper's order */
+.guide dl{margin:0}.guide dt{font-size:12px;font-weight:700;color:var(--ink);letter-spacing:.04em;margin-top:12px}.guide dt:first-child{margin-top:2px}
+.guide dd{margin:3px 0 0;font-size:13.5px;line-height:1.64;color:var(--ink2)}
 /* ---- design system (applied last): type scale, change colours, pills ----
    numbers: hero 44 (MRI) / tiles and cards 24 / list rows 18 / small 13, all Archivo
    text: lead 26 (確定値, the date) / headline 20 / body 14 / panel title 13 / subhead 12 / meta 11.5 / pill 10.5
@@ -317,6 +320,10 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
     <section class="panel" id="cmdty" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
     <section class="panel" id="nums" hidden></section>
+    <section class="panel guide">
+      <div class="ph"><h2>この新聞の読み方</h2></div>
+      <dl><dt>注目点</dt><dd>その日いちばん目を向けるべき2〜3点。ここだけ読めば、その朝の要点がつかめる。</dd><dt>MRI 確定値</dt><dd>恐怖新聞の一面。VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。</dd><dt>主要指数と記事</dt><dd>米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。</dd><dt>主なニュース</dt><dd>動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。</dd><dt>金利</dt><dd>株の値段の重し。10年債は株価の割引率、2年債は利上げと利下げの見通しを映す。逆イールドとその解消は景気の節目の目印で、この新聞では解消から1年を「解消直後」として追う。</dd><dt>実質金利・インフレ期待</dt><dd>10年債の利回りを、インフレの分と、物価を除いた本当の金利に分けたもの。実質金利の上昇は、PER の高い株ほど重しになる。</dd><dt>OAS</dt><dd>社債の上乗せ金利。お金の貸し手が不安になると広がる。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。</dd><dt>コモディティ・ドル</dt><dd>金は不安、原油はインフレと景気、銅は景気、ビットコインはリスクを取る気分、ドルは世界のお金の向きを映す。</dd><dt>心</dt><dd>数字を読んだあとに、その日の局面で陥りやすい考えのクセを確かめる。</dd><dt>数字</dt><dd>すべての数字を、毎日同じ順番で。慣れると、どこが動いたかが一目でわかる。</dd></dl>
+    </section>
   </div>
 
   <div id="t-mri" hidden><iframe id="mriframe" title="Market Risk Index"></iframe></div>
@@ -338,7 +345,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v83";
+const APP_VER="fi-v84";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
