@@ -175,6 +175,17 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .nws b{font-size:11px;font-weight:700;color:var(--accent);border:1px solid rgba(127,168,255,.45);border-radius:999px;padding:1px 8px;white-space:nowrap;justify-self:start}
 .nws p{margin:0;font-size:14px;line-height:1.6}
 /* the numbers behind the story: rates, currencies, commodities, one row each */
+.lq{display:grid;grid-template-columns:minmax(0,1fr) auto 70px 70px;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.lq.hd{border-top:0;padding:0 0 3px}.lq.hd span{font-size:10.5px;font-weight:700;color:var(--muted);text-align:right}
+.lq .k{font-size:13.5px;color:var(--ink2);white-space:nowrap}.lq .k small{display:block;font-size:10.5px;color:var(--muted);margin-top:1px}
+.lq .v{font-family:var(--f-tick);font-stretch:82%;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.lq .v small{font-family:var(--f-body);font-size:11px;font-weight:600;margin-left:1px}
+.lq .c{font-family:var(--f-tick);font-stretch:85%;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.lq .c.up{color:#5fd08e}.lq .c.dn{color:#ff7b7b}
+.mtab{margin-top:10px}
+.mtab .lq{grid-template-columns:minmax(0,1fr) auto 64px}
+.lq .k{overflow:hidden;text-overflow:ellipsis}
+.lsrc{margin-top:8px;font-size:11.5px;color:var(--muted)}
 .ng{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin:12px 0 2px}
 .ng:first-of-type{margin-top:2px}
 .nr{display:grid;grid-template-columns:minmax(0,1fr) auto 92px;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
@@ -331,6 +342,9 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="rates" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
+    <section class="panel" id="infl" hidden></section>
+    <section class="panel" id="jobs" hidden></section>
+    <section class="panel" id="liq" hidden></section>
     <section class="panel" id="nums" hidden></section>
     <section class="panel guide" id="guide"></section>
   </div>
@@ -352,7 +366,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v100";
+const APP_VER="fi-v102";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -917,6 +931,129 @@ function renderNums(){
   el.innerHTML=`<div class="ph"><h2>${tx("数字","The numbers")}</h2><span class="asof">${ETLabel(t)||""}</span></div>
     ${G(tx("恐怖指数","Fear gauges"),fear)}${G(tx("株価指数","Indices"),idx)}${G(tx("S&amp;P500 セクター","S&amp;P 500 sectors"),sec)}${G(tx("金利","Rates"),rates)}${G(tx("為替","Currencies"),fx)}${G(tx("コモディティ","Commodities"),cm)}${G(tx("暗号資産","Crypto"),cr)}`;
 }
+// time series chart for the monthly and weekly pages: lines (or bars for the first series when o.bars), dates along
+// the bottom by year, a few gridlines, dashed reference lines (o.ref), the last value of each line at its end
+const dms=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d||15)};
+function tsChart(S,W,o={}){
+  S=S.filter(x=>x.p&&x.p.length>1);if(!S.length)return"";
+  const H=o.H||140,ML=30,MR=44,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,dec=o.dec??1,u=o.unit||"";
+  const ts=S.flatMap(x=>x.p.map(q=>q[0])),vs=S.flatMap(x=>x.p.map(q=>q[1])).concat(o.ref||[]).concat(o.bars||o.zero?[0]:[]);
+  const t0=Math.min(...ts),t1=Math.max(...ts);let lo=Math.min(...vs),hi=Math.max(...vs);
+  const span=hi-lo||1,st=[.1,.2,.25,.5,1,2,2.5,5,10,20,25,50,100,200,250,500,1000].find(k=>span/k<=4)||1000;
+  lo=Math.floor(lo/st)*st;hi=Math.ceil(hi/st)*st;if(hi===lo)hi=lo+st;
+  const x=t=>ML+(t1===t0?PW:(t-t0)/(t1-t0)*PW),y=v=>MT+(hi-v)/(hi-lo)*PH,f=v=>(v<0?"−":o.sign&&v>0?"+":"")+Math.abs(v).toFixed(dec)+u;
+  let g="";
+  for(let v=lo;v<=hi+1e-9;v+=st)g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity="${Math.abs(v)<1e-9&&lo<0?.3:.06}"/><text x="${ML-5}" y="${y(v)+3}" text-anchor="end">${(Math.abs(v)<1e-9?0:+v.toFixed(st<1?(st<.25?1:2):0))}</text>`;
+  for(let yr=new Date(t0).getUTCFullYear()+1;Date.UTC(yr,0,1)<=t1;yr++){const xx=x(Date.UTC(yr,0,1));g+=`<line x1="${xx}" x2="${xx}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".08"/><text x="${xx}" y="${H-5}" text-anchor="middle">${yr}</text>`}
+  (o.ref||[]).forEach(v=>{g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity=".4" stroke-dasharray="3 3"/>`});
+  let p="";const ends=[];
+  S.forEach((sr,k)=>{const P=sr.p;
+    if(o.bars&&k===0){const bw=Math.max(1.5,PW/P.length*.7);P.forEach(([t,v])=>{p+=`<rect x="${(x(t)-bw/2).toFixed(1)}" y="${Math.min(y(v),y(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(.5,Math.abs(y(v)-y(0))).toFixed(1)}" fill="${sr.c}" opacity="${v<0?.9:.75}"/>`})}
+    else p+=`<path d="${P.map(([t,v],i)=>`${i?"L":"M"}${x(t).toFixed(1)},${y(v).toFixed(1)}`).join("")}" fill="none" stroke="${sr.c}" stroke-width="${sr.w||1.6}" stroke-linejoin="round"/>`;
+    const L=P[P.length-1];ends.push({y:y(L[1]),t:f(L[1]),c:sr.c})});
+  ends.sort((a,b)=>a.y-b.y);for(let i=1;i<ends.length;i++)if(ends[i].y-ends[i-1].y<11)ends[i].y=ends[i-1].y+11;
+  ends.forEach(e=>{p+=`<text x="${ML+PW+5}" y="${(e.y+3.5).toFixed(1)}" style="fill:${e.c};font-weight:700">${e.t}</text>`});
+  return `<div class="rchart"><svg viewBox="0 0 ${W} ${H}" height="${H}">${g}${p}</svg></div>`;
+}
+const legend=L=>`<div class="rkey rleg">${L.map(([n,c])=>`<span><i style="border-color:${c}"></i>${n}</span>`).join("")}</div>`;
+// monthly helpers on [["YYYY-MM", value], ...]
+const yoyOf=A=>{const m={};A.forEach(([k,v])=>m[k]=v);return A.map(([k,v])=>{const p=m[`${+k.slice(0,4)-1}${k.slice(4)}`];return p?[k,(v/p-1)*100]:null}).filter(Boolean)};
+const momOf=A=>A.slice(1).map(([k,v],i)=>[k,(v/A[i][1]-1)*100]);
+const toT=A=>A.map(([k,v])=>[dms(k),v]);
+const lastOf=A=>A&&A.length?A[A.length-1]:null;
+const pct1=v=>v==null?"":`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(1)}%`;
+const moLab=k=>{const m=+k.slice(5);return tx(`${m}月`,MON[m-1])};
+let MAC=null;
+function renderInfl(){
+  const el=$("infl"),B=MAC&&MAC.bls,P=MAC&&MAC.pce||{};
+  if(!B||!B.cpi){el.hidden=true;return}
+  const C={cpi:"#ff8a7a",core_cpi:"#ffb547",pce:"#7fd6a4",core_pce:"#6ec3ff",ppi:"#b59cff"};
+  const Y={cpi:yoyOf(B.cpi),core_cpi:yoyOf(B.core_cpi||[]),pce:yoyOf(P.pce||[]),core_pce:yoyOf(P.core_pce||[]),ppi:yoyOf(B.ppi||[]),core_ppi:yoyOf(B.core_ppi||[])};
+  const MM={cpi:momOf(B.cpi_sa||[]),core_cpi:momOf(B.core_cpi_sa||[]),pce:momOf(P.pce||[]),core_pce:momOf(P.core_pce||[]),ppi:momOf(B.ppi_sa||[])};
+  const N={cpi:"CPI",core_cpi:tx("コアCPI","Core CPI"),pce:"PCE",core_pce:tx("コアPCE","Core PCE"),ppi:"PPI",core_ppi:tx("コアPPI","Core PPI")};
+  const v=k=>(lastOf(Y[k])||[])[1],mo=k=>(lastOf(Y[k])||[""])[0];
+  const h1=tx(`CPI 前年比${pct1(v("cpi"))}　コア${pct1(v("core_cpi"))}`,`CPI ${pct1(v("cpi"))} on the year, core ${pct1(v("core_cpi"))}`);
+  const h2=[Y.pce.length?tx(`PCE ${pct1(v("pce"))}、コアPCE ${pct1(v("core_pce"))}`,`PCE ${pct1(v("pce"))}, core PCE ${pct1(v("core_pce"))}`):"",Y.ppi.length?`PPI ${pct1(v("ppi"))}`:""].filter(Boolean).join(tx("、",", "));
+  const cut=String(new Date().getUTCFullYear()-3)+"-01";
+  const W=Math.max(260,el.clientWidth-28),keys=["cpi","core_cpi","pce","core_pce","ppi"].filter(k=>Y[k].length);
+  const row=k=>{const m=lastOf(MM[k]||[]),yy=v(k);return `<div class="lq"><span class="k">${N[k]}<small>${moLab(mo(k))}</small></span><span class="v">${pct1(yy)}</span><span class="c">${m&&m[0]===mo(k)?pct1(m[1]):""}</span></div>`};
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>${tx("インフレ","Inflation")}</h2><span class="asof">${tx(`${moLab(mo("cpi"))}分まで`,`through ${moLab(mo("cpi"))}`)}</span></div>${headHTML("inflHead",[h1,h2])}
+    <div class="rcap"><span>${tx("前年比の推移","Change on a year")}</span></div>${legend(keys.map(k=>[N[k],C[k]]))}
+    ${tsChart(keys.map(k=>({c:C[k],p:toT(Y[k].filter(q=>q[0]>=cut)),w:k.startsWith("core")?1.3:1.8})),W,{H:170,unit:"%",ref:[2]})}
+    <div class="mtab"><div class="lq hd"><span></span><span>${tx("前年比","Year")}</span><span>${tx("前月比","Month")}</span></div>${["cpi","core_cpi","pce","core_pce","ppi","core_ppi"].filter(k=>Y[k].length).map(row).join("")}</div>
+    <div class="lsrc">${tx("点線は FRB の目標 2%。前月比は季節調整済み","Dashed: the Fed's 2% target. Monthly changes seasonally adjusted")}　${tx("出典","Sources")} BLS / BEA</div>`;
+}
+function renderJobs(){
+  const el=$("jobs"),B=MAC&&MAC.bls,CL=MAC&&MAC.claims;
+  if(!B||!B.payrolls){el.hidden=true;return}
+  const en=EN(),pay=B.payrolls.slice(1).map(([k,v],i)=>[k,v-B.payrolls[i][1]]),lp=lastOf(pay),ur=lastOf(B.unrate),jo=lastOf(B.jolts||[]);
+  const man=v=>en?`${v>=0?"+":"−"}${Math.round(Math.abs(v))}K`:`${v>=0?"+":"−"}${(Math.abs(v)/10).toFixed(1)}万人`;
+  const cl=CL&&CL.length?CL[CL.length-1]:null,clp=CL&&CL.length>1?CL[CL.length-2]:null,ccl=CL?[...CL].reverse().find(q=>q[2]):null;
+  const kk=v=>en?`${Math.round(v/1e3)}K`:`${(v/1e4).toFixed(1)}万件`;
+  const h1=en?`Payrolls ${man(lp[1])}, unemployment ${ur[1].toFixed(1)}%`:`雇用者 ${man(lp[1])}　失業率${ur[1].toFixed(1)}%`;
+  const h2=[cl?(en?`Initial claims ${kk(cl[1])}`:`新規失業保険申請 ${kk(cl[1])}`):"",jo?(en?`job openings rate ${jo[1].toFixed(1)}%`:`求人率 ${jo[1].toFixed(1)}%`):""].filter(Boolean).join(en?", ":"、");
+  const cut=String(new Date().getUTCFullYear()-2)+"-"+String(new Date().getUTCMonth()+1).padStart(2,"0");
+  const W=Math.max(260,el.clientWidth-28);
+  const r=(k,sub,val,c1)=>`<div class="lq"><span class="k">${k}<small>${sub}</small></span><span class="v">${val}</span><span class="c">${c1||""}</span></div>`;
+  const d=(a,b,dec=1,u="")=>b==null?"":`${a-b>0?"+":a-b<0?"−":"±"}${Math.abs(a-b).toFixed(dec)}${u}`;
+  const prevU=B.unrate[B.unrate.length-2],prevJ=(B.jolts||[])[B.jolts.length-2];
+  let rows=r(tx("雇用者数","Nonfarm payrolls"),tx(`${moLab(lp[0])} 非農業部門・前月比`,`${moLab(lp[0])}, change`),man(lp[1]),"")
+    +r(tx("失業率","Unemployment rate"),moLab(ur[0]),ur[1].toFixed(1)+"%",d(ur[1],prevU&&prevU[1],1,"pt"));
+  if(jo)rows+=r(tx("求人率","Job openings rate"),tx(`${moLab(jo[0])} JOLTS`,`${moLab(jo[0])}, JOLTS`),jo[1].toFixed(1)+"%",d(jo[1],prevJ&&prevJ[1],1,"pt"));
+  if(cl){const md=`${+cl[0].slice(5,7)}/${+cl[0].slice(8)}`;rows+=r(tx("新規申請","Initial claims"),tx(`${md} までの週`,`week to ${md}`),kk(cl[1]),clp?d(cl[1]/1e3,clp[1]/1e3,0,en?"K":"千"):"")}
+  if(ccl){const md=`${+ccl[0].slice(5,7)}/${+ccl[0].slice(8)}`;rows+=r(tx("継続受給","Continuing claims"),tx(`${md} までの週`,`week to ${md}`),en?`${(ccl[2]/1e6).toFixed(2)}M`:`${(ccl[2]/1e4).toFixed(0)}万人`,"")}
+  const cw=CL?CL.filter(q=>q[0]>=cut+"-01"):[];
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>${tx("雇用","Jobs")}</h2><span class="asof">${tx(`${moLab(lp[0])}分まで`,`through ${moLab(lp[0])}`)}</span></div>${headHTML("jobsHead",[h1,h2])}
+    <div class="rcap"><span>${tx("雇用者数の増減（千人）","Payroll change (thousands)")}</span></div>
+    ${tsChart([{c:"#7fa8ff",p:toT(pay.filter(q=>q[0]>=cut))}],W,{H:130,dec:0,bars:true,sign:true})}
+    <div class="rcap"><span>${tx("失業率と求人率","Unemployment and job openings")}</span></div>${legend([[tx("失業率","Unemployment"),"#ff8a7a"],[tx("求人率","Openings rate"),"#7fd6a4"]])}
+    ${tsChart([{c:"#ff8a7a",p:toT(B.unrate.filter(q=>q[0]>=cut))},{c:"#7fd6a4",p:toT((B.jolts||[]).filter(q=>q[0]>=cut))}],W,{H:130,unit:"%"})}
+    ${cw.length>1?`<div class="rcap"><span>${tx("新規失業保険申請（千件、週次）","Initial claims (thousands, weekly)")}</span></div>${tsChart([{c:"#ffb547",p:cw.map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:120,dec:0})}`:""}
+    <div class="mtab">${rows}</div>
+    <div class="lsrc">${tx("出典","Sources")} BLS / ${tx("米労働省","US Labor Dept.")}</div>`;
+}
+// dollar liquidity (weekly and monthly, so after the daily pages): the Fed's balance sheet and reserves (H.4.1),
+// the overnight reverse repo (NY Fed, daily) and M2 (H.6), from the MRI app's data/liquidity.json
+let LQ=null;
+function liqCharts(){
+  const el=$("liq"),W=Math.max(260,el.clientWidth-28),F=LQ.fed,R=LQ.rrp,M=LQ.m2;let h="";
+  if(F&&F.hist&&F.hist.length>4){h+=`<div class="rcap"><span>${tx("FRB総資産と準備預金（兆ドル）","Fed assets and reserves ($T)")}</span></div>${legend([[tx("総資産","Total assets"),"#7fa8ff"],[tx("準備預金","Reserves"),"#7fd6a4"]])}`
+    +tsChart([{c:"#7fa8ff",p:F.hist.map(q=>[dms(q[0]),q[1]/1e6])},{c:"#7fd6a4",p:F.hist.map(q=>[dms(q[0]),q[2]/1e6])}],W,{H:140,dec:2})}
+  if(R&&R.hist&&R.hist.length>20)h+=`<div class="rcap"><span>${tx("リバースレポ（10億ドル）","Overnight reverse repo ($B)")}</span></div>`+tsChart([{c:"#ffb547",p:R.hist.map(q=>[dms(q[0]),q[1]]),w:1.3}],W,{H:110,dec:0});
+  if(M&&M.hist){const yy=yoyOf(M.hist);h+=yy.length>=12?`<div class="rcap"><span>${tx("M2 前年比","M2, change on a year")}</span></div>`+tsChart([{c:"#b59cff",p:toT(yy)}],W,{H:110,unit:"%",zero:true}):`<div class="rcap"><span>${tx("M2（兆ドル）","M2 ($T)")}</span></div>`+tsChart([{c:"#b59cff",p:toT(M.hist.map(([k,v])=>[k,v/1e3]))}],W,{H:110,dec:1})}
+  return h;
+}
+function renderLiq(){
+  const el=$("liq");
+  if(!LQ||!(LQ.fed||LQ.m2||LQ.rrp)){el.hidden=true;return}
+  const F=LQ.fed,R=LQ.rrp,M=LQ.m2,en=EN();
+  // amounts in billions: trillions for levels, billions (億ドル in Japanese) for changes
+  const lvl=b=>en?`$${(b/1e3).toFixed(2)}<small>T</small>`:`${(b/1e3).toFixed(2)}<small>兆ドル</small>`;
+  const lvlB=b=>b>=1e3?lvl(b):en?`$${b.toFixed(1)}<small>B</small>`:`${(b*10).toFixed(b<10?1:0)}<small>億ドル</small>`;
+  const chg=b=>{const a=Math.abs(b),sg=b>0?"+":b<0?"−":"±";return en?`${sg}$${a>=100?Math.round(a):a.toFixed(1)}B`:`${sg}${(a*10).toLocaleString("en-US",{maximumFractionDigits:a*10>=100?0:1})}億`};
+  const pc=v=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(1)}%`,cl=v=>v>0?"up":v<0?"dn":"";
+  const md2=x=>{const [,m,d]=x.split("-").map(Number);return `${m}/${d}`};
+  const row=(k,sub,v,c1,c1c,c2,c2c)=>`<div class="lq"><span class="k">${k}<small>${sub}</small></span><span class="v">${v}</span><span class="c ${c1c||""}">${c1}</span><span class="c ${c2c||""}">${c2}</span></div>`;
+  let rows="",h1="",h2="";
+  if(F){const [t,tw,ty]=F.total.map(x=>x/1e3),[r,rw,ry]=F.reserves.map(x=>x/1e3),wk=md2(F.week);
+    rows+=row(tx("FRB総資産","Fed total assets"),tx(`${wk}（水）`,`Wed ${wk}`),lvl(t),chg(tw),cl(tw),chg(ty),cl(ty))
+      +row(tx("準備預金","Reserve balances"),tx(`${wk} までの週平均`,`week to ${wk}`),lvl(r),chg(rw),cl(rw),chg(ry),cl(ry));
+    h1=en?`Reserves $${(r/1e3).toFixed(2)}T, ${chg(rw)} on the week`:`準備預金 ${(r/1e3).toFixed(2)}兆ドル`;
+    h2=en?"":`前週比${chg(rw)}ドル`}
+  if(R&&R.hist&&R.hist.length){const h=R.hist,v=h[h.length-1][1],p=h.length>1?h[h.length-2][1]:null,ya=String(+R.date.slice(0,4)-1)+R.date.slice(4),y=h[0][0]<=ya?h.find(x=>x[0]>=ya):null;
+    rows+=row(tx("リバースレポ","Overnight reverse repo"),tx(`${md2(R.date)} 翌日物`,`${md2(R.date)}`),lvlB(v),p==null?"":chg(v-p),p==null?"":cl(v-p),y?chg(v-y[1]):"",y?cl(v-y[1]):"")}
+  if(M&&M.hist&&M.hist.length>=13){const h=M.hist,v=h[h.length-1][1],mm=(v/h[h.length-2][1]-1)*100,yy=(v/h[h.length-13][1]-1)*100,mo=+M.month.slice(5);
+    rows+=row("M2",tx(`${mo}月 季節調整済み`,`${MON[mo-1]} (SA)`),lvl(v),pc(mm),cl(mm),pc(yy),cl(yy));
+    h2+=(h2?(en?", ":"、"):"")+(en?`M2 ${pc(yy)} on the year`:`M2は前年比${pc(yy)}`)}
+  if(!h1&&h2){h1=h2;h2=""}
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>${tx("ドル流動性","Dollar liquidity")}</h2><span class="asof">${tx("週次・月次","Weekly and monthly")}</span></div>${headHTML("liqHead",[h1,h2])}
+    ${liqCharts()}
+    <div class="mtab"><div class="lq hd"><span></span><span></span><span>${tx("前回比","Prev.")}</span><span>${tx("前年比","Year")}</span></div>${rows}</div>
+    <div class="lsrc">${tx("出典","Sources")} FRB H.4.1・H.6 / NY Fed</div>`;
+}
 // 心: the scene of the day judged as in Mind (US closes before 7:00 Japan time), and Mind's word and bias for the day
 const fortuneDay=()=>{const j=new Date(Date.now()+(9-7)*36e5);return j.getUTCFullYear()*10000+(j.getUTCMonth()+1)*100+j.getUTCDate()};
 const dayIdx=d=>Math.floor(new Date(Math.floor(d/10000),Math.floor(d/100)%100-1,d%100).getTime()/864e5);
@@ -952,8 +1089,10 @@ async function loadMarkets(){
   await Promise.all([
     fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MK=j).catch(()=>MK=null),
     fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null),
-    fetch(`data/oas.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>OASD=j).catch(()=>OASD=null)]);
-  renderNums();renderRates();renderCmdty();
+    fetch(`data/oas.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>OASD=j).catch(()=>OASD=null),
+    fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
+    fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null)]);
+  renderNums();renderRates();renderCmdty();renderLiq();renderInfl();renderJobs();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
