@@ -154,6 +154,13 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .mtop .mv{text-align:right}.mtop .mv .big{font-size:44px}.mtop .mv .ml{font-family:var(--f-tick);font-size:18px;font-weight:700;color:var(--ink2);margin-right:8px}
 .mtop .rlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
 /* the three indicators behind the MRI, as in the MRI app: score (percentile), its move, the reading, ±1σ / ±2σ */
+.trend .tread{display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--f-tick);font-stretch:85%;font-size:13px;color:var(--ink2);margin:6px 0 4px;min-height:38px}
+.trend .tread b{color:var(--ink);font-weight:700}.trend .tread .d{font-weight:700;color:var(--ink)}
+.trend .tchart svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.trend .tchart .ax{font-family:var(--f-tick);font-stretch:85%;font-size:11px;fill:var(--muted)}
+.trend .tchart .grid{stroke:var(--line);stroke-width:1}
+.trend .tchart .xh{stroke:var(--ink2);stroke-width:1;stroke-dasharray:3 3}
+.trend .tlab{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:4px}.trend .tlab i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
 .mtop .inds{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
 .mtop .indh{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:4px}
 .mtop .indh span{font-family:var(--f-tick);font-stretch:85%;font-size:11.5px;font-weight:600;color:var(--muted)}
@@ -390,6 +397,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel eye" id="eye" hidden></section>
     <div class="sec" id="sec-daily"></div>
     <section class="panel mtop" id="mritop" hidden></section>
+    <section class="panel trend" id="mritrend" hidden></section>
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="news" hidden></section>
     <section class="panel" id="rates" hidden></section>
@@ -422,7 +430,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v141";
+const APP_VER="fi-v142";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -810,6 +818,50 @@ function renderMriTop(){
     <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
       <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
     <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>`+mriInds(r,p,live?hm:`${Mo}/${Dd} 終値`);
+}
+// the MRI over the past year (daily, confirmed closes), with the S&P 500's trend-corrected percentile below, as in the
+// MRI app's chart; the reading in the medium and long run is the day's article (paper.json "mriTrend", "mriTrendHead"),
+// otherwise one built from the data
+let TCI=null;
+function renderMriTrend(){
+  const el=$("mritrend");
+  if(!TEMP||!TEMP.mri){el.hidden=true;return}
+  const {mri}=TEMP,all=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[7]!=null),last=all[all.length-1][0];
+  const from=last-10000,B=all.filter(r=>r[0]>from);if(B.length<20){el.hidden=true;return}
+  const n=B.length,W=pw(el),ML=2,MR=26,MT=6,MB=22,PH=Math.round(W*.6),PH2=Math.round(PH*.5),GAP=20,PW=W-ML-MR;
+  const x=i=>ML+PW*i/(n-1),Y=(top,h)=>v=>top+h-v*h;
+  const g1={top:MT,h:PH,y:Y(MT,PH)},g2={top:MT+PH+GAP,h:PH2,y:Y(MT+PH+GAP,PH2)},BOT=g2.top+g2.h,H=BOT+MB;
+  const BANDS=[[0,.2,"--l1"],[.2,.4,"--l2"],[.4,.6,"--l3"],[.6,.8,"--l4"],[.8,1,"--l5"]];
+  const dot=v=>v>.8?"#F44336":v>=.75?"#FF9800":v<=.08?"#1a6b2a":v<=.1?"#81C784":null;
+  let g="",p="";
+  // month ticks every 3 months
+  const xt=[];let lm="";B.forEach((r,i)=>{const m=String(r[0]).slice(4,6);if(m!==lm&&i>0&&+m%3===0)xt.push([i,+m===1?String(r[0]).slice(2,4)+"/1":(+m)+"月"]);lm=m});
+  [[g1,[0,.2,.4,.6,.8,1],.13],[g2,[0,.5,1],.1]].forEach(([G,ticks,op])=>{
+    BANDS.forEach(([a,b,c])=>{g+=`<rect x="${ML}" y="${G.y(b)}" width="${PW}" height="${G.y(a)-G.y(b)}" fill="var(${c})" opacity="${op}"/>`});
+    ticks.forEach(v=>{g+=`<line class="grid" x1="${ML}" x2="${ML+PW}" y1="${G.y(v)}" y2="${G.y(v)}" opacity=".6"/><text class="ax" x="${W}" y="${G.y(v)+4}" text-anchor="end">${v*100}</text>`});
+    xt.forEach(([i])=>{g+=`<line class="grid" x1="${x(i)}" x2="${x(i)}" y1="${G.top}" y2="${G.top+G.h}" opacity=".4"/>`})});
+  // SELL 80 and BUY 8
+  [[.8,"var(--sell)"],[.08,"var(--buy)"]].forEach(([v,c])=>{g+=`<line x1="${ML}" x2="${ML+PW}" y1="${g1.y(v)}" y2="${g1.y(v)}" stroke="${c}" stroke-width="1" stroke-dasharray="4 3" opacity=".8"/>`});
+  const path=(k,G)=>B.map((r,i)=>r[k]==null?"":(i&&B[i-1][k]!=null?"L":"M")+x(i).toFixed(1)+" "+G.y(r[k]).toFixed(1)).join("");
+  p+=`<path d="${path(7,g1)}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>`;
+  B.forEach((r,i)=>{const c=dot(r[7]);if(c)p+=`<circle cx="${x(i).toFixed(1)}" cy="${g1.y(r[7]).toFixed(1)}" r="2.6" fill="${c}"/>`});
+  if(B.some(r=>r[9]!=null))p+=`<path d="${path(9,g2)}" fill="none" stroke="#9C7CFF" stroke-width="1.6" stroke-linejoin="round"/>`;
+  xt.forEach(([i,t])=>{g+=`<text class="ax" x="${x(i)}" y="${H-6}" text-anchor="middle">${t}</text>`});
+  const ci=TCI!=null&&TCI<n?TCI:null;let xh="";
+  if(ci!=null){const r=B[ci];xh=`<line class="xh" x1="${x(ci)}" x2="${x(ci)}" y1="${MT}" y2="${BOT}"/><circle cx="${x(ci)}" cy="${g1.y(r[7])}" r="3.5" fill="var(--ink)" stroke="var(--panel)" stroke-width="1.5"/>`+(r[9]!=null?`<circle cx="${x(ci)}" cy="${g2.y(r[9])}" r="3.5" fill="#9C7CFF" stroke="var(--panel)" stroke-width="1.5"/>`:"")}
+  const r=B[ci!=null?ci:n-1],lv=level(r[7]),ds=String(r[0]).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3");
+  // the year in numbers: the high and the low with their dates
+  const hi=B.reduce((a,b)=>b[7]>a[7]?b:a),lo=B.reduce((a,b)=>b[7]<a[7]?b:a),f=v=>(v*100).toFixed(2);
+  const auto=`この1年のMRIは、${ymd(hi[0])}の${f(hi[7])}が高値、${ymd(lo[0])}の${f(lo[7])}が安値だった。1年前の${f(B[0][7])}に対して、いまは${f(B[n-1][7])}にある。`;
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>MRI の推移</h2><span class="asof">1年・日足</span></div>`
+    +headHTML("mriTrendHead",[`1年の高値 ${f(hi[7])}　安値 ${f(lo[7])}`,`いまは ${f(B[n-1][7])}（${lv[1]}）`])
+    +note("mriTrend",auto)
+    +`<div class="tread"><span class="d">${ds}</span><span>MRI <b style="color:var(${lv[2]})">${f(r[7])}</b></span><span>${lv[1]}</span>${r[9]!=null?`<span style="color:#9C7CFF">S&amp;P <b style="color:inherit">${(r[9]*100).toFixed(1)}</b></span>`:""}<span>SKEW <b>${(r[5]*100).toFixed(1)}</b></span><span>VIX <b>${(r[4]*100).toFixed(1)}</b></span><span>CAPE <b>${(r[6]*100).toFixed(1)}</b></span></div>`
+    +`<div class="tchart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="MRIの1年の日足チャート">${g}${p}${xh}<rect class="hit" x="${ML}" y="${MT}" width="${PW}" height="${BOT-MT}" fill="transparent"/></svg></div>`
+    +`<div class="tlab"><span><i style="background:var(--ink)"></i>MRI</span><span><i style="background:#9C7CFF"></i>S&amp;P500（トレンド補正後のパーセンタイル）</span></div>`;
+  const svg=el.querySelector("svg"),pick=e=>{const b=svg.getBoundingClientRect(),px=(e.clientX-b.left)*W/b.width;TCI=Math.max(0,Math.min(n-1,Math.round((px-ML)/PW*(n-1))));renderMriTrend()};
+  svg.addEventListener("click",pick);
 }
 // the three indicators behind the MRI (row [date, VIX, SKEW, CAPE, VIX score, SKEW score, CAPE score, MRI, ...]),
 // drawn as in the MRI app: each score is a percentile, coloured by the MRI's bands, with ±1σ / ±2σ marks;
@@ -1527,7 +1579,7 @@ async function loadMarkets(){
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderKokoro();renderMriTop();renderNums();renderEye();
+  renderKokoro();renderMriTop();renderMriTrend();renderNums();renderEye();
 }
 // the evening edition carries the data it was written on, frozen before the US open (paper.json "pre": futures.json
 // with the pre-open MRI, markets.json, indices.json, fedwatch.json), so its numbers stay with its text all night
@@ -1541,7 +1593,7 @@ async function loadPaper(){
     fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{STORY=j;if(j&&j.preAt&&!(new Date(j.preAt)>new Date(j.revisedAt||j.writtenAt||0)))delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
     fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null)]);
   applyPre();
-  renderIdx();renderNews();renderMriTop();renderNums();renderEye();renderCmdty();renderRates();renderFedw();
+  renderIdx();renderNews();renderMriTop();renderMriTrend();renderNums();renderEye();renderCmdty();renderRates();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
