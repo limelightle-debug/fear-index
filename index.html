@@ -186,6 +186,16 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .mtab .lq{grid-template-columns:minmax(0,1fr) auto 64px}
 .lq .k{overflow:hidden;text-overflow:ellipsis}
 .mtab.lq4 .lq{grid-template-columns:minmax(0,1fr) auto 58px 58px;gap:6px}
+.eye .eg{display:grid;grid-template-columns:62px minmax(0,1fr) minmax(0,1fr);gap:0 10px;align-items:stretch}
+.eye .ek{display:flex;align-items:flex-start;padding-top:10px!important}
+.eye .eh{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;padding-bottom:4px}
+.eye .eh b{color:var(--ink2);font-size:12px;margin-right:4px}
+.eye .ek,.eye .el,.eye .ef{padding:8px 0;border-top:1px solid var(--line)}
+.eye .ek{font-size:13px;font-weight:700;color:var(--ink2)}
+.eye .el b{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;border:1px solid}
+.eye .el small,.eye .ef small{display:block;font-family:var(--f-tick);font-stretch:85%;font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+.eye .ef span{font-size:13px;font-weight:700}
+.eye .ef i{font-style:normal;margin-right:3px}
 .lsrc{margin-top:8px;font-size:11.5px;color:var(--muted)}
 .ng{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin:12px 0 2px}
 .ng:first-of-type{margin-top:2px}
@@ -337,6 +347,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 
   <div id="t-paper">
     <section class="panel issue" id="issue"></section>
+    <section class="panel eye" id="eye" hidden></section>
     <section class="panel mtop" id="mritop" hidden></section>
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="news" hidden></section>
@@ -368,7 +379,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v109";
+const APP_VER="fi-v111";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -933,6 +944,70 @@ function renderNums(){
   el.innerHTML=`<div class="ph"><h2>${tx("数字","The numbers")}</h2><span class="asof">${ETLabel(t)||""}</span></div>
     ${G(tx("恐怖指数","Fear gauges"),fear)}${G(tx("株価指数","Indices"),idx)}${G(tx("S&amp;P500 セクター","S&amp;P 500 sectors"),sec)}${G(tx("金利","Rates"),rates)}${G(tx("為替","Currencies"),fx)}${G(tx("コモディティ","Commodities"),cm)}${G(tx("暗号資産","Crypto"),cr)}`;
 }
+// 鷹の目・魚の目: the whole paper on one page, at the top. 鷹の目 is where each thing stands now (its level and
+// state), 魚の目 is which way it is flowing (the change over the last month or three). Every row comes from the data
+// the panels below use; a row with no data is left out. Arrows are coloured by what the move means for stocks:
+// green easier, red harder.
+function renderEye(){
+  const el=$("eye"),R=[],en=EN(),sg=(v,d=1,u="")=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(d)}${u}`;
+  const chip=(t,c)=>`<b style="color:${c};border-color:${c}66;background:${c}14">${t}</b>`;
+  const C={hot:"#ff6b6b",warm:"#ffb547",ok:"#5fd08e",cool:"#6ec3ff",mid:"#9aa3c7"};
+  // flow: dir +1 / -1 / 0, good = which direction helps stocks
+  const flow=(d,good,txt,sub)=>{const c=d===0?C.mid:(d===good?C.ok:C.hot);return {f:`<span style="color:${c}"><i>${d>0?"↗":d<0?"↘":"→"}</i>${txt}</span><small>${sub}</small>`,d,good}};
+  const add=(k,lvl,lsub,fl)=>R.push({k,l:`${lvl}<small>${lsub}</small>`,f:fl?fl.f:"",fl});
+  // 恐怖: the MRI and the scene
+  if(TEMP&&TEMP.mri){const rows=TEMP.mri.daily.filter(r=>r[0]!==TEMP.mri.liveDay&&r[7]!=null),r=rows[rows.length-1],m=r[7],lv=level(m),b=rows[Math.max(0,rows.length-22)],dm=(m-b[7])*100;
+    let sc="";try{if(window.MindData&&window.MindEngine){const key=sceneOf(TEMP),nm=MindData.SCENES[key][1];sc=en?(nm[1]||nm[0]):nm[0]}}catch(e){}
+    const S=signals(TEMP.mri,r[0]).filter(x=>x.on).map(x=>`${x.name} Lv.${x.lv}`);
+    add(tx("恐怖","Fear"),chip(`MRI ${(m*100).toFixed(1)} ${lv[1]}`,m>=.8?C.hot:m>=.6?C.warm:m<=.08?C.ok:C.mid),[sc&&tx(`局面 ${sc}`,`scene: ${sc}`)].concat(S).filter(Boolean).join(" · ")||"—",
+      flow(dm>3?1:dm<-3?-1:0,-1,dm>3?tx("警戒が強まる","risk rising"):dm<-3?tx("警戒が和らぐ","risk easing"):tx("横ばい","steady"),tx(`1ヶ月 ${sg(dm,1,"pt")}`,`1M ${sg(dm,1,"pt")}`)))}
+  // 景気: GDPNow (or the last GDP) and how the nowcast has moved over the last month
+  const G=MAC&&MAC.gdp,N=MAC&&MAC.gdpnow;
+  if(G&&G.length){const L=G[G.length-1],ev=N&&N.evo&&N.evo.length?N.evo:null,ahead=N&&N.quarter>L[0].replace(/-(\d)$/,"-Q$1"),v=ahead&&ev?ev[ev.length-1][1]:L[1];
+    const st=v>=2.5?[tx("強い","Strong"),C.ok]:v>=1?[tx("巡航","Moderate"),C.cool]:v>=0?[tx("減速","Slowing"),C.warm]:[tx("マイナス","Contracting"),C.hot];
+    let fl=null;if(ahead&&ev&&ev.length>1){const last=ev[ev.length-1],ago=[...ev].reverse().find(q=>dms(q[0])<=dms(last[0])-30*864e5)||ev[0],d=last[1]-ago[1];
+      fl=flow(d>.3?1:d<-.3?-1:0,1,d>.3?tx("上方修正","revised up"):d<-.3?tx("下方修正","revised down"):tx("横ばい","steady"),`GDPNow ${tx("1ヶ月","1M")} ${sg(d,1,"pt")}`)}
+    else if(G.length>1){const d=L[1]-G[G.length-2][1];fl=flow(d>.5?1:d<-.5?-1:0,1,d>.5?tx("加速","faster"):d<-.5?tx("減速","slower"):tx("横ばい","steady"),tx(`前期比 ${sg(d,1,"pt")}`,`vs prior quarter ${sg(d,1,"pt")}`))}
+    add(tx("景気","Growth"),chip(st[0],st[1]),ahead?`GDPNow ${qLab(N.quarter)} ${sg(v,1,"%")}`:`GDP ${qLab(L[0].replace(/-(\d)$/,"-Q$1"))} ${sg(v,1,"%")}`,fl)}
+  const B=MAC&&MAC.bls;
+  // 物価: CPI on the year against the 2% target, and its direction over three months
+  if(B&&B.cpi){const y=yoyOf(B.cpi),c=yoyOf(B.core_cpi||[]),L=lastOf(y),p3=y[y.length-4],lc=lastOf(c),d=p3?L[1]-p3[1]:0;
+    const st=L[1]>=3?[tx("高止まり","Elevated"),C.hot]:L[1]>2.3?[tx("目標超え","Above target"),C.warm]:L[1]>=1.7?[tx("目標近辺","Near target"),C.ok]:[tx("目標以下","Below target"),C.cool];
+    add(tx("物価","Prices"),chip(st[0],st[1]),`CPI ${sg(L[1],1,"%")}${lc?tx(` コア ${sg(lc[1],1,"%")}`,` core ${sg(lc[1],1,"%")}`):""}`,
+      flow(d>.25?1:d<-.25?-1:0,-1,d>.25?tx("再加速","re-accelerating"):d<-.25?tx("鈍化","cooling"):tx("横ばい","steady"),tx(`3ヶ月 ${sg(d,1,"pt")}`,`3M ${sg(d,1,"pt")}`)))}
+  // 雇用: openings against unemployment, and the unemployment rate over three months
+  if(B&&B.unrate){const u=B.unrate,L=lastOf(u),p3=u[u.length-4],d=p3?L[1]-p3[1]:0,um=new Map(u),jo=(B.jolts||[]).filter(q=>um.has(q[0])),lj=lastOf(jo),gp=lj?lj[1]-um.get(lj[0]):null;
+    const st=gp==null?[`${L[1].toFixed(1)}%`,C.mid]:gp>.5?[tx("人手不足","Tight"),C.warm]:gp>0?[tx("やや人手不足","Slightly tight"),C.cool]:gp>-.5?[tx("均衡〜緩み","Loosening"),C.warm]:[tx("人余り","Slack"),C.hot];
+    add(tx("雇用","Jobs"),chip(st[0],st[1]),tx(`失業率 ${L[1].toFixed(1)}%`,`unemployment ${L[1].toFixed(1)}%`)+(gp!=null?tx(` 求人率との差 ${sg(gp,1,"pt")}`,`, openings gap ${sg(gp,1,"pt")}`):""),
+      flow(d>=.3?-1:d<=-.2?1:0,1,d>=.3?tx("悪化","weakening"):d<=-.2?tx("改善","improving"):tx("横ばい","steady"),tx(`失業率 3ヶ月 ${sg(d,1,"pt")}`,`unemployment 3M ${sg(d,1,"pt")}`)))}
+  // 賃金: real (hourly earnings on the year less CPI), and wage growth over three months
+  if(B&&B.ahe&&B.cpi){const w=yoyOf(B.ahe),cm=new Map(yoyOf(B.cpi)),L=lastOf(w),real=cm.has(L[0])?L[1]-cm.get(L[0]):null,p3=w[w.length-4],d=p3?L[1]-p3[1]:0;
+    if(real!=null)add(tx("賃金","Wages"),chip(real>=0?tx("実質プラス","Real gains"):tx("実質マイナス","Real losses"),real>=0?C.ok:C.hot),tx(`時給 ${sg(L[1],1,"%")} 実質 ${sg(real,1,"pt")}`,`earnings ${sg(L[1],1,"%")}, real ${sg(real,1,"pt")}`),
+      flow(d>.2?1:d<-.2?-1:0,1,d>.2?tx("伸び拡大","picking up"):d<-.2?tx("伸び鈍化","slowing"):tx("横ばい","steady"),tx(`3ヶ月 ${sg(d,1,"pt")}`,`3M ${sg(d,1,"pt")}`)))}
+  // 金利: the 10-year, the curve and the rate path priced, and the 10-year over three months
+  if(CV&&CV.now){const n=CV.now.y,s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"],m3=CV.m3&&CV.m3.y["10Y"],d=m3!=null?n["10Y"]-m3:0,pth=pathOf(n["2Y"]-n["3M"]);
+    const st=(s2<0||s3<0)?[tx("逆イールド","Inverted"),C.hot]:[tx("順イールド","Normal curve"),C.ok];
+    add(tx("金利","Rates"),chip(st[0],st[1]),tx(`10年 ${n["10Y"].toFixed(2)}% ${pth[0]}`,`10Y ${n["10Y"].toFixed(2)}%, ${pth[0]}`),
+      flow(d>.15?1:d<-.15?-1:0,-1,d>.15?tx("上昇","rising"):d<-.15?tx("低下","falling"):tx("横ばい","steady"),tx(`10年 3ヶ月 ${sg(d,2)}`,`10Y 3M ${sg(d,2)}`)))}
+  // 流動性: M2 growth and the reserves over 13 weeks
+  if(LQ&&(LQ.m2||LQ.fed)){const M=LQ.m2&&LQ.m2.hist?yoyOf(LQ.m2.hist):[],my=lastOf(M),F=LQ.fed&&LQ.fed.hist||[],lf=lastOf(F),f13=F.length>13?F[F.length-14]:null,dr=lf&&f13?(lf[2]-f13[2])/1e6:null;
+    const st=my?(my[1]>=5?[tx("拡大","Expanding"),C.ok]:my[1]>=0?[tx("緩やか","Modest"),C.cool]:[tx("縮小","Shrinking"),C.hot]):[tx("—","—"),C.mid];
+    add(tx("流動性","Liquidity"),chip(st[0],st[1]),[my?`M2 ${sg(my[1],1,"%")}`:"",lf?tx(`準備預金 ${(lf[2]/1e6).toFixed(2)}兆ドル`,`reserves $${(lf[2]/1e6).toFixed(2)}T`):""].filter(Boolean).join(" "),
+      dr==null?null:flow(dr>.05?1:dr<-.05?-1:0,1,dr>.05?tx("準備預金 増加","reserves rising"):dr<-.05?tx("準備預金 減少","reserves falling"):tx("横ばい","steady"),tx(`13週 ${sg(dr*1e4,0)}億ドル`,`13W ${sg(dr*1e3,0)}B`)))}
+  if(!R.length){el.hidden=true;return}
+  // headline: the big picture in one line (growth and prices), then the count of flows that help or hurt
+  const by=k=>R.find(x=>x.k===tx(k[0],k[1]));
+  const lv=x=>x?x.l.replace(/<small>.*$/,"").replace(/<[^>]+>/g,""):"";
+  const g=by(["景気","Growth"]),pz=by(["物価","Prices"]),j=by(["雇用","Jobs"]);
+  const h1=[g&&tx(`景気は${lv(g)}`,`Growth ${lv(g).toLowerCase()}`),pz&&tx(`物価は${lv(pz)}`,`prices ${lv(pz).toLowerCase()}`)].filter(Boolean).join(tx("、",", "));
+  const F=R.filter(x=>x.fl&&x.fl.d!==0),good=F.filter(x=>x.fl.d===x.fl.good).map(x=>x.k),bad=F.filter(x=>x.fl.d!==x.fl.good).map(x=>x.k);
+  const h2=en?[good.length?`easing: ${good.join(", ")}`:"",bad.length?`tightening: ${bad.join(", ")}`:""].filter(Boolean).join(" / "):[good.length?`追い風 ${good.join("・")}`:"",bad.length?`向かい風 ${bad.join("・")}`:""].filter(Boolean).join("　");
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>${tx("鷹の目・魚の目","Hawk's eye, fish's eye")}</h2><span class="asof">${tx("毎日更新","Updated daily")}</span></div>${headHTML("eyeHead",[h1,h2])}
+    <div class="eg"><span class="eh"></span><span class="eh"><b>${tx("鷹の目","Hawk")}</b>${tx("いまの水準","where it stands")}</span><span class="eh"><b>${tx("魚の目","Fish")}</b>${tx("流れ","which way")}</span>
+    ${R.map(x=>`<span class="ek">${x.k}</span><span class="el">${x.l}</span><span class="ef">${x.f||"<small>—</small>"}</span>`).join("")}</div>
+    <div class="lsrc">${tx("矢印の色は株式にとっての意味。緑は追い風、赤は向かい風","Arrow colour: what the move means for stocks, green helps, red hurts")}</div>`;
+}
 // time series chart for the monthly and weekly pages: lines (or bars for the first series when o.bars), dates along
 // the bottom by year, a few gridlines, dashed reference lines (o.ref), the last value of each line at its end
 const dms=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d||15)};
@@ -989,7 +1064,7 @@ function beveridge(U,V,W){
   g+=`<text x="${ML+PW}" y="${H-2}" text-anchor="end">${tx("失業率 %","Unemployment %")}</text><text x="${ML+4}" y="${MT+9}">${tx("求人率 %","Openings %")}</text>`;
   let p="";
   const mi=k=>+k.slice(0,4)*12+ +k.slice(5,7);
-  for(let i=1;i<n;i++){if(mi(Q[i][0])-mi(Q[i-1][0])>1)continue;const a=.12+.88*(i/(n-1))**1.6;p+=`<line x1="${x(Q[i-1][1]).toFixed(1)}" y1="${y(Q[i-1][2]).toFixed(1)}" x2="${x(Q[i][1]).toFixed(1)}" y2="${y(Q[i][2]).toFixed(1)}" stroke="#7fa8ff" stroke-opacity="${a.toFixed(2)}" stroke-width="${i>n-13?2:1.2}"/>`}
+  for(let i=1;i<n;i++){if(mi(Q[i][0])-mi(Q[i-1][0])>1)continue;const t=i/(n-1),a=.06+.94*t**2.2,sw=.4+2.2*t**1.8;p+=`<line x1="${x(Q[i-1][1]).toFixed(1)}" y1="${y(Q[i-1][2]).toFixed(1)}" x2="${x(Q[i][1]).toFixed(1)}" y2="${y(Q[i][2]).toFixed(1)}" stroke="#7fa8ff" stroke-opacity="${a.toFixed(2)}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round"/>`}
   // a label at each January for the last few years, and the latest month
   const L0=Q[n-1];
   Q.forEach((q,i)=>{if(q[0].endsWith("-01")&&i>n-62&&Math.hypot(x(q[1])-x(L0[1]),y(q[2])-y(L0[2]))>22)p+=`<circle cx="${x(q[1])}" cy="${y(q[2])}" r="2" fill="#7fa8ff"/><text x="${x(q[1])+4}" y="${y(q[2])-4}" style="fill:var(--ink2)">${q[0].slice(0,4)}</text>`});
@@ -1166,18 +1241,18 @@ async function loadMarkets(){
     fetch(`data/oas.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>OASD=j).catch(()=>OASD=null),
     fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
     fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null)]);
-  renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();
+  renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderKokoro();renderMriTop();renderNums();
+  renderKokoro();renderMriTop();renderNums();renderEye();
 }
 async function loadPaper(){
   await Promise.all([
     fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
     fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>STORY=j).catch(()=>STORY=null)]);
-  renderIdx();renderNews();renderMriTop();renderNums();
+  renderIdx();renderNews();renderMriTop();renderNums();renderEye();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
