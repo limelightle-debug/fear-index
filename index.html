@@ -368,7 +368,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v106";
+const APP_VER="fi-v107";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -988,7 +988,8 @@ function beveridge(U,V,W){
   g+=`<line x1="${x(lo)}" y1="${y(lo)}" x2="${x(hi)}" y2="${y(hi)}" stroke="#fff" stroke-opacity=".35" stroke-dasharray="3 3"/><text x="${x(hi)-4}" y="${y(hi)+12}" text-anchor="end">${tx("求人率=失業率","openings = unemployment")}</text>`;
   g+=`<text x="${ML+PW}" y="${H-2}" text-anchor="end">${tx("失業率 %","Unemployment %")}</text><text x="${ML+4}" y="${MT+9}">${tx("求人率 %","Openings %")}</text>`;
   let p="";
-  for(let i=1;i<n;i++){const a=.12+.88*(i/(n-1))**1.6;p+=`<line x1="${x(Q[i-1][1]).toFixed(1)}" y1="${y(Q[i-1][2]).toFixed(1)}" x2="${x(Q[i][1]).toFixed(1)}" y2="${y(Q[i][2]).toFixed(1)}" stroke="#7fa8ff" stroke-opacity="${a.toFixed(2)}" stroke-width="${i>n-13?2:1.2}"/>`}
+  const mi=k=>+k.slice(0,4)*12+ +k.slice(5,7);
+  for(let i=1;i<n;i++){if(mi(Q[i][0])-mi(Q[i-1][0])>1)continue;const a=.12+.88*(i/(n-1))**1.6;p+=`<line x1="${x(Q[i-1][1]).toFixed(1)}" y1="${y(Q[i-1][2]).toFixed(1)}" x2="${x(Q[i][1]).toFixed(1)}" y2="${y(Q[i][2]).toFixed(1)}" stroke="#7fa8ff" stroke-opacity="${a.toFixed(2)}" stroke-width="${i>n-13?2:1.2}"/>`}
   // a label at each January for the last few years, and the latest month
   const L0=Q[n-1];
   Q.forEach((q,i)=>{if(q[0].endsWith("-01")&&i>n-62&&Math.hypot(x(q[1])-x(L0[1]),y(q[2])-y(L0[2]))>22)p+=`<circle cx="${x(q[1])}" cy="${y(q[2])}" r="2" fill="#7fa8ff"/><text x="${x(q[1])+4}" y="${y(q[2])-4}" style="fill:var(--ink2)">${q[0].slice(0,4)}</text>`});
