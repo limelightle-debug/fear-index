@@ -201,15 +201,10 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .kokoro .kh b{font-size:20px;font-weight:800;letter-spacing:.2em}
 .kokoro .kh span{font-size:12px;color:var(--muted)}
 .kokoro .kh span em{font-style:normal;font-weight:700;color:var(--ink2)}
-.kokoro .kw{margin:10px 0 0;font-size:15px;font-weight:700;line-height:1.75}
-.kokoro .kq{margin:0}.kokoro .kq .kw{margin:0}
-.kokoro .kq figcaption{margin-top:6px;text-align:right;font-size:11.5px;color:var(--muted);letter-spacing:.04em}
-.kokoro .kbs{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
-.kokoro .kbs small{display:block;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.06em}
-.kokoro .kb{margin-top:6px}.kokoro .kb+.kb{margin-top:10px}
-.kokoro .kb strong{display:block;font-size:14px}
-.kokoro .kb p{margin:2px 0 0;font-size:13px;line-height:1.65;color:var(--ink2)}
-.kokoro .kl{display:block;text-align:right;margin-top:8px;font-size:12px;color:var(--accent);text-decoration:none}
+.kokoro .kq{margin:6px 0 0}
+.kokoro .kw{margin:0;font-size:24px;font-weight:800;line-height:1.55;letter-spacing:.02em}
+.kokoro .kq figcaption{margin-top:10px;text-align:right;font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+.kokoro .kq+.ccm{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
 /* the day's other news, one line each with a tag */
 .nws{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:baseline}
 .nws b{font-size:11px;font-weight:700;color:var(--accent);border:1px solid rgba(127,168,255,.45);border-radius:999px;padding:1px 8px;white-space:nowrap;justify-self:start}
@@ -437,7 +432,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v147";
+const APP_VER="fi-v148";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1560,15 +1555,16 @@ function renderKokoro(){
   const el=$("kokoro"),M=window.MindData;
   if(!TEMP||!M||!window.MindEngine){el.hidden=true;return}
   let key;try{key=sceneOf(TEMP)}catch(e){el.hidden=true;return}
-  // the scene of the day (『VIXの声を聴け』 chapter 5): what is happening, a word from 30の言葉 (chapter 4) with its
-  // number and theme, and every bias the scene warns of
-  const [ai,name,what,biases,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja])=>W[n]=[ja,g[0]]));
-  const di=dayIdx(fortuneDay()),wn=words[di%words.length],[w,wg]=W[wn];
+  // one word from 30の言葉 (『VIXの声を聴け』 chapter 4) in large type, then what it says about today's market.
+  // The day's article picks the word and writes the reading (paper.json "kokoroWord" 1-30, "kokoro"); otherwise
+  // the scene's words rotate by day, read with the scene's description
+  const [ai,name,what,,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja])=>W[n]=[ja,g[0]]));
+  const day=sessionDay(),own=STORY&&(!day||sameDay(day)),pick=own&&+STORY.kokoroWord,txt=own&&STORY.kokoro;
+  const wn=pick&&W[pick]?pick:words[dayIdx(fortuneDay())%words.length],[w,wg]=W[wn];
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>心</h2><span class="asof">${ACT[ai]}</span></div>${headHTML("kokoroHead",[`今の局面は「${name[0]}」`,""])}
-    <div class="ccm"><p>${esc(what[0])}</p></div>
+  el.innerHTML=`<div class="ph"><h2>心</h2><span class="asof">${ACT[ai]}・${esc(name[0])}</span></div>
     <figure class="kq"><p class="kw">「${esc(w)}」</p><figcaption>30の言葉より　${wn}　${esc(wg)}</figcaption></figure>
-    <div class="kbs"><small>気をつけるバイアス</small>${biases.map(k=>M.BIAS[k]).filter(Boolean).map(b=>`<div class="kb"><strong>${esc(b[0])}</strong><p>${esc(b[1])}</p></div>`).join("")}</div>`;
+    <div class="ccm"><p>${esc(txt&&pick===wn?txt:what[0])}</p></div>`;
 }
 async function loadMarkets(){
   await Promise.all([
@@ -1598,7 +1594,7 @@ async function loadPaper(){
     fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{STORY=j;if(j&&j.preAt&&!(new Date(j.preAt)>new Date(j.revisedAt||j.writtenAt||0)))delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
     fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null)]);
   applyPre();
-  renderIdx();renderNews();renderMriTop();renderMriTrend();renderNums();renderEye();renderCmdty();renderRates();renderFedw();
+  renderIdx();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
