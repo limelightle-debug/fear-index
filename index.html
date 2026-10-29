@@ -274,7 +274,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .issue .ib{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:0}
 .issue .ib .id{font-size:28px;white-space:nowrap}.issue .ib .id small{font-size:16px}
 @media (max-width:400px){.issue .mast{width:128px;height:49.5px}.issue .ib .id{font-size:26px}.issue .ib .id small{font-size:15px}}
-.issue .ib .it{display:flex;align-items:center;gap:7px}.issue .ed{font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:.08em;padding:2px 8px;border-radius:6px;border:1px solid;line-height:1.3}.issue .ed.mor{color:#ffb547;border-color:#ffb54766;background:#ffb5471a}.issue .ed.eve{color:#9db8ff;border-color:#9db8ff66;background:#9db8ff1a}.issue .ib .it b{font-size:16px}.issue .ib .it span{margin-top:0}
+.issue .ib .it{display:flex;align-items:center;gap:7px}.issue .ed{font-style:normal;font-size:19px;font-weight:900;letter-spacing:.18em;padding:4px 8px 4px 12px;border-radius:7px;line-height:1.2;color:#0b0d1a}.issue .ed.mor{background:#ffb547;box-shadow:0 0 14px #ffb54766}.issue .ed.eve{background:#7fa2ff;box-shadow:0 0 14px #7fa2ff77}.issue.eve{border-color:#7fa2ff88;box-shadow:0 0 0 1px #7fa2ff33,0 0 22px #7fa2ff22}.issue .ib .it b{font-size:16px}.issue .ib .it span{margin-top:0}
 .issue .id{font-size:26px;font-weight:800;letter-spacing:.02em;line-height:1.1}
 .issue .id small{font-size:17px;font-weight:700;margin-left:2px}
 .issue .it{text-align:right;line-height:1.1}
@@ -403,7 +403,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v134";
+const APP_VER="fi-v135";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -645,6 +645,7 @@ function renderIssue(st){
   // the day's points to watch (paper.json "points"), picked from what the paper carries below
   // usually 3, up to 5 on a heavy day (the morning run decides)
   const P=st&&Array.isArray(SP(st,"points"))?SP(st,"points").slice(0,5):[];
+  $("issue").classList.toggle("eve",eve);
   $("issue").innerHTML=`<div class="irow"><img class="mast" src="icons/masthead.png" alt="恐怖新聞" width="150" height="58"><div class="ib"><div class="id">${EN()?`${MON[j.getUTCMonth()]} ${j.getUTCDate()}<small> ${w}</small>`:`${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small>`}</div><div class="it"><i class="ed ${eve?"eve":"mor"}">${eve?tx("夜刊","Evening"):tx("朝刊","Morning")}</i><b>${hm}</b>${note?`<span>${note}</span>`:""}</div></div></div>`
     +(P.length?`<ul class="pts">${P.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"");
 }
