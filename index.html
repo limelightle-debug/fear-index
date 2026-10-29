@@ -152,7 +152,8 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .mtop .mrow .lvl{margin-top:8px;font-size:18px;padding:5px 15px}
 .mtop .mv{text-align:right}.mtop .mv .big{font-size:44px}.mtop .mv .ml{font-family:var(--f-tick);font-size:18px;font-weight:700;color:var(--ink2);margin-right:8px}
 .mtop .rlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
-.mtop .cm,.ccm{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.mtop .cm{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.ccm{margin:2px 0 6px}
 .ccm p{margin:0;font-size:14px;line-height:1.7;text-indent:1em;color:var(--ink)}
 .mtop .cm b{font-size:11.5px;font-weight:700;color:var(--accent)}
 .mtop .cm p{margin:3px 0 0;font-size:14px;line-height:1.64;text-indent:1em}
@@ -395,7 +396,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v121";
+const APP_VER="fi-v122";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -790,10 +791,10 @@ function renderCmdty(){
   const say=([k,name])=>{const x=it[k],a=Math.abs(x.pct).toFixed(1);if(EN())return`${x.en} ${x.pct>=0?"up":"down"} ${a}%`;
     return k==="usdjpy"?`ドル円は${a}%の円${x.pct>=0?"安":"高"}`:k==="dxy"?`ドルは${a}%${x.pct>=0?"高":"安"}`:`${name.replace(/（.*）/,"")}は${a}%${x.pct>=0?"高":"安"}`};
   const ch2=mv.length?[say(mv[0]).replace("は","が"),mv.slice(1,3).map(say).join(EN()?", ":"、")]:["",""];
-  el.innerHTML=`<div class="ph"><h2>${tx("コモディティ・ドル","Commodities & dollar")}</h2><span class="asof">${ETLabel((it.gold||it[T[0][0]]).time)}</span></div>${mv.length?headHTML("cmdtyHead",ch2):""}<div class="tiles ctiles">`+T.map(([k,name,full])=>{const x=it[k];if(EN())name=x.en;
+  el.innerHTML=`<div class="ph"><h2>${tx("コモディティ・ドル","Commodities & dollar")}</h2><span class="asof">${ETLabel((it.gold||it[T[0][0]]).time)}</span></div>${mv.length?headHTML("cmdtyHead",ch2):""}${note("cmdty",cmdtyComment(it,T))}<div class="tiles ctiles">`+T.map(([k,name,full])=>{const x=it[k];if(EN())name=x.en;
     const f=v=>v.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec}),usd=x.unit==="ドル",yen=x.unit==="円";
     const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}${usd?"$":""}${f(Math.abs(x.chg))}${yen&&!EN()?"円":""}`;
-    return `<div class="tile" style="background:${tileColor(x.pct,full)}"><div class="tn">${name}</div><div class="tv">${usd?'<small style="margin:0 1px 0 0">$</small>':""}${f(x.price)}${yen&&!EN()?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`+(()=>{const day=(it.gold||it[T[0][0]]).time,ymd=String(day||"").slice(0,10),own=STORY&&(STORY.date===ymd)&&SP(STORY,"cmdty"),c=own||cmdtyComment(it,T);return c?`<div class="ccm"><p>${esc(c)}</p></div>`:""})();
+    return `<div class="tile" style="background:${tileColor(x.pct,full)}"><div class="tn">${name}</div><div class="tv">${usd?'<small style="margin:0 1px 0 0">$</small>':""}${f(x.price)}${yen&&!EN()?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
 }
 // currencies: the dollar index and the yen against the dollar, euro and pound (full colour at ±1%, they move less)
 function renderFX(){
@@ -940,7 +941,7 @@ function renderRates(){
   const d10=CV.prev&&CV.prev.y["10Y"]!=null?n["10Y"]-CV.prev.y["10Y"]:0,a10=Math.abs(d10),pth=pathOf(n["2Y"]-n["3M"])[0];
   const rh=EN()?[`US 10Y ${a10<.01?"flat at":d10>0?(a10>=.1?"jumps to":"up to"):(a10>=.1?"drops to":"down to")} ${n["10Y"].toFixed(2)}%`,`${st[0]}, rate path: ${pth}`]
     :[`米10年債 ${n["10Y"].toFixed(2)}%${a10<.01?"で横ばい":`に${a10>=.1?"大幅":""}${d10>0?"上昇":"低下"}`}`,`${st[0]}、2年−3ヶ月は${pth}`];
-  el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>${headHTML("ratesHead",rh)}
+  el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>${headHTML("ratesHead",rh)}${note("rates",autoRates())}
     <div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
     <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span><span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(n["2Y"]-n["3M"])}</b><em class="path" style="color:${pathOf(n["2Y"]-n["3M"])[1]}">${pathOf(n["2Y"]-n["3M"])[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
@@ -1089,7 +1090,7 @@ function renderFedw(){
     return `<tr><td>${en?`${MON[+m.date.slice(5,7)-1]} ${+m.date.slice(8)} ’${m.date.slice(2,4)}`:`${m.date.slice(2,4)}/${md(m.date)}`}</td>${ranges.map(r=>{const v=m.probs[r];return `<td class="${v==null?"":r===best[0][0]?"mx":"sd"}">${v==null?"":v.toFixed(1)}</td>`}).join("")}</tr>`}).join("")}</table>`;
   const asof=String(FW.asof||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>FedWatch</h2><span class="asof">${asof?tx(`${+asof[2]}/${+asof[3]} ${asof[4]}:${asof[5]}（米東部）`,`${MON[+asof[2]-1]} ${+asof[3]} ${asof[4]}:${asof[5]} ET`):""}</span></div>${headHTML("fedwHead",[h1,h2])}
+  el.innerHTML=`<div class="ph"><h2>FedWatch</h2><span class="asof">${asof?tx(`${+asof[2]}/${+asof[3]} ${asof[4]}:${asof[5]}（米東部）`,`${MON[+asof[2]-1]} ${+asof[3]} ${asof[4]}:${asof[5]} ET`):""}</span></div>${headHTML("fedwHead",[h1,h2])}${note("fedw",autoFedw())}
     <div class="rstate"><span class="sp">${tx("政策金利","Target")}<b>${lo.toFixed(2)}〜${hi.toFixed(2)}%</b></span><span class="sp">EFFR<b>${FW.effr.toFixed(2)}%</b></span></div>
     <div class="rcap"><span>${tx("織り込まれた政策金利の道筋","The rate path priced")}</span></div>${chart}
     <div class="rcap"><span>${tx("会合ごとの確率（%）","Probabilities by meeting (%)")}</span></div>${tab}
@@ -1097,6 +1098,51 @@ function renderFedw(){
 }
 // a panel's drawing width: its own width, or while it is still hidden (first render) the paper's column
 const pw=el=>{const w=el.clientWidth||(el.parentElement&&el.parentElement.clientWidth)||document.documentElement.clientWidth-32;return Math.max(260,w-28)};
+// every panel's reading: the day's written text (paper.json <key>, only for the session it was written for),
+// otherwise one built from the data
+const sessionDay=()=>TEMP&&TEMP.mri?String(TEMP.mri.daily.filter(r=>r[0]!==TEMP.mri.liveDay&&r[7]!=null).slice(-1)[0][0]).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3"):(IDX&&IDX.indices&&IDX.indices[0]?String(IDX.indices[0].time).slice(0,10):null);
+function note(key,auto){
+  const day=sessionDay(),own=STORY&&(!day||STORY.date===day)&&SP(STORY,key),t=own||auto||"";
+  return t?`<div class="ccm"><p>${esc(t)}</p></div>`:"";
+}
+const sgn1=(v,d=1,u="")=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(d)}${u}`;
+function autoRates(){
+  if(!CV||!CV.now)return"";const n=CV.now.y,p=CV.prev&&CV.prev.y,en=EN(),s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"],pth=pathOf(n["2Y"]-n["3M"])[0],d10=p?n["10Y"]-p["10Y"]:0,d2=p?n["2Y"]-p["2Y"]:0;
+  const m3=CV.m3&&CV.m3.y["10Y"];
+  return en?`The 10-year yields ${n["10Y"].toFixed(2)}% (${sgn1(d10,2)} on the day) and the 2-year ${n["2Y"].toFixed(2)}% (${sgn1(d2,2)}). The curve is ${(s2<0||s3<0)?"inverted":"normal"}, 10s over 2s at ${sgn1(s2,2)}. The 2-year over the 3-month at ${sgn1(n["2Y"]-n["3M"],2)} says the market prices rates ${pth.toLowerCase()}.${m3!=null?` Over three months the 10-year has moved ${sgn1(n["10Y"]-m3,2)}.`:""}`
+    :`10年債は${n["10Y"].toFixed(2)}%で前日比${sgn1(d10,2)}、2年債は${n["2Y"].toFixed(2)}%で${sgn1(d2,2)}。曲線は${(s2<0||s3<0)?"逆イールド":"順イールド"}で、10年と2年の差は${sgn1(s2,2)}。2年と3ヶ月の差${sgn1(n["2Y"]-n["3M"],2)}は、市場が政策金利を${pth}と見ていることを示す。${m3!=null?`10年債は3ヶ月で${sgn1(n["10Y"]-m3,2)}動いた。`:""}`;
+}
+function autoFedw(){
+  if(!FW||!FW.meetings||!FW.meetings.length)return"";const en=EN(),M=FW.meetings,m0=M[0],lo=FW.target[0],L=M[M.length-1],mo=+m0.date.slice(5,7);
+  const up=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]>lo+1e-9).reduce((a,[,v])=>a+v,0),dn=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]<lo-1e-9).reduce((a,[,v])=>a+v,0);
+  const H=FW.hist||[],prev=H.length>1?H[H.length-2]:null,dd=prev&&prev[5]===m0.date?(m0.moves-prev[1])*100:null;
+  return en?`Futures put the odds of a ${up>=dn?"hike":"cut"} at the ${MON[mo-1]} meeting at ${Math.max(up,dn).toFixed(0)}%${dd!=null?` (${sgn1(dd,0,"pt")} on the day)`:""}. By ${L.date.slice(0,4)}'s last meeting, ${Math.abs(L.moves).toFixed(1)} ${L.moves>0?"hikes":"cuts"} are priced, a path towards ${L.after.toFixed(2)}%.`
+    :`先物は${mo}月会合での${up>=dn?"利上げ":"利下げ"}を${Math.max(up,dn).toFixed(0)}%と見る${dd!=null?`（前日から${sgn1(dd,0,"pt")}）`:""}。${L.date.slice(0,4)}年末までに${Math.abs(L.moves).toFixed(1)}回分の${L.moves>0?"利上げ":"利下げ"}を織り込み、政策金利は${L.after.toFixed(2)}%前後へ向かう道筋になっている。`;
+}
+function autoGdp(){
+  const G=MAC&&MAC.gdp,N=MAC&&MAC.gdpnow;if(!G||!G.length)return"";const en=EN(),L=G[G.length-1],lq=L[0].replace(/-(\d)$/,"-Q$1"),ev=N&&N.evo&&N.evo.length?N.evo:null;
+  const s=ev&&N.quarter>lq?(en?`GDPNow estimates ${qLab(N.quarter)} at ${sgn1(ev[ev.length-1][1],1,"%")}, ${Math.abs(ev[ev.length-1][1]-ev[0][1]).toFixed(1)}pt ${ev[ev.length-1][1]<ev[0][1]?"below":"above"} its first estimate of ${ev[0][1].toFixed(1)}%. `:`GDPNowは${qLab(N.quarter)}を年率${sgn1(ev[ev.length-1][1],1,"%")}と見積もる。最初の予測${ev[0][1].toFixed(1)}%から${Math.abs(ev[ev.length-1][1]-ev[0][1]).toFixed(1)}pt${ev[ev.length-1][1]<ev[0][1]?"下方":"上方"}修正された。`):"";
+  return s+(en?`Real GDP grew ${sgn1(L[1],1,"%")} in ${qLab(lq)}${G.length>1?` after ${sgn1(G[G.length-2][1],1,"%")}`:""}.`:`直近の${qLab(lq)}の実質GDPは${sgn1(L[1],1,"%")}${G.length>1?`（前期は${sgn1(G[G.length-2][1],1,"%")}）`:""}。`);
+}
+function autoInfl(){
+  const B=MAC&&MAC.bls,P=MAC&&MAC.pce||{};if(!B||!B.cpi)return"";const en=EN(),y=k=>lastOf(yoyOf(k)),c=y(B.cpi),cc=y(B.core_cpi||[]),p=y(P.pce||[]),cp=y(P.core_pce||[]),pp=y(B.ppi||[]);
+  const Yc=yoyOf(B.cpi),d3=Yc.length>3?c[1]-Yc[Yc.length-4][1]:0;
+  return en?`CPI is up ${sgn1(c[1],1,"%")} on the year${cc?`, core ${sgn1(cc[1],1,"%")}`:""}${p?`; PCE ${sgn1(p[1],1,"%")}${cp?`, core ${sgn1(cp[1],1,"%")}`:""}`:""}, all ${c[1]>2?"above":"below"} the 2% target.${pp?` Producer prices run at ${sgn1(pp[1],1,"%")}, and what businesses pay tends to reach consumers later.`:""} Over three months CPI has moved ${sgn1(d3,1,"pt")}.`
+    :`CPIは前年比${sgn1(c[1],1,"%")}${cc?`、コアは${sgn1(cc[1],1,"%")}`:""}${p?`。PCEは${sgn1(p[1],1,"%")}${cp?`、コアPCEは${sgn1(cp[1],1,"%")}`:""}`:""}で、目標の2%を${c[1]>2?"上回る":"下回る"}。${pp?`企業の仕入れ値であるPPIは${sgn1(pp[1],1,"%")}で、その分はのちに消費者物価へ届きやすい。`:""}CPIの伸びは3ヶ月で${sgn1(d3,1,"pt")}動いた。`;
+}
+function autoJobs(){
+  const B=MAC&&MAC.bls,CL=MAC&&MAC.claims;if(!B||!B.payrolls||!B.unrate)return"";const en=EN(),pay=B.payrolls[B.payrolls.length-1][1]-B.payrolls[B.payrolls.length-2][1],u=lastOf(B.unrate),um=new Map(B.unrate),jo=(B.jolts||[]).filter(q=>um.has(q[0])),lj=lastOf(jo),gp=lj?lj[1]-um.get(lj[0]):null;
+  const w=B.ahe?lastOf(yoyOf(B.ahe)):null,cm=new Map(yoyOf(B.cpi||[])),real=w&&cm.has(w[0])?w[1]-cm.get(w[0]):null,cl=CL&&CL.length?CL[CL.length-1]:null;
+  return en?`Payrolls ${pay>=0?"rose":"fell"} ${Math.abs(Math.round(pay))}K in ${moLab(u[0])} and unemployment is ${u[1].toFixed(1)}%.${gp!=null?` Openings run ${Math.abs(gp).toFixed(1)}pt ${gp>0?"above":"below"} unemployment.`:""}${cl?` Initial jobless claims are ${Math.round(cl[1]/1e3)}K.`:""}${real!=null?` Hourly earnings are up ${sgn1(w[1],1,"%")}, ${real>=0?"ahead of":"behind"} prices by ${Math.abs(real).toFixed(1)}pt.`:""}`
+    :`${moLab(u[0])}の雇用者は${Math.abs(pay/10).toFixed(1)}万人${pay>=0?"増":"減"}、失業率は${u[1].toFixed(1)}%。${gp!=null?`求人率は失業率を${Math.abs(gp).toFixed(1)}pt${gp>0?"上回り、人手不足が続く":"下回り、雇用は緩み始めている"}。`:""}${cl?`失業保険の新規申請は${(cl[1]/1e4).toFixed(1)}万件。`:""}${real!=null?`平均時給は前年比${sgn1(w[1],1,"%")}で、物価を${Math.abs(real).toFixed(1)}pt${real>=0?"上回る":"下回り、実質賃金はマイナスだ"}。`:""}`;
+}
+function autoLiq(){
+  if(!LQ)return"";const en=EN(),R=LQ.rrp&&LQ.rrp.hist,F=LQ.fed&&LQ.fed.hist||[],S=LQ.money&&LQ.money.spread,M=LQ.m2&&LQ.m2.hist?lastOf(yoyOf(LQ.m2.hist)):null;
+  const rl=R&&R.length?R[R.length-1][1]:null,L=lastOf(F),d13=F.length>13?(L[2]-F[F.length-14][2])/1e3:null,sp=S&&S.length?S[S.length-1][2]:null;
+  const H=F.slice(-80),lo=H.length?H.reduce((a,q)=>q[1]<a[1]?q:a,H[0]):null,up=lo&&L?(L[1]-lo[1])/1e3:null;
+  return en?`${rl!=null?`The buffer, the reverse repo, is down to $${rl.toFixed(1)}B${rl<50?", all but gone":""}. `:""}${L?`Reserves stand at $${(L[2]/1e6).toFixed(2)}T${d13!=null?`, ${sgn1(d13,0,"B")} in 13 weeks`:""}. `:""}${sp!=null?`SOFR is ${Math.abs(sp*100).toFixed(0)}bp ${sp>0?"above":"below"} IORB. `:""}${up!=null&&up>20?`The Fed has grown its balance sheet by $${up.toFixed(0)}B from its low. `:""}${M?`M2 is up ${sgn1(M[1],1,"%")} on the year.`:""}`
+    :`${rl!=null?`緩衝材のリバースレポは${(rl*10).toFixed(1)}億ドル${rl<50?"とほぼ尽きた":""}。`:""}${L?`準備預金は${(L[2]/1e6).toFixed(2)}兆ドル${d13!=null?`で、13週に${Math.abs(d13*10).toFixed(0)}億ドル${d13<0?"減った":"増えた"}`:""}。`:""}${sp!=null?`SOFRはIORBを${Math.abs(sp*100).toFixed(0)}bp${sp>0?"上回り、資金の綱が張っている":"下回る"}。`:""}${up!=null&&up>20?`FRBは総資産を底から${Math.round(up*10).toLocaleString("en-US")}億ドル増やしている。`:""}${M?`市中のお金M2は前年比${sgn1(M[1],1,"%")}。`:""}`;
+}
 // time series chart for the monthly and weekly pages: lines (or bars for the first series when o.bars), dates along
 // the bottom by year, a few gridlines, dashed reference lines (o.ref), the last value of each line at its end
 const dms=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d||15)};
@@ -1182,7 +1228,7 @@ function renderGDP(){
   const T=N&&N.track&&N.track.length?N.track.slice(-6).reverse():[];
   const tr=T.length?`<div class="rcap"><span>${tx("GDPNow の実績","GDPNow track record")}</span></div><div class="mtab" style="margin-top:2px"><div class="lq hd"><span></span><span>${tx("直前の予測","Last nowcast")}</span><span>${tx("速報値","Advance")}</span></div>${T.map(([q,a,b])=>`<div class="lq"><span class="k">${qLab(q)}<small>${q.slice(0,4)}</small></span><span class="v">${sg(a)}</span><span class="c">${sg(b)}</span></div>`).join("")}</div>`:"";
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>${tx("景気","Growth")}</h2><span class="asof">${tx("実質GDP 前期比年率","Real GDP, annual rate")}</span></div>${headHTML("gdpHead",[h1,h2])}
+  el.innerHTML=`<div class="ph"><h2>${tx("景気","Growth")}</h2><span class="asof">${tx("実質GDP 前期比年率","Real GDP, annual rate")}</span></div>${headHTML("gdpHead",[h1,h2])}${note("gdp",autoGdp())}
     <div class="rcap"><span>${tx("実質GDP（四半期）","Real GDP (quarterly)")}</span></div>${legend([[tx("GDP","GDP"),"#7fa8ff"]].concat(ahead?[["GDPNow","#ffb547"]]:[]))}${chart}${evo}${tr}
     <div class="lsrc">${tx("出典","Sources")} BEA / ${tx("アトランタ連銀","Atlanta Fed")} GDPNow</div>`;
 }
@@ -1200,7 +1246,7 @@ function renderInfl(){
   const W=pw(el),keys=["cpi","core_cpi","pce","core_pce","ppi"].filter(k=>Y[k].length);
   const row=k=>{const m=lastOf(MM[k]||[]),yy=v(k);return `<div class="lq"><span class="k">${N[k]}<small>${moLab(mo(k))}</small></span><span class="v">${pct1(yy)}</span><span class="c">${m&&m[0]===mo(k)?pct1(m[1]):""}</span></div>`};
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>${tx("インフレ","Inflation")}</h2><span class="asof">${tx(`${moLab(mo("cpi"))}分まで`,`through ${moLab(mo("cpi"))}`)}</span></div>${headHTML("inflHead",[h1,h2])}
+  el.innerHTML=`<div class="ph"><h2>${tx("インフレ","Inflation")}</h2><span class="asof">${tx(`${moLab(mo("cpi"))}分まで`,`through ${moLab(mo("cpi"))}`)}</span></div>${headHTML("inflHead",[h1,h2])}${note("infl",autoInfl())}
     <div class="rcap"><span>${tx("前年比の推移","Change on a year")}</span></div>${legend(keys.map(k=>[N[k],C[k]]))}
     ${tsChart(keys.map(k=>({c:C[k],p:toT(Y[k].filter(q=>q[0]>=cut)),w:k.startsWith("core")?1.3:1.8})),W,{H:170,unit:"%",ref:[2]})}
     <div class="mtab"><div class="lq hd"><span></span><span>${tx("前年比","Year")}</span><span>${tx("前月比","Month")}</span></div>${["cpi","core_cpi","pce","core_pce","ppi","core_ppi"].filter(k=>Y[k].length).map(row).join("")}</div>
@@ -1237,7 +1283,7 @@ function renderJobs(){
       VU={above,gp,m:L[0]}}}
   const h2=[VU?(en?`openings rate ${VU.above?"above":"below"} unemployment (${VU.gp>0?"+":"−"}${Math.abs(VU.gp).toFixed(1)}pt)`:`求人率が失業率を${VU.above?"上回る":"下回る"}（${VU.gp>0?"+":"−"}${Math.abs(VU.gp).toFixed(1)}pt）`):"",cl?(en?`claims ${kk(cl[1])}`:`失業保険申請 ${kk(cl[1])}`):""].filter(Boolean).join(en?", ":"、");
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>${tx("雇用","Jobs")}</h2><span class="asof">${tx(`${moLab(lp[0])}分まで`,`through ${moLab(lp[0])}`)}</span></div>${headHTML("jobsHead",[h1,h2])}
+  el.innerHTML=`<div class="ph"><h2>${tx("雇用","Jobs")}</h2><span class="asof">${tx(`${moLab(lp[0])}分まで`,`through ${moLab(lp[0])}`)}</span></div>${headHTML("jobsHead",[h1,h2])}${note("jobs",autoJobs())}
     <div class="rcap"><span>${tx("雇用者数の増減（千人）","Payroll change (thousands)")}</span></div>
     ${tsChart([{c:"#7fa8ff",p:toT(pay.filter(q=>q[0]>=cut))}],W,{H:130,dec:0,bars:true,sign:true})}
     <div class="rcap"><span>${tx("求人率と失業率","Job openings and unemployment")}</span></div>${legend([[tx("求人率","Openings rate"),"#7fd6a4"],[tx("失業率","Unemployment"),"#ff8a7a"]])}
@@ -1315,7 +1361,7 @@ function renderLiq(){
     if(rl!=null&&rl<50){h1=d13<-50?tx("緩衝材は尽き、本体が削られる","The buffer is gone; the body is draining"):tx("緩衝材は尽きている","The buffer is gone");
       h2=[F?tx(`準備預金 ${(F.reserves[0]/1e6).toFixed(2)}兆ドル`,`reserves $${(F.reserves[0]/1e6).toFixed(2)}T`):"",sp!=null?tx(`SOFRはIORBを${Math.abs(sp*100).toFixed(0)}bp${sp>0?"上回る":"下回る"}`,`SOFR ${Math.abs(sp*100).toFixed(0)}bp ${sp>0?"above":"below"} IORB`):""].filter(Boolean).join(tx("、",", "))}}
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>${tx("ドル流動性","Dollar liquidity")}</h2><span class="asof">${tx("週次・月次","Weekly and monthly")}</span></div>${headHTML("liqHead",[h1,h2])}
+  el.innerHTML=`<div class="ph"><h2>${tx("ドル流動性","Dollar liquidity")}</h2><span class="asof">${tx("週次・月次","Weekly and monthly")}</span></div>${headHTML("liqHead",[h1,h2])}${note("liq",autoLiq())}
     ${liqCharts()}
     <div class="mtab lq4"><div class="lq hd"><span></span><span></span><span>${tx("前回比","Prev.")}</span><span>${tx("前年比","Year")}</span></div>${rows}</div>
     <div class="lsrc">${tx("出典","Sources")} FRB H.4.1・H.6 / NY Fed</div>`;
