@@ -403,7 +403,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v130";
+const APP_VER="fi-v131";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -1476,7 +1476,7 @@ async function loadTemp(){
 async function loadPaper(){
   await Promise.all([
     fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
-    fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>STORY=j).catch(()=>STORY=null),
+    fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{STORY=j;if(j&&j.preAt&&!(new Date(j.preAt)>new Date(j.revisedAt||j.writtenAt||0)))delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
     fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null)]);
   renderIdx();renderNews();renderMriTop();renderNums();renderEye();renderCmdty();renderRates();
 }
