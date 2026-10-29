@@ -394,7 +394,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v117";
+const APP_VER="fi-v118";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -814,7 +814,7 @@ function curveChart(c,W){
 // the period of the rates history charts (spread, real yield, OAS): one switch for all three, kept per viewer
 const RP=[["1Y","1年",1],["3Y","3年",3],["5Y","5年",5]];  // label shown: 1年 / 1Y
 // each chart keeps its own period (sp: spread, rl: real yield, hy: high yield OAS)
-const RPK={};["sp","rl","hy"].forEach(c=>{const v=store.get("rp."+c,"5Y");RPK[c]=RP.some(r=>r[0]===v)?v:"5Y"});
+const RPK={};["sp","rl","hy","fa","sf"].forEach(c=>{const v=store.get("rp."+c,"5Y");RPK[c]=RP.some(r=>r[0]===v)?v:"5Y"});
 const rpSeg=c=>`<div class="seg rpseg">${RP.map(([k,l])=>`<button type="button" data-rp="${c}:${k}" aria-pressed="${k===RPK[c]}">${EN()?k:l}</button>`).join("")}</div>`;
 const rCut=(S,c)=>{if(!S||!S.length)return S;const y=RP.find(r=>r[0]===RPK[c])[2],L=S[S.length-1][0],from=String(+L.slice(0,4)-y)+L.slice(4);return S.filter(q=>q[0]>=from)};
 // ticks along the bottom: years, or for a year or less the quarters (1月 shown as the year)
@@ -1249,14 +1249,14 @@ function liqCharts(){
   if(Y&&Y.repo&&Y.repo.length){const R30=Y.repo.filter(q=>dms(q[0])>=Date.now()-30*864e5),tot=R30.reduce((a,q)=>a+q[1],0);
     if(tot>.05)rows+=row(tx("SRF（常設レポ）","Standing repo"),tx("この30日の利用","taken, last 30 days"),B(tot),pill(tx("利用あり","in use"),C.a))}
   if(rows)h+=`<div class="rcap"><span>${tx("配管の状態","The plumbing")}</span></div><div class="mtab" style="margin-top:2px">${rows}</div>`;
-  if(F&&F.hist&&F.hist.length>4){const cut=Date.now()-366*864e5,P=F.hist.filter(q=>dms(q[0])>=cut);
-    h+=`<div class="rcap"><span>${tx("FRB総資産（兆ドル、1年）","Fed total assets ($T, 1 year)")}</span></div>`+tsChart([{c:"#7fa8ff",p:P.map(q=>[dms(q[0]),q[1]/1e6]),w:1.8}],W,{H:140,dec:2})}
+  if(F&&F.hist&&F.hist.length>4){const P=rCut(F.hist,"fa");
+    h+=`<div class="rcap"><span>${tx("FRB総資産（兆ドル）","Fed total assets ($T)")}</span>${rpSeg("fa")}</div>`+tsChart([{c:"#7fa8ff",p:P.map(q=>[dms(q[0]),q[1]/1e6]),w:1.8}],W,{H:140,dec:2})}
   if(F&&F.hist&&R&&R.hist){const s0=F.hist[0][0],wk=new Map();R.hist.forEach(q=>{if(q[0]>=s0){const k=q[0].slice(0,8)+String(Math.min(28,Math.ceil(+q[0].slice(8)/7)*7)).padStart(2,"0");wk.set(k,q)}});
     h+=`<div class="rcap"><span>${tx(`準備預金とリバースレポ（兆ドル、${s0.slice(0,4)}年から）`,`Reserves and reverse repo ($T, since ${s0.slice(0,4)})`)}</span></div>${legend([[tx("準備預金","Reserves"),"#7fd6a4"],[tx("リバースレポ","Reverse repo"),"#ffb547"]])}`
       +tsChart([{c:"#7fd6a4",p:F.hist.map(q=>[dms(q[0]),q[2]/1e6]),w:1.8},{c:"#ffb547",p:[...wk.values()].map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:150,dec:1,zero:true,ref:[1.4]})
       +`<div class="lsrc" style="margin-top:2px">${tx("点線は2019年9月に短期金利が跳ねたときの準備預金 1.4兆ドル","Dashed: reserves of $1.4T when short rates spiked in September 2019")}</div>`}
-  if(Y&&Y.spread&&Y.spread.length>20){const cut=Date.now()-366*864e5;
-    h+=`<div class="rcap"><span>${tx("SOFR − IORB（bp、1年）","SOFR − IORB (bp, 1 year)")}</span></div>`+tsChart([{c:"#ff8a7a",p:Y.spread.filter(q=>dms(q[0])>=cut).map(q=>[dms(q[0]),q[2]*100]),w:1.2}],W,{H:110,dec:0,zero:true})
+  if(Y&&Y.spread&&Y.spread.length>20){
+    h+=`<div class="rcap"><span>${tx("SOFR − IORB（bp）","SOFR − IORB (bp)")}</span>${rpSeg("sf")}</div>`+tsChart([{c:"#ff8a7a",p:rCut(Y.spread,"sf").map(q=>[dms(q[0]),q[2]*100]),w:1.2}],W,{H:110,dec:0,zero:true})
       +`<div class="lsrc" style="margin-top:2px">${tx("0 を上回ると、銀行が準備預金に付く金利より高く資金を取り合っている。IORB は政策金利の上限−0.10","Above 0, banks pay more for cash than reserves earn. IORB: top of the target range less 0.10")}</div>`}
   if(M&&M.hist){const yy=yoyOf(M.hist);h+=yy.length>=12?`<div class="rcap"><span>${tx("M2 前年比","M2, change on a year")}</span></div>`+tsChart([{c:"#b59cff",p:toT(yy)}],W,{H:110,unit:"%",zero:true}):""}
   return h;
@@ -1351,7 +1351,7 @@ async function load(){
   if(!Object.keys(DATA).length)$("empty").textContent="データを読み込めませんでした";
   renderPaper();
 }
-document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);renderRates()}});
+document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);if(c==="fa"||c==="sf")renderLiq();else renderRates()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-lang]");if(!b||b.dataset.lang===LANG)return;
   LANG=b.dataset.lang;document.documentElement.lang=LANG;if(!EMBED)try{localStorage.setItem("lang",LANG)}catch(err){}
