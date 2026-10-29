@@ -114,6 +114,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tile .tv small{font-size:13px;font-weight:600;margin-left:2px;opacity:.85}
 .tile .tc{font-family:var(--f-tick);font-stretch:85%;font-size:13px;font-weight:700;margin-top:1px;opacity:.95;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tile .tc span{font-weight:500;opacity:.8;margin-left:6px}
+.ctiles .tile:last-child:nth-child(odd){grid-column:1/-1}
 .tile.hero{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
 .tile.hero .tn{font-size:14px}
 .tile.hero .tl{display:block;font-size:13px;margin-top:2px}
@@ -296,6 +297,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="news" hidden></section>
     <section class="panel" id="rates" hidden></section>
+    <section class="panel" id="cmdty" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
     <section class="panel" id="nums" hidden></section>
   </div>
@@ -319,7 +321,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v76";
+const APP_VER="fi-v77";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -619,15 +621,16 @@ const ETLabel=t=>{const m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d
   const w="日月火水木金土"[new Date(Date.UTC(+m[1],+m[2]-1,+m[3])).getUTCDay()],h=+m[4];
   return `${+m[2]}/${+m[3]}（${w}）${h>=16&&h<18?"米国市場引け":`${m[4]}:${m[5]} 時点（米東部）`}`};
 function renderCmdty(){
-  const el=$("cmdty"),it=MK&&MK.items?MK.items.filter(x=>["gold","wti","copper","btc"].includes(x.k)):[];
-  if(!it.length){el.hidden=true;return}
-  const ord=["gold","wti","copper","btc"];it.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));
-  const g=it.find(x=>x.k==="gold")||it[0];
+  // gold, crude, bitcoin, the dollar index and the yen as tiles coloured by the day's move
+  // (full colour at ±3%; ±1% for the dollar and the yen, which move less; ±5% for bitcoin)
+  const el=$("cmdty"),it={};(MK&&MK.items||[]).forEach(x=>it[x.k]=x);
+  const L=[["gold","金",3],["wti","原油（WTI）",3],["btc","ビットコイン",5],["dxy","ドルインデックス",1],["usdjpy","ドル円",1]].filter(([k])=>it[k]);
+  if(!L.length){el.hidden=true;return}
   el.hidden=false;
-  el.innerHTML=`<div class="ph"><h2>コモディティ</h2><span class="asof">${ETLabel(g.time)}</span></div><div class="tiles">`+it.map(x=>{
-    const f=v=>v.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec});
-    const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}$${f(Math.abs(x.chg))}`;
-    return `<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${x.ja}</div><div class="tv"><small style="margin:0 1px 0 0">$</small>${f(x.price)}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
+  el.innerHTML=`<div class="ph"><h2>コモディティ・ドル</h2><span class="asof">${ETLabel((it.gold||it[L[0][0]]).time)}</span></div><div class="tiles ctiles">`+L.map(([k,name,full])=>{const x=it[k];
+    const f=v=>v.toLocaleString("en-US",{minimumFractionDigits:x.dec,maximumFractionDigits:x.dec}),usd=x.unit==="ドル",yen=x.unit==="円";
+    const ch=x.chg==null?"":`${x.chg>0?"+":x.chg<0?"−":"±"}${usd?"$":""}${f(Math.abs(x.chg))}${yen?"円":""}`;
+    return `<div class="tile" style="background:${tileColor(x.pct,full)}"><div class="tn">${name}</div><div class="tv">${usd?'<small style="margin:0 1px 0 0">$</small>':""}${f(x.price)}${yen?"<small>円</small>":""}</div><div class="tc">${fmtPct(x.pct)}<span>${ch}</span></div></div>`}).join("")+`</div>`;
 }
 // currencies: the dollar index and the yen against the dollar, euro and pound (full colour at ±1%, they move less)
 function renderFX(){
@@ -834,7 +837,7 @@ async function loadMarkets(){
   await Promise.all([
     fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MK=j).catch(()=>MK=null),
     fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null)]);
-  renderNums();renderRates();
+  renderNums();renderRates();renderCmdty();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
