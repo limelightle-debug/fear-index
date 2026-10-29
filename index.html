@@ -42,10 +42,7 @@ a{color:inherit}
 .num{font-family:var(--f-tick);font-stretch:82%;font-variant-numeric:tabular-nums}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 0 8px}
 .brand{display:flex;align-items:center;gap:10px}
-.top{position:sticky}.top .langseg{position:absolute;right:0;top:14px;display:flex;background:var(--chip);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
 
-.langseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:700 12px/1 var(--f-body);letter-spacing:.04em;padding:7px 9px;border-radius:6px;cursor:pointer}
-.langseg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.4)}
 .avatar{width:44px;height:44px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
 h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15}
 .ed{font-size:12px;color:var(--muted);margin-top:2px}
@@ -358,7 +355,6 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
         <div class="ed" id="ed">読み込み中…</div>
       </div>
     </div>
-    <div class="langseg" id="lang" role="group" aria-label="Language"><button type="button" data-lang="ja">JP</button><button type="button" data-lang="en">EN</button></div>
     <div class="seg" id="tabs" role="group" aria-label="表示">
       <button type="button" data-tab="paper">恐怖新聞</button>
       <button type="button" data-tab="apps">アプリ</button>
@@ -403,10 +399,10 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v138";
+const APP_VER="fi-v139";
 const $=id=>document.getElementById(id);
-// language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
-let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
+// the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
+const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
 document.documentElement.lang=LANG;
 const EN=()=>LANG==="en",tx=(ja,en)=>EN()?en:ja;
 const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -415,8 +411,8 @@ const dayLab=(m,d,w)=>EN()?`${WD(w)} ${MON[m-1]} ${d}`:`${m}/${d}（${WD(w)}）`
 const wdOf=(y,m,d)=>new Date(Date.UTC(y,m-1,d)).getUTCDay();
 const CLOSE=()=>tx("米国市場引け","US close");
 const fmtJ=d=>{const j=new Date(d.getTime()+9*36e5);return `${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`};
-// the day's article in the reader's language (paper.json "en"), falling back to the Japanese
-const SP=(st,k)=>st&&(EN()&&st.en&&st.en[k]!=null?st.en[k]:st[k]);
+// the day's article (Japanese only)
+const SP=(st,k)=>st&&st[k];
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
   ["mri","Market Risk Index","VIX・SKEW・CAPE から天井と底を推定する MRI と、そのシグナル",`${BASE}/mri-app/`,"icons/app-mri.png"],
@@ -591,7 +587,6 @@ function renderBooks(){
 const TABL={paper:["恐怖新聞","Fear Paper"],apps:["アプリ","Apps"],books:["書籍","Books"]};
 function renderTabs(){
   document.querySelectorAll("#tabs button").forEach(b=>{b.textContent=TABL[b.dataset.tab][EN()?1:0];b.setAttribute("aria-pressed",b.dataset.tab===state.tab)});
-  document.querySelectorAll("#lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===LANG));
   $("ttl").textContent=tx("恐怖新聞","The Fear Paper");document.title=tx("恐怖新聞","The Fear Paper");
   ["paper","apps","books"].forEach(k=>$("t-"+k).hidden=state.tab!==k);
 }
@@ -1512,10 +1507,6 @@ async function load(){
 }
 document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);if(c==="fa"||c==="sf")renderLiq();else renderRates()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
-document.addEventListener("click",e=>{const b=e.target.closest("[data-lang]");if(!b||b.dataset.lang===LANG)return;
-  LANG=b.dataset.lang;document.documentElement.lang=LANG;if(!EMBED)try{localStorage.setItem("lang",LANG)}catch(err){}
-  renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderSecs();renderIdx();renderNews();renderMriTop();renderRates();renderCmdty();renderNums();renderKokoro();
-});
 renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderSecs();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
