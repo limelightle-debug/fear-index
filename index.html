@@ -203,6 +203,13 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .eye .el small,.eye .ef small{display:block;font-family:var(--f-tick);font-stretch:85%;font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.35;word-break:break-word}
 .eye .ef span{font-size:12px;font-weight:700;line-height:1.35;display:block}
 .eye .ef i{font-style:normal;margin-right:3px}
+.fw{width:100%;border-collapse:collapse;margin-top:10px;font-variant-numeric:tabular-nums}
+.fw th{font-size:10.5px;font-weight:700;color:var(--muted);padding:0 2px 5px;text-align:right;white-space:nowrap}
+.fw th:first-child,.fw td:first-child{text-align:left}
+.fw td{font-family:var(--f-tick);font-stretch:85%;font-size:12.5px;padding:6px 2px;border-top:1px solid var(--line);text-align:right;color:var(--muted)}
+.fw td:first-child{color:var(--ink2)}
+.fw td.mx{color:var(--ink);font-weight:700;background:#6ec3ff1f}
+.fw td.sd{color:var(--ink2);background:#ffb5471a}
 .lsrc{margin-top:8px;font-size:11.5px;color:var(--muted)}
 .ng{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin:12px 0 2px}
 .ng:first-of-type{margin-top:2px}
@@ -359,6 +366,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="news" hidden></section>
     <section class="panel" id="rates" hidden></section>
+    <section class="panel" id="fedw" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
     <section class="panel" id="gdp" hidden></section>
@@ -386,7 +394,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v114";
+const APP_VER="fi-v115";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -540,14 +548,20 @@ function bookRow([b,url,cv,layer]){
 // the last panel: why each panel is in the paper and what to look at, in the paper's order
 const GUIDE=[
  ["注目点","その日いちばん目を向けるべき2〜3点。ここだけ読めば、その朝の要点がつかめる。","Points to watch","The two or three things to look at first. Read only these and you have the morning."],
- ["MRI 確定値","恐怖新聞の一面。VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。","MRI, confirmed","The front page. Fear and froth in the market as one number, from VIX, SKEW and CAPE. Look less at the value than at how far it is from SELL 80 and BUY 8, and how it moved from the day before."],
- ["主要指数と記事","米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。","Markets and the story","How US stocks moved. The S&amp;P 500 is the whole market, the Nasdaq 100 and chips are where the moves are, the Russell 2000 is small caps that feel the economy. When only one of them moves a lot, the market is lopsided."],
+ ["鷹の目・魚の目・虫の目","この新聞の全部を3つの段落にまとめた冒頭のページ。鷹の目は高い空から全体の景色を、魚の目はこの1〜3ヶ月の流れと潮目を、虫の目はその日の細部を見る。3つを順に読むと、何が起きていて、どちらへ向かい、今日の何がそれを裏づけるかがつながる。","Hawk, fish and bug's eyes","The whole paper in three paragraphs at the top. The hawk sees the landscape from high above, the fish reads the current of the last one to three months, the bug looks at the day's detail. Read in turn, they tie together what is happening, where it is heading and what today confirms."],
+ ["MRI 確定値","VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。","MRI, confirmed","Fear and froth in the market as one number, from VIX, SKEW and CAPE. Look less at the value than at how far it is from SELL 80 and BUY 8, and how it moved from the day before."],
+ ["主要指数と記事","米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。","Markets and the story","How US stocks moved. The S&amp;P 500 is the whole, the Nasdaq 100 and chips the centre of the action, the Russell 2000 the small caps that feel the economy. A day when only one moves a lot is a lopsided market."],
  ["主なニュース","動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。","News","Why it moved. See which news lines up with which move."],
- ["金利","株の値段の重し。10年債は株価の割引率、2年債は利上げと利下げの見通しを映す。逆イールドとその解消は景気の節目の目印で、この新聞では解消から1年を「解消直後」として追う。2年−3ヶ月（= 2本の長短差の差）は、今の政策金利に対して市場が今後2年の利上げ・利下げをどれだけ織り込んでいるか。+0.15超で「利上げ寄り」、−0.15未満で「利下げ織り込み」、その間は「据え置き」。2本の長短差のチャートがクロスするのは、この符号が変わるとき。","Rates","The weight on stock prices. The 10-year is the discount rate for stocks; the 2-year mirrors where rate hikes and cuts are expected. An inverted curve and its end mark turns in the economy; this paper follows the year after it ends as “just uninverted”. 2Y−3M (the gap between the two spreads) is how much the market prices hikes or cuts over two years against today’s policy rate: above +0.15 “leaning to hikes”, below −0.15 “cuts priced”, in between “on hold”. The two spread lines cross when it changes sign."],
- ["実質金利・インフレ期待","10年債の利回りを、インフレの分と、物価を除いた本当の金利に分けたもの。実質金利の上昇は、PER の高い株ほど重しになる。","Real yield and breakeven","The 10-year yield split into the part for inflation and the real rate after it. A rising real yield weighs most on stocks with high P/Es."],
- ["OAS","社債の上乗せ金利。お金の貸し手が不安になると広がる。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。","OAS","The extra yield on corporate bonds. It widens when lenders get nervous. A sharp widening in high yield tends to come with a stock sell-off, or a little before it."],
- ["コモディティ・ドル","金は不安、原油はインフレと景気、銅は景気、ビットコインはリスクを取る気分、ドルは世界のお金の向きを映す。","Commodities and the dollar","Gold reads fear, crude inflation and growth, copper growth, bitcoin the appetite for risk, the dollar where the world's money is going."],
+ ["金利","株の値段の重し。10年債は株価の割引率、2年債は利上げと利下げの見通しを映す。逆イールドとその解消は景気の節目の目印で、この新聞では解消から1年を「解消直後」として追う。2年債と3ヶ月債の差は、政策金利の先行きの織り込みを表す。","Rates","The weight on stock prices. The 10-year is the discount rate for stocks, the 2-year reflects where policy rates are expected to go. An inversion and its end mark turns in the cycle; this paper follows the year after an inversion ends as just uninverted. The 2-year less the 3-month shows the rate path priced."],
+ ["FedWatch","FF金利先物の価格から、次の FOMC 会合以降に政策金利がどこにあるかの確率を出したもの（CME FedWatch と同じ方法）。見出しは次の会合で動く確率と、先の会合までに何回分の利上げか利下げを市場が織り込んでいるか。数字そのものより、日々どちらへ傾いていくかを見る。","FedWatch","The odds of where the policy rate will sit after each coming FOMC meeting, from fed funds futures prices (CME FedWatch's method). The headline gives the chance of a move at the next meeting and how many hikes or cuts are priced further out. Watch which way it leans from day to day more than the numbers."],
+ ["実質金利・インフレ期待","10年債の利回りを、インフレの分と、物価を除いた本当の金利に分けたもの。実質金利の上昇は、PER の高い株ほど重しになる。","Real yield and breakeven","The 10-year yield split into inflation and the real rate. A rising real rate weighs most on high P/E stocks."],
+ ["OAS","社債の上乗せ金利。お金の貸し手が不安になると広がる。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。","OAS","The extra yield on corporate bonds. It widens when lenders get nervous. A sudden widening in high yield tends to come with a sharp fall in stocks, or just before it."],
+ ["コモディティ・ドル","金は不安、原油はインフレと景気、銅は景気、ビットコインはリスクを取る気分、ドルは世界のお金の向きを映す。","Commodities and the dollar","Gold reads fear, crude inflation and growth, copper growth, bitcoin the appetite for risk, the dollar the direction of the world's money."],
  ["心","数字を読んだあとに、その日の局面で陥りやすい考えのクセを確かめる。","心 (Mind)","After the numbers, check the habit of mind this stage of the market tends to bring out."],
+ ["景気","実質GDP（前期比年率）の四半期の推移と、アトランタ連銀の GDPNow。GDPNow は発表を待たずに今の四半期を見積もるもので、新しい指標が出るたびに更新される。その推移が上向きか下向きかが、景気の勢いの変化を先に映す。","Growth","Real GDP by quarter (annualised) and the Atlanta Fed's GDPNow, which estimates the current quarter before it is published and updates with each new release. Whether its path bends up or down shows the change in momentum early."],
+ ["インフレ","CPI、PCE、PPI の前年比。FRB が目標にする 2% との距離と、前月比の勢いを見る。コアは値動きの大きい食品とエネルギーを除いたもので、物価の地合いを表す。PPI は企業の仕入れ値で、消費者物価の先を映しやすい。","Inflation","CPI, PCE and PPI on the year. See how far they are from the Fed's 2% target and the pace on the month. Core leaves out volatile food and energy and shows the underlying trend. PPI, the prices businesses pay, tends to run ahead of consumer prices."],
+ ["雇用","雇用者数の増減、失業率、求人率、平均時給、失業保険の申請。求人率が失業率を上回っているあいだは人手不足で、下回ると雇用は緩み始める。ベヴァリッジ曲線は失業率と求人率の組み合わせを月ごとに結んだもの。点線より上が人手不足の側。平均時給は物価と比べ、上回れば実質賃金はプラス。新規申請は毎週出る、景気の変化にいちばん早く反応する数字。","Jobs","Payrolls, unemployment, job openings, hourly earnings and jobless claims. While openings run above unemployment the market is tight; below it, it starts to loosen. The Beveridge curve joins the two month by month; above the dashed line is the tight side. Hourly earnings against prices show real wages. Weekly claims are the quickest to react to a turn."],
+ ["ドル流動性","FRB の総資産と銀行の準備預金、リバースレポ、M2。市場に出回るお金の量で、準備預金が減り続けると、株などリスク資産の足元が細りやすい。M2 の前年比はお金の増え方の勢いを表す。","Dollar liquidity","The Fed's balance sheet and bank reserves, the reverse repo and M2: the amount of money in the system. When reserves keep falling, the footing of stocks and other risk assets tends to thin. M2 on the year shows how fast money is growing."],
  ["数字","すべての数字を、毎日同じ順番で。慣れると、どこが動いたかが一目でわかる。","The numbers","Every number, in the same order every day. Once you are used to it, what moved jumps out."]];
 function renderGuide(){
   $("guide").innerHTML=`<div class="ph"><h2>${tx("この新聞の読み方","How to read this paper")}</h2></div><dl>${GUIDE.map(g=>`<dt>${EN()?g[2]:g[0]}</dt><dd>${EN()?g[3]:g[1]}</dd>`).join("")}</dl>`;
@@ -994,7 +1008,9 @@ function renderEye(){
     const m=lastOf(momOf(B.ahe));U.push(en?`Hourly earnings ${sg(m[1],1,"%")} on the month.`:`時給は前月比${sg(m[1],1,"%")}。`)}
   // 金利
   if(CV&&CV.now){const n=CV.now.y,s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"],m3=CV.m3&&CV.m3.y["10Y"],d=m3!=null?n["10Y"]-m3:0,pth=pathOf(n["2Y"]-n["3M"])[0];
-    H.push(en?`The 10-year yields ${n["10Y"].toFixed(2)}% on a ${(s2<0||s3<0)?"inverted":"normal"} curve; the market prices rates ${pth.toLowerCase()}.`:`金利は10年債${n["10Y"].toFixed(2)}%の${(s2<0||s3<0)?"逆イールド":"順イールド"}で、市場は政策金利を${pth}と見ている。`);
+    let fw="";if(FW&&FW.meetings&&FW.meetings.length){const m0=FW.meetings[0],lo=FW.target[0],up=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]>lo+1e-9).reduce((a,[,v])=>a+v,0),dn=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]<lo-1e-9).reduce((a,[,v])=>a+v,0),mo=+m0.date.slice(5,7);
+      fw=up>=10||dn>=10?(en?` FedWatch puts the odds of a ${up>=dn?"hike":"cut"} in ${MON[mo-1]} at ${Math.max(up,dn).toFixed(0)}%.`:`FedWatchは${mo}月の${up>=dn?"利上げ":"利下げ"}を${Math.max(up,dn).toFixed(0)}%と見る。`):(en?` FedWatch sees ${MON[mo-1]} on hold.`:`FedWatchは${mo}月を据え置きと見る。`)}
+    H.push((en?`The 10-year yields ${n["10Y"].toFixed(2)}% on a ${(s2<0||s3<0)?"inverted":"normal"} curve; the market prices rates ${pth.toLowerCase()}.`:`金利は10年債${n["10Y"].toFixed(2)}%の${(s2<0||s3<0)?"逆イールド":"順イールド"}で、市場は政策金利を${pth}と見ている。`)+fw);
     if(Math.abs(d)>.15){F.push(en?`The 10-year is ${d>0?"up":"down"} ${Math.abs(d).toFixed(2)} in three months.`:`10年債利回りは3ヶ月で${Math.abs(d).toFixed(2)}${d>0?"上昇":"低下"}した。`);W(-1,d>0?1:-1,tx("金利","rates"))}
     else F.push(en?"The 10-year is little changed over three months.":"10年債利回りは3ヶ月でほぼ横ばい。");
     if(CV.prev){const d1=n["10Y"]-CV.prev.y["10Y"];U.push(en?`The 10-year moved ${sg(d1,2)} on the day.`:`10年債は前日比${sg(d1,2)}。`)}}
@@ -1025,6 +1041,31 @@ function renderEye(){
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>${tx("鷹の目・魚の目・虫の目","Hawk, fish and bug's eyes")}</h2><span class="asof">${tx("毎日更新","Updated daily")}</span></div>${headHTML("eyeHead",[h1,h2])}
     ${P(tx("鷹の目","Hawk's eye"),tx("全体を見渡す","the big picture"),txt[0])}${P(tx("魚の目","Fish's eye"),tx("流れを読む","the current"),txt[1])}${P(tx("虫の目","Bug's eye"),tx("直近を見る","up close"),txt[2])}`;
+}
+// FedWatch: what fed funds futures price for each FOMC meeting, worked out by CME's method (MRI app, data/fedwatch.json)
+let FW=null;
+function renderFedw(){
+  const el=$("fedw");
+  if(!FW||!FW.meetings||!FW.meetings.length){el.hidden=true;return}
+  const en=EN(),M=FW.meetings,[lo,hi]=FW.target,m0=M[0],W=Math.max(260,el.clientWidth-28);
+  const md=s=>`${+s.slice(5,7)}/${+s.slice(8)}`,ymd=s=>en?`${MON[+s.slice(5,7)-1]} ${+s.slice(8)}, ${s.slice(0,4)}`:`${s.slice(0,4)}/${+s.slice(5,7)}/${+s.slice(8)}`;
+  const up=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]>lo+1e-9).reduce((a,[,v])=>a+v,0),dn=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]<lo-1e-9).reduce((a,[,v])=>a+v,0);
+  const mo=+m0.date.slice(5,7),L=M[M.length-1],mv=L.moves;
+  const h1=up>=dn?(en?`${MON[mo-1]} meeting: ${up.toFixed(0)}% chance of a hike`:`${mo}月会合 利上げ確率${up.toFixed(0)}%`):(en?`${MON[mo-1]} meeting: ${dn.toFixed(0)}% chance of a cut`:`${mo}月会合 利下げ確率${dn.toFixed(0)}%`);
+  const h2=Math.abs(mv)<.2?(en?`little change priced through ${L.date.slice(0,4)}`:`${L.date.slice(0,4)}年末までほぼ据え置きを織り込む`):(en?`${Math.abs(mv).toFixed(1)} ${mv>0?"hikes":"cuts"} priced by ${ymd(L.date)}`:`${L.date.slice(0,4)}年${L.date.slice(5,7)==="12"?"末":`${+L.date.slice(5,7)}月`}までに${mv>0?"利上げ":"利下げ"}${Math.abs(mv).toFixed(1)}回分を織り込む`);
+  // the expected policy rate after each meeting, from today's level
+  const pts=[[Date.now(),FW.now]].concat(M.map(m=>[dms(m.date),m.after]));
+  const chart=tsChart([{c:"#6ec3ff",p:pts,w:2}],W,{H:130,dec:2,unit:"%",ref:[(lo+hi)/2]});
+  const ranges=[...new Set(M.flatMap(m=>Object.keys(m.probs)))].sort();
+  const tab=`<table class="fw"><tr><th>${tx("会合","Meeting")}</th>${ranges.map(r=>`<th>${r.replace(/(\d\.\d\d)-(\d\.\d\d)/,(x,a,b)=>`${a}〜${b}`.replace(/\.(\d\d)/g,".$1"))}</th>`).join("")}</tr>${M.map(m=>{const best=Object.entries(m.probs).sort((a,b)=>b[1]-a[1]);
+    return `<tr><td>${en?`${MON[+m.date.slice(5,7)-1]} ${+m.date.slice(8)} ’${m.date.slice(2,4)}`:`${m.date.slice(2,4)}/${md(m.date)}`}</td>${ranges.map(r=>{const v=m.probs[r];return `<td class="${v==null?"":r===best[0][0]?"mx":"sd"}">${v==null?"":v.toFixed(1)}</td>`}).join("")}</tr>`}).join("")}</table>`;
+  const asof=String(FW.asof||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/);
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>FedWatch</h2><span class="asof">${asof?tx(`${+asof[2]}/${+asof[3]} ${asof[4]}:${asof[5]}（米東部）`,`${MON[+asof[2]-1]} ${+asof[3]} ${asof[4]}:${asof[5]} ET`):""}</span></div>${headHTML("fedwHead",[h1,h2])}
+    <div class="rstate"><span class="sp">${tx("政策金利","Target")}<b>${lo.toFixed(2)}〜${hi.toFixed(2)}%</b></span><span class="sp">EFFR<b>${FW.effr.toFixed(2)}%</b></span></div>
+    <div class="rcap"><span>${tx("織り込まれた政策金利の道筋","The rate path priced")}</span></div>${chart}
+    <div class="rcap"><span>${tx("会合ごとの確率（%）","Probabilities by meeting (%)")}</span></div>${tab}
+    <div class="lsrc">${tx("CME FedWatch と同じ方法で、FF金利先物の価格から計算。価格は遅れて届くため、CME の表示と少しずれることがある。点線は今の政策金利の中央","Worked out from fed funds futures by CME FedWatch's method. Prices arrive delayed, so it can differ slightly from CME's own. Dashed: the middle of today's target range")}</div>`;
 }
 // time series chart for the monthly and weekly pages: lines (or bars for the first series when o.bars), dates along
 // the bottom by year, a few gridlines, dashed reference lines (o.ref), the last value of each line at its end
@@ -1258,8 +1299,9 @@ async function loadMarkets(){
     fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null),
     fetch(`data/oas.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>OASD=j).catch(()=>OASD=null),
     fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
-    fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null)]);
-  renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();
+    fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null),
+    fetch(`../mri-app/data/fedwatch.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FW=j).catch(()=>FW=null)]);
+  renderFedw();renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
