@@ -42,5 +42,21 @@
       tabs.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
     },true);
   }
-  window.Suite={mount};
+  // the one footer of every app: the institute's mark and name (a plain link back to the institute) and the copyright.
+  // Replaces the element the app gives (its old footer). Not shown inside the institute's frames.
+  function foot(sel){
+    const el=document.querySelector(sel||".foot");if(!el)return;
+    if(/[?&]embed\b/.test(location.search)){el.remove();return}
+    const st=document.createElement("style");st.textContent=`.ifoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;padding:14px 0 4px;border-top:1px solid var(--line,#2a2a4a)}
+      .ifoot .ilab{display:flex;align-items:center;gap:10px;color:var(--ink,#f2f2f7);text-decoration:none;font-size:15px;font-weight:700;letter-spacing:.06em}
+      .ifoot .ilab img{width:36px;height:36px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px var(--line,#2a2a4a)}
+      .ifoot .icopy{font-size:11px;color:var(--muted,#8a8aa6);white-space:nowrap}`;
+    document.head.appendChild(st);
+    const f=document.createElement("footer");f.className="ifoot";
+    f.innerHTML=`<a class="ilab" href="${BASE}" target="_top"><img src="${BASE}icons/app.png" alt="" width="36" height="36"><span></span></a><span class="icopy">© Gold Locks</span>`;
+    el.replaceWith(f);
+    const name=()=>f.querySelector(".ilab span").textContent=document.documentElement.lang==="en"?"Fear Index Research Institute":"恐怖指数研究所";
+    name();new MutationObserver(name).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
+  }
+  window.Suite={mount,foot};
 })();
