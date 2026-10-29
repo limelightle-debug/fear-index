@@ -183,6 +183,8 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .rstate .sp b{font-family:var(--f-tick);font-stretch:82%;font-size:15px;color:var(--ink);margin-left:4px}
 .rstate .note{width:100%;color:var(--muted);font-size:11.5px}
 .rchart{margin-top:6px}
+.rxs{margin-top:4px}.rxs .rx:first-child{border-top:0}.rx .c{color:var(--ink2)}
+.rxn{font-size:11px;color:var(--muted);line-height:1.55;margin-top:6px}
 .rchart svg{display:block;width:100%;overflow:visible}
 .rchart text{font-family:var(--f-tick);font-stretch:85%;font-size:10px;fill:var(--muted)}
 .rcap{display:flex;align-items:baseline;justify-content:space-between;margin-top:16px;font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
@@ -311,7 +313,7 @@ html.mritab .wrap{padding-bottom:0}html.mritab .foot{display:none}
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v61";
+const APP_VER="fi-v62";
 const $=id=>document.getElementById(id);
 const BASE="https://limelightle-debug.github.io";
 const APPS=[
@@ -676,6 +678,18 @@ function spreadChart(S,W){
     <path d="${d(p1)}" fill="none" stroke="${RC.now}" stroke-width="1.6"/>
     ${lab(L[1],RC.now,L[1]>=L[2]?-5:5)}${L[2]!=null?lab(L[2],RC.m3,L[2]>L[1]?-5:5):""}</svg>`;
 }
+// under the charts: the 10-year real yield and breakeven inflation, and the corporate bond spreads (OAS),
+// each with its change from 3 months earlier (curve.json "infl" and "oas")
+function ratesMore(){
+  const I=CV&&CV.infl,O=CV&&CV.oas;if(!I&&!O)return"";
+  const md=d=>{const [,m,dd]=d.split("-").map(Number);return`${m}/${dd}`};
+  const row=(name,v,v3)=>{if(v==null)return"";const d=v3==null?null:v-v3;
+    return `<div class="nr rx"><span class="k">${name}</span><span class="v">${v.toFixed(2)}%</span><span class="c">${d==null?"":`${d>0?"▲":d<0?"▼":""} ${Math.abs(d).toFixed(2)}`}</span></div>`};
+  return `<div class="rcap"><span>実質金利・インフレ期待・OAS</span><span class="rkey"><span>3ヶ月前比</span></span></div><div class="rxs">
+    ${I?row("10年実質金利",I.real10,I.real10_m3)+row("10年インフレ期待",I.be10,I.be10_m3):""}
+    ${O?row("OAS ハイイールド",O.hy,O.hy_m3)+row("OAS 投資適格",O.ig,O.ig_m3):""}</div>
+    <div class="rxn">${I?`インフレ期待＝10年債利回り−10年実質金利（${md(I.date)}）。`:""}${O?`OAS＝米社債の国債に対する上乗せ金利（ICE BofA、${md(O.date)}）。`:""}</div>`;
+}
 function renderRates(){
   const el=$("rates");
   if(!CV||!CV.now||!CV.m3){el.hidden=true;return}
@@ -695,7 +709,7 @@ function renderRates(){
     <div class="rsum">${[["3ヶ月","3M"],["2年","2Y"],["10年","10Y"],["30年","30Y"]].map(([l,k])=>{const dv=n[k]-CV.m3.y[k];return `<div>${l}<b>${n[k].toFixed(2)}</b><small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small></div>`}).join("")}</div>
     <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">10年−2年<b>${sg(s2)}</b></span><span class="sp">10年−3ヶ月<b>${sg(s3)}</b></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>イールドカーブ</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>最新</span><span><i style="border-color:${RC.m3}"></i>3ヶ月前</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>6ヶ月前</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
-    <div class="rcap"><span>長短金利差の推移</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>10年−2年</span><span><i style="border-color:${RC.m3}"></i>10年−3ヶ月</span></span></div><div class="rchart">${spreadChart(S,W)}</div>`;
+    <div class="rcap"><span>長短金利差の推移</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>10年−2年</span><span><i style="border-color:${RC.m3}"></i>10年−3ヶ月</span></span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}`;
 }
 function renderNews(){
   const el=$("news"),day=IDX&&IDX.indices&&IDX.indices.length?(String((IDX.indices.find(x=>x.k==="SPX")||IDX.indices[0]).time).match(/^\d{4}-\d\d-\d\d/)||[""])[0]:"";
