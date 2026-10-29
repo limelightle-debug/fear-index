@@ -9,14 +9,14 @@ const EMBED=(location.search.match(/[?&]embed=(apps|books)\b/)||[])[1]||"";
 if(EMBED){document.documentElement.classList.add("embed");
   document.addEventListener("click",e=>{const a=e.target.closest("a[href]");if(a&&!a.target)a.target="_top"},true)}
 </script>
-<title>恐怖指数研究所</title>
-<meta name="description" content="恐怖指数研究所の恐怖新聞：MRI・VIX・TQQQ・Nasdaq 100 を上から下まで一枚で">
+<title>恐怖新聞</title>
+<meta name="description" content="恐怖新聞：毎朝の米国市場を、MRI と恐怖の目で一枚に（恐怖指数研究所）">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="恐怖指数研究所">
+<meta name="apple-mobile-web-app-title" content="恐怖新聞">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0a1a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,7 +43,7 @@ a{color:inherit}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 0 8px}
 .brand{display:flex;align-items:center;gap:10px}
 .top{position:sticky}.top .langseg{position:absolute;right:0;top:14px;display:flex;background:var(--chip);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
-html[lang=en] .top h1{font-size:17px;padding-right:96px}
+
 .langseg button{appearance:none;border:0;background:transparent;color:var(--muted);font:700 12px/1 var(--f-body);letter-spacing:.04em;padding:7px 9px;border-radius:6px;cursor:pointer}
 .langseg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.4)}
 .avatar{width:44px;height:44px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
@@ -309,7 +309,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <div class="brand">
       <img class="avatar" src="icons/app.png" alt="" width="44" height="44">
       <div>
-        <h1 id="ttl">恐怖指数研究所</h1>
+        <h1 id="ttl">恐怖新聞</h1>
         <div class="ed" id="ed">読み込み中…</div>
       </div>
     </div>
@@ -350,7 +350,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v93";
+const APP_VER="fi-v94";
 const $=id=>document.getElementById(id);
 // language, shared with the other apps (localStorage "lang"); ?lang= when shown inside another app's アプリ / 書籍 tab
 let LANG=(()=>{const q=(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1];if(q)return q;try{const v=localStorage.getItem("lang");if(v==="ja"||v==="en")return v}catch(e){}return /^ja/i.test(navigator.language||"")?"ja":"en"})();
@@ -493,7 +493,7 @@ function renderApps(){
   const A=Object.fromEntries(APPS.map(a=>[a[0],a]));
   const card=([k,role,ch],en)=>{if(EN()&&en)[role,ch]=en;const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}${ch?`<i class="ch">${ch}</i>`:""}</b><span>${role}</span></div><em>›</em></a>`};
   // seen from another app (its アプリ tab), the institute itself comes first: the way back to the paper
-  const home=EMBED?`<a class="node home" href="${BASE}/fear-index/"><img src="icons/app.png" alt="" width="44" height="44"><div><b>${tx("恐怖指数研究所","Fear Index Research Institute")}</b><span>${tx("毎朝の恐怖新聞","The Fear Paper, every morning")}</span></div><em>›</em></a>`:"";
+  const home=EMBED?`<a class="node home" href="${BASE}/fear-index/"><img src="icons/app.png" alt="" width="44" height="44"><div><b>${tx("恐怖新聞","The Fear Paper")}</b><span>${tx("毎朝の米国市場を、恐怖の目で","The US market every morning, through fear")}</span></div><em>›</em></a>`:"";
   $("apps").innerHTML=`<div class="ph"><h2>${tx("アプリ","Apps")}</h2><span class="asof">${tx("『VIXの声を聴け』に沿って","Following “Listen to VIX”")}</span></div>${home}`+
     MAP.map(([k,role,title,items],i)=>{const E=MAP_EN[i];if(EN()){role=E[0];title=E[1]}
       return `${i?`<div class="arrow">↓</div>`:""}<div class="layer"><div class="lh"><b class="kan">${k}</b><b>${role}</b><span>${title}</span></div>${items.map((x,j)=>card(x,E[2][j])).join("")}</div>`}).join("");
@@ -527,7 +527,7 @@ const TABL={paper:["恐怖新聞","Fear Paper"],apps:["アプリ","Apps"],books:
 function renderTabs(){
   document.querySelectorAll("#tabs button").forEach(b=>{b.textContent=TABL[b.dataset.tab][EN()?1:0];b.setAttribute("aria-pressed",b.dataset.tab===state.tab)});
   document.querySelectorAll("#lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===LANG));
-  $("ttl").textContent=tx("恐怖指数研究所","Fear Index Research Institute");
+  $("ttl").textContent=tx("恐怖新聞","The Fear Paper");document.title=tx("恐怖新聞","The Fear Paper");
   ["paper","apps","books"].forEach(k=>$("t-"+k).hidden=state.tab!==k);
 }
 function renderEd(){
