@@ -61,5 +61,37 @@
     const name=()=>f.querySelector(".ilab span").textContent=document.documentElement.lang==="en"?"Fear Index Research Institute":"恐怖指数研究所";
     name();new MutationObserver(name).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
   }
-  window.Suite={mount,foot};
+
+  // the festival banner of a VIX event: while one is on (the VIX app's notes, mri-app/data/vix_notes.json), a large
+  // "VIXイベント開催中！" under the given element, linking to the VIX app. ?sim=YYYYMM&d=YYYYMMDD previews a past event.
+  function fest(o){
+    if(/[?&]embed\b/.test(location.search))return;
+    const anchor=document.querySelector(o.after);if(!anchor)return;
+    const st=document.createElement("style");st.textContent=`.sfest{position:relative;overflow:hidden;display:block;margin-top:10px;border-radius:16px;padding:16px 14px 12px;text-align:center;color:#fff;text-decoration:none;
+      background:radial-gradient(120% 140% at 50% 0%,#ff3b5c 0%,#b3122e 45%,#3a0410 100%);border:1px solid #ff6b85;animation:sfestglow 1.6s ease-in-out infinite}
+      .sfest::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 20deg,#fff2 20deg 30deg,transparent 30deg 60deg,#fff1 60deg 70deg,transparent 70deg 110deg,#fff2 110deg 120deg,transparent 120deg 160deg,#fff1 160deg 170deg,transparent 170deg 200deg,#fff2 200deg 210deg,transparent 210deg 250deg,#fff1 250deg 260deg,transparent 260deg 300deg,#fff2 300deg 310deg,transparent 310deg);animation:sfestspin 14s linear infinite;pointer-events:none}
+      .sfest>*{position:relative}.sfest .fx{font-weight:900;font-size:28px;letter-spacing:.04em;line-height:1.1;text-shadow:0 0 18px #ffb3c1,0 2px 0 #5a0010}
+      .sfest .fs{margin-top:7px;font-size:12.5px;font-weight:800;color:#ffe2e7}.sfest .fq{margin-top:5px;font-size:11px;font-weight:700;color:#ffc2cd}
+      .sfest.m3{background:radial-gradient(120% 140% at 50% 0%,#ffcf3b 0%,#ff3b5c 40%,#3a0410 100%)}
+      @keyframes sfestglow{0%,100%{box-shadow:0 0 0 1px #ff3b5c55,0 0 18px #ff3b5c66}50%{box-shadow:0 0 0 1px #ff3b5caa,0 0 34px #ff3b5ccc}}
+      @keyframes sfestspin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.sfest,.sfest::before{animation:none}}
+      @media (max-width:360px){.sfest .fx{font-size:24px}}`;
+    document.head.appendChild(st);
+    const box=document.createElement("div");anchor.insertAdjacentElement("afterend",box);
+    const q=new URLSearchParams(location.search),sim=+q.get("sim"),simd=+q.get("d");
+    let N=null;
+    const draw=()=>{
+      if(!N){box.innerHTML="";return}
+      let n=sim?N.notes.find(x=>x.ym===sim):N.notes.find(x=>x.active);if(!n){box.innerHTML="";return}
+      let R=n.rows;if(sim){const d=simd&&R.some(r=>r[0]===simd)?simd:n.start;R=R.filter(r=>r[0]<=d);if(n.end&&d>=n.end){box.innerHTML="";return}}
+      const en=document.documentElement.lang==="en",si=R.findIndex(r=>r[0]===n.start),day=si>=0?R.length-si:1;
+      let w=1;R.forEach(r=>r[8].forEach(m=>{if(m[0]==="start")w=m[1]}));
+      const m3=Math.max(...R.slice(Math.max(si,0)).map(r=>r[1]))>=n.sig[2];
+      box.innerHTML=`<a class="sfest${m3?" m3":""}" href="${BASE}../mri-app/vix/${sim?`?sim=${sim}${simd?`&d=${simd}`:""}`:""}" target="_top"><div class="fx">${en?"VIX EVENT IS ON!":"VIXイベント開催中！"}</div><div class="fs">${en?`${n.en} ${n.year}  day ${day}  wave ${w}${m3?"  +3σ reached":""}`:`${n.name} ${n.year}　開催${day}日目　第${w}波${m3?"　+3σ到達":""}`}</div><div class="fq">${en?"Who masters fear masters the market ›":"恐怖を制するものは相場を制す ›"}</div></a>`;
+    };
+    const load=()=>fetch(BASE+"../mri-app/data/vix_notes.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j){N=j;draw()}}).catch(()=>{});
+    load();setInterval(()=>{if(!document.hidden)load()},5*60*1000);
+    new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
+  }
+  window.Suite={mount,foot,fest};
 })();
