@@ -503,7 +503,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v187";
+const APP_VER="fi-v188";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1170,26 +1170,23 @@ const ETLabel=t=>{const m=String(t||"").match(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d
 // a reading of the commodities and the dollar: the biggest move and what it stands for, the rest in one breath, and
 // what the combination says (paper.json "cmdty" replaces it when the day's article has one for the same session)
 function cmdtyComment(it,T){
-  const en=EN(),f=(x,d)=>x.price.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
-  const mv=T.filter(([k])=>it[k].pct!=null).map(([k,name,full])=>({k,name:en?it[k].en:name.replace(/（.*）/,""),x:it[k],z:it[k].pct/full}));
+  // what the moves mean together; the levels and the day's moves are on the tiles
+  if(EN())return"";
+  const mv=T.filter(([k])=>it[k].pct!=null).map(([k,name,full])=>({k,name:name.replace(/（.*）/,""),z:it[k].pct/full}));
   if(!mv.length)return"";
-  const top=[...mv].sort((a,b)=>Math.abs(b.z)-Math.abs(a.z))[0],dir=q=>Math.abs(q.z)<.1?0:q.z>0?1:-1,a=q=>Math.abs(q.x.pct).toFixed(1);
-  const lv={gold:()=>`${f(top.x,0)}${en?"":"ドル"}`,wti:()=>`${f(top.x,2)}${en?"":"ドル"}`,copper:()=>`${f(top.x,2)}${en?"":"ドル"}`,btc:()=>`${f(top.x,0)}${en?"":"ドル"}`,dxy:()=>f(top.x,2),usdjpy:()=>`${f(top.x,2)}${en?"":"円"}`};
-  const mean=en?{gold:["fear and doubt about money were bought","fear eased"],wti:["the embers of inflation glow again","inflation pressure takes a breath"],copper:["the economy is read as strong","the economy is read with caution"],btc:["the appetite for risk holds","the appetite for risk shrank"],dxy:["money is pulled back to the dollar","money drifts away from the dollar"],usdjpy:["the yen weakened","the yen firmed"]}
-    :{gold:["不安とお金への疑いが買われた","不安はやや後退した"],wti:["インフレの火種が再びくすぶる","インフレの圧力はひと息ついた"],copper:["景気は強いと読まれている","景気への見方は慎重だ"],btc:["リスクを取る気分は残る","リスクを取る気分はしぼんだ"],dxy:["世界のお金がドルへ引き戻された","お金はドルから少し離れた"],usdjpy:["円は売られた","円は買い戻された"]};
-  const d0=dir(top);let t="";
-  if(!d0)return en?"Commodities and the dollar barely moved.":"コモディティもドルも、ほとんど動かなかった。";
-  t+=en?`${top.name} ${d0>0?"rose":"fell"} ${a(top)}% to ${top.k==="dxy"?"":"$"}${lv[top.k]()}: ${mean[top.k][d0>0?0:1]}.`:`${top.name}が${a(top)}%${d0>0?(top.k==="usdjpy"?"上がり":"高の"):(top.k==="usdjpy"?"下がり":"安の")}${lv[top.k]()}。${mean[top.k][d0>0?0:1]}。`;
-  const rest=mv.filter(q=>q!==top&&dir(q)),up=rest.filter(q=>dir(q)>0).map(q=>q.name),dn=rest.filter(q=>dir(q)<0).map(q=>q.name);
-  if(up.length||dn.length)t+=en?` ${[up.length?`${up.join(", ")} up`:"",dn.length?`${dn.join(", ")} down`:""].filter(Boolean).join("; ")}.`:`${up.length?`${up.join("と")}は上げ`:""}${up.length&&dn.length?"、":""}${dn.length?`${dn.join("と")}は下げた`:"た"}。`.replace("上げた。","上げた。");
-  const D=k=>{const q=mv.find(x=>x.k===k);return q?dir(q):0};
-  let g="";
-  if(D("wti")>0&&D("gold")>0)g=en?"Oil and gold rising together is a hedge against both inflation and unease.":"原油と金がそろって上がるのは、インフレと不安の両方に備える動きだ。";
-  else if(D("wti")>0&&D("copper")>0&&D("btc")>=0)g=en?"Oil and copper up together is a bet on strong demand.":"原油と銅がそろって上がるのは、需要の強さに賭ける動きだ。";
-  else if(D("gold")>0&&D("btc")<0)g=en?"Gold up while bitcoin falls is a retreat to safety.":"金が上がりビットコインが下がるのは、守りに入る動きだ。";
-  else if(D("wti")<0&&D("copper")<0)g=en?"Oil and copper down together hint at softer demand.":"原油と銅がそろって下がるのは、需要の陰りを映す。";
-  else if(D("dxy")>0&&D("gold")<0)g=en?"A firmer dollar weighs on gold.":"ドル高が金の重しになった。";
-  return t+(g?(en?" ":"")+g:"");
+  const dir=q=>Math.abs(q.z)<.1?0:q.z>0?1:-1,D=k=>{const q=mv.find(x=>x.k===k);return q?dir(q):0};
+  const top=[...mv].sort((a,b)=>Math.abs(b.z)-Math.abs(a.z))[0],d0=dir(top);
+  if(!d0)return"コモディティもドルも大きくは動かず、景色は前日から変わっていない。";
+  const mean={gold:["不安とお金への疑いが買われた","不安の受け皿まで売られた"],wti:["インフレの薪が再びくべられた","インフレの圧力はひと息ついた"],copper:["景気は強いと読まれている","景気への賭けが引いた"],btc:["リスクを取る気分が戻った","リスクを取る気分が真っ先にしぼんだ"],dxy:["世界のお金がドルへ引き戻された","お金はドルから離れ始めた"],usdjpy:["円が売られた","円が買い戻された"]};
+  const t=[`いちばん大きく動いたのは${top.name}で、${mean[top.k][d0>0?0:1]}。`];
+  if(D("gold")<0&&D("btc")<0&&D("copper")<0)t.push("安全資産もリスク資産もそろって売られ、逃げ場を選ばない現金化の形だ。");
+  else if(D("gold")>0&&D("btc")<0)t.push("金が買われビットコインが売られるのは、守りに入る動きだ。");
+  else if(D("btc")>0&&D("copper")>0)t.push("景気とリスクへの賭けがそろって戻っている。");
+  if(D("wti")>0&&D("copper")<0)t.push("景気への賭けが引くのに原油は上がる。成長は冷え、物価の薪は残る、FRBにとって扱いにくい組み合わせだ。");
+  else if(D("wti")>0&&D("gold")>0)t.push("原油と金がそろって上がるのは、インフレと不安の両方に備える動きだ。");
+  else if(D("wti")>0&&D("copper")>0)t.push("原油と銅がそろって上がるのは、需要の強さに賭ける動きだ。");
+  else if(D("wti")<0&&D("copper")<0)t.push("原油と銅がそろって下がるのは、需要の熱が冷めた合図だ。");
+  return t.slice(0,3).join("");
 }
 function renderCmdty(){
   // gold, crude, copper, bitcoin, the dollar index and the yen as tiles coloured by the day's move
@@ -1622,41 +1619,69 @@ function note(key,auto){
 }
 const sgn1=(v,d=1,u="")=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(d)}${u}`;
 function autoRates(){
-  if(!CV||!CV.now)return"";const n=CV.now.y,p=CV.prev&&CV.prev.y,en=EN(),s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"],pth=pathOf(n["2Y"]-n["3M"])[0],d10=p?n["10Y"]-p["10Y"]:0,d2=p?n["2Y"]-p["2Y"]:0;
-  const m3=CV.m3&&CV.m3.y["10Y"];
-  return en?`The 10-year yields ${n["10Y"].toFixed(2)}% (${sgn1(d10,2)} on the day) and the 2-year ${n["2Y"].toFixed(2)}% (${sgn1(d2,2)}). The curve is ${(s2<0||s3<0)?"inverted":"normal"}, 10s over 2s at ${sgn1(s2,2)}. The 2-year over the 3-month at ${sgn1(n["2Y"]-n["3M"],2)} says the market prices rates ${pth.toLowerCase()}.${m3!=null?` Over three months the 10-year has moved ${sgn1(n["10Y"]-m3,2)}.`:""}`
-    :`10年債は${n["10Y"].toFixed(2)}%で前日比${sgn1(d10,2)}、2年債は${n["2Y"].toFixed(2)}%で${sgn1(d2,2)}。曲線は${(s2<0||s3<0)?"逆イールド":"順イールド"}で、10年と2年の差は${sgn1(s2,2)}。2年と3ヶ月の差${sgn1(n["2Y"]-n["3M"],2)}は、市場が政策金利を${pth}と見ていることを示す。${m3!=null?`10年債は3ヶ月で${sgn1(n["10Y"]-m3,2)}動いた。`:""}`;
+  // the reading, not the numbers on the panel: how the two ends moved against each other, what the curve's shape
+  // says about the policy path, and what three months of yields leave on stocks
+  if(!CV||!CV.now||EN())return"";const n=CV.now.y,p=CV.prev&&CV.prev.y,s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"],gap=n["2Y"]-n["3M"],d10=p?n["10Y"]-p["10Y"]:0,d2=p?n["2Y"]-p["2Y"]:0;
+  const m3=CV.m3&&CV.m3.y["10Y"],t=[];
+  if(d2<=-.03&&d10<=-.03)t.push(d2<d10?"短い金利のほうが大きく下がり、市場は目先の引き締めを少し割り引いた。":"長い金利のほうが大きく下がり、債券は先の成長への不安を買った。");
+  else if(d2>=.03&&d10>=.03)t.push(d2>d10?"短い金利が先に上がり、目先の引き締めを織り込み直す動きが長い金利を引き上げた。":"長い金利が先に上がり、物価と財政への警戒が曲線の先を押し上げた。");
+  else if(d2>=.03&&d10<=-.03)t.push("短い金利が上がり長い金利が下がる。目先の利上げを織り込みながら、先の成長には弱気という平坦化だ。");
+  else if(d2<=-.03&&d10>=.03)t.push("短い金利が下がり長い金利が上がる。目先の緩みと、先の物価への警戒が同居する傾きの拡大だ。");
+  else t.push("金利は大きくは動かず、債券市場は前日の見方を持ち越した。");
+  if(s2<0||s3<0)t.push("逆イールドは、いまの引き締めがいずれ景気を冷やすと市場が見ている形だ。");
+  else if(gap>=.25)t.push("2年債が3ヶ月債を上回る形は、政策金利がこの先さらに上がると市場が見ていることを示す。");
+  else if(gap<=-.25)t.push("2年債が3ヶ月債を下回る形は、市場が先の利下げを見ていることを示す。");
+  if(m3!=null&&Math.abs(n["10Y"]-m3)>=.2)t.push(n["10Y"]>m3?"3ヶ月で積み上がった長い金利は、株の値段にとって重しのまま残る。":"3ヶ月で長い金利が下りてきたことは、株の値段にとって追い風になっている。");
+  return t.join("");
 }
 function autoFedw(){
-  if(!FW||!FW.meetings||!FW.meetings.length)return"";const en=EN(),M=FW.meetings,m0=M[0],lo=FW.target[0],L=M[M.length-1],mo=+m0.date.slice(5,7);
+  if(!FW||!FW.meetings||!FW.meetings.length||EN())return"";const M=FW.meetings,m0=M[0],lo=FW.target[0],L=M[M.length-1],mo=+m0.date.slice(5,7);
   const up=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]>lo+1e-9).reduce((a,[,v])=>a+v,0),dn=Object.entries(m0.probs).filter(([r])=>+r.split("-")[0]<lo-1e-9).reduce((a,[,v])=>a+v,0);
-  const H=FW.hist||[],prev=H.length>1?H[H.length-2]:null,dd=prev&&prev[5]===m0.date?(m0.moves-prev[1])*100:null;
-  return en?`Futures put the odds of a ${up>=dn?"hike":"cut"} at the ${MON[mo-1]} meeting at ${Math.max(up,dn).toFixed(0)}%${dd!=null?` (${sgn1(dd,0,"pt")} on the day)`:""}. By ${L.date.slice(0,4)}'s last meeting, ${Math.abs(L.moves).toFixed(1)} ${L.moves>0?"hikes":"cuts"} are priced, a path towards ${L.after.toFixed(2)}%.`
-    :`先物は${mo}月会合での${up>=dn?"利上げ":"利下げ"}を${Math.max(up,dn).toFixed(0)}%と見る${dd!=null?`（前日から${sgn1(dd,0,"pt")}）`:""}。${L.date.slice(0,4)}年末までに${Math.abs(L.moves).toFixed(1)}回分の${L.moves>0?"利上げ":"利下げ"}を織り込み、政策金利は${L.after.toFixed(2)}%前後へ向かう道筋になっている。`;
+  const H=FW.hist||[],prev=H.length>1?H[H.length-2]:null,dd=prev&&prev[5]===m0.date?(m0.moves-prev[1])*100:null,hk=up>=dn,pr=Math.max(up,dn),w=hk?"利上げ":"利下げ",t=[];
+  t.push(pr>=70?`${mo}月の${w}は、もう可能性ではなく本線だ。`:pr>=40?`${mo}月の${w}は、半々に近い賭けとして揺れている。`:`${mo}月の会合では、市場は据え置きを本線に置く。`);
+  if(dd!=null&&Math.abs(dd)>=3)t.push((dd>0)===(m0.moves>=0)?"見方は日を追って固まっている。":"見方は少しずつ後退している。");
+  if(Math.abs(L.moves)>=1.5)t.push(`年末までの道のりは、単発の調整ではなく続く${L.moves>0?"引き締め":"緩和"}として描かれている。`);
+  else if(Math.abs(L.moves)>=.5)t.push(`先の道のりは、小さな${L.moves>0?"引き締め":"緩和"}にとどまると見られている。`);
+  return t.join("");
 }
 function autoGdp(){
-  const G=MAC&&MAC.gdp,N=MAC&&MAC.gdpnow;if(!G||!G.length)return"";const en=EN(),L=G[G.length-1],lq=L[0].replace(/-(\d)$/,"-Q$1"),ev=N&&N.evo&&N.evo.length?N.evo:null;
-  const s=ev&&N.quarter>lq?(en?`GDPNow estimates ${qLab(N.quarter)} at ${sgn1(ev[ev.length-1][1],1,"%")}, ${Math.abs(ev[ev.length-1][1]-ev[0][1]).toFixed(1)}pt ${ev[ev.length-1][1]<ev[0][1]?"below":"above"} its first estimate of ${ev[0][1].toFixed(1)}%. `:`GDPNowは${qLab(N.quarter)}を年率${sgn1(ev[ev.length-1][1],1,"%")}と見積もる。最初の予測${ev[0][1].toFixed(1)}%から${Math.abs(ev[ev.length-1][1]-ev[0][1]).toFixed(1)}pt${ev[ev.length-1][1]<ev[0][1]?"下方":"上方"}修正された。`):"";
-  return s+(en?`Real GDP grew ${sgn1(L[1],1,"%")} in ${qLab(lq)}${G.length>1?` after ${sgn1(G[G.length-2][1],1,"%")}`:""}.`:`直近の${qLab(lq)}の実質GDPは${sgn1(L[1],1,"%")}${G.length>1?`（前期は${sgn1(G[G.length-2][1],1,"%")}）`:""}。`);
+  const G=MAC&&MAC.gdp,N=MAC&&MAC.gdpnow;if(!G||!G.length||EN())return"";const L=G[G.length-1],lq=L[0].replace(/-(\d)$/,"-Q$1"),ev=N&&N.evo&&N.evo.length&&N.quarter>lq?N.evo:null;
+  const now=ev?ev[ev.length-1][1]:null,rev=ev&&ev.length>1?now-ev[0][1]:0,B=MAC.bls,c=B&&B.cpi?lastOf(yoyOf(B.cpi)):null,t=[];
+  const g=now!=null?now:L[1];
+  t.push(g>=2.5?"経済は減速の気配を見せないまま走っている。":g>=1?"経済は巡航速度の近くで走っている。":g>=0?"経済は失速の手前まで速度を落としている。":"経済は縮み始めている。");
+  if(ev&&Math.abs(rev)>=.3)t.push(rev>0?"今の四半期の見積もりは、データが出るたびに上へ書き換えられている。":"今の四半期の見積もりは、データが出るたびに下へ削られている。");
+  if(c&&c[1]>=3&&g>=2)t.push("物価が目標から離れる中では、強い成長は株の支えであると同時に、利上げを正当化する材料にもなる。");
+  else if(g<1)t.push("成長の鈍りは、利上げの手を止める理由にもなりうる。");
+  return t.join("");
 }
 function autoInfl(){
-  const B=MAC&&MAC.bls,P=MAC&&MAC.pce||{};if(!B||!B.cpi)return"";const en=EN(),y=k=>lastOf(yoyOf(k)),c=y(B.cpi),cc=y(B.core_cpi||[]),p=y(P.pce||[]),cp=y(P.core_pce||[]),pp=y(B.ppi||[]);
-  const Yc=yoyOf(B.cpi),d3=Yc.length>3?c[1]-Yc[Yc.length-4][1]:0;
-  return en?`CPI is up ${sgn1(c[1],1,"%")} on the year${cc?`, core ${sgn1(cc[1],1,"%")}`:""}${p?`; PCE ${sgn1(p[1],1,"%")}${cp?`, core ${sgn1(cp[1],1,"%")}`:""}`:""}, all ${c[1]>2?"above":"below"} the 2% target.${pp?` Producer prices run at ${sgn1(pp[1],1,"%")}, and what businesses pay tends to reach consumers later.`:""} Over three months CPI has moved ${sgn1(d3,1,"pt")}.`
-    :`CPIは前年比${sgn1(c[1],1,"%")}${cc?`、コアは${sgn1(cc[1],1,"%")}`:""}${p?`。PCEは${sgn1(p[1],1,"%")}${cp?`、コアPCEは${sgn1(cp[1],1,"%")}`:""}`:""}で、目標の2%を${c[1]>2?"上回る":"下回る"}。${pp?`企業の仕入れ値であるPPIは${sgn1(pp[1],1,"%")}で、その分はのちに消費者物価へ届きやすい。`:""}CPIの伸びは3ヶ月で${sgn1(d3,1,"pt")}動いた。`;
+  const B=MAC&&MAC.bls,P=MAC&&MAC.pce||{};if(!B||!B.cpi||EN())return"";const y=k=>lastOf(yoyOf(k)),c=y(B.cpi),cc=y(B.core_cpi||[]),pp=y(B.ppi||[]);
+  const Yc=yoyOf(B.cpi),d3=Yc.length>3?c[1]-Yc[Yc.length-4][1]:0,w=B.ahe?y(B.ahe):null,t=[];
+  t.push(c[1]>2.5?(d3>=.2?"物価は目標の2%から遠ざかっている。":d3<=-.2?"物価は目標へ向けて戻り始めたが、まだ遠い。":"物価は目標の上で高止まりしている。"):c[1]<1.5?"物価は目標を下回り、冷えすぎを心配する側にある。":"物価は目標の近くにある。");
+  if(cc&&Math.abs(cc[1]-c[1])>=.4)t.push(cc[1]<c[1]?"コアの伸びが総合を下回り、熱の源はエネルギーなど外側にある。":"コアの伸びが総合を上回り、熱は値動きの大きい品目を除いた芯に根を張っている。");
+  if(pp&&pp[1]-c[1]>=1)t.push("川上の仕入れ値が川下を大きく上回り、値上がりはまだ消費者に届ききっていない。");
+  if(w&&w[1]<c[1])t.push("賃金は物価の後ろを歩き、熱の源を人件費に求めるのは難しい。");
+  return t.join("");
 }
 function autoJobs(){
-  const B=MAC&&MAC.bls,CL=MAC&&MAC.claims;if(!B||!B.payrolls||!B.unrate)return"";const en=EN(),pay=B.payrolls[B.payrolls.length-1][1]-B.payrolls[B.payrolls.length-2][1],u=lastOf(B.unrate),um=new Map(B.unrate),jo=(B.jolts||[]).filter(q=>um.has(q[0])),lj=lastOf(jo),gp=lj?lj[1]-um.get(lj[0]):null;
-  const w=B.ahe?lastOf(yoyOf(B.ahe)):null,cm=new Map(yoyOf(B.cpi||[])),real=w&&cm.has(w[0])?w[1]-cm.get(w[0]):null,cl=CL&&CL.length?CL[CL.length-1]:null;
-  return en?`Payrolls ${pay>=0?"rose":"fell"} ${Math.abs(Math.round(pay))}K in ${moLab(u[0])} and unemployment is ${u[1].toFixed(1)}%.${gp!=null?` Openings run ${Math.abs(gp).toFixed(1)}pt ${gp>0?"above":"below"} unemployment.`:""}${cl?` Initial jobless claims are ${Math.round(cl[1]/1e3)}K.`:""}${real!=null?` Hourly earnings are up ${sgn1(w[1],1,"%")}, ${real>=0?"ahead of":"behind"} prices by ${Math.abs(real).toFixed(1)}pt.`:""}`
-    :`${moLab(u[0])}の雇用者は${Math.abs(pay/10).toFixed(1)}万人${pay>=0?"増":"減"}、失業率は${u[1].toFixed(1)}%。${gp!=null?`求人率は失業率を${Math.abs(gp).toFixed(1)}pt${gp>0?"上回り、人手不足が続く":"下回り、雇用は緩み始めている"}。`:""}${cl?`失業保険の新規申請は${(cl[1]/1e4).toFixed(1)}万件。`:""}${real!=null?`平均時給は前年比${sgn1(w[1],1,"%")}で、物価を${Math.abs(real).toFixed(1)}pt${real>=0?"上回る":"下回り、実質賃金はマイナスだ"}。`:""}`;
+  const B=MAC&&MAC.bls,CL=MAC&&MAC.claims;if(!B||!B.payrolls||!B.unrate||EN())return"";const PY=B.payrolls,pay=PY[PY.length-1][1]-PY[PY.length-2][1],p3=PY.length>4?(PY[PY.length-1][1]-PY[PY.length-4][1])/3:pay;
+  const u=lastOf(B.unrate),u3=B.unrate.length>3?u[1]-B.unrate[B.unrate.length-4][1]:0,um=new Map(B.unrate),jo=(B.jolts||[]).filter(q=>um.has(q[0])),lj=lastOf(jo),gp=lj?lj[1]-um.get(lj[0]):null;
+  const w=B.ahe?lastOf(yoyOf(B.ahe)):null,cm=new Map(yoyOf(B.cpi||[])),real=w&&cm.has(w[0])?w[1]-cm.get(w[0]):null,cl=CL&&CL.length?CL[CL.length-1][1]:null,t=[];
+  const cool=p3<100||u3>=.2,low=cl!=null&&cl<240000;
+  t.push(cool&&low?"雇用は冷えながらも、崩れてはいない。":cool?"雇用は冷え、解雇の兆しも申請件数に出始めている。":"雇用はなお力強く増えている。");
+  if(cool&&low)t.push("企業は採用を絞りながら、人を減らすところまでは踏み込んでいない。");
+  if(gp!=null)t.push(gp>0?"求人が職を探す人を上回るあいだは、人手の足りなさが賃金を下支えする。":"求人が職を探す人を下回り、人手不足の時代は終わりつつある。");
+  if(real!=null&&real<0)t.push("賃金が物価に届かず、家計の体力は少しずつ削られている。");
+  return t.join("");
 }
 function autoLiq(){
-  if(!LQ)return"";const en=EN(),R=LQ.rrp&&LQ.rrp.hist,F=LQ.fed&&LQ.fed.hist||[],S=LQ.money&&LQ.money.spread,M=LQ.m2&&LQ.m2.hist?lastOf(yoyOf(LQ.m2.hist)):null;
-  const rl=R&&R.length?R[R.length-1][1]:null,L=lastOf(F),d13=F.length>13?(L[2]-F[F.length-14][2])/1e3:null,sp=S&&S.length?S[S.length-1][2]:null;
-  const H=F.slice(-80),lo=H.length?H.reduce((a,q)=>q[1]<a[1]?q:a,H[0]):null,up=lo&&L?(L[1]-lo[1])/1e3:null;
-  return en?`${rl!=null?`The buffer, the reverse repo, is down to $${rl.toFixed(1)}B${rl<50?", all but gone":""}. `:""}${L?`Reserves stand at $${(L[2]/1e6).toFixed(2)}T${d13!=null?`, ${sgn1(d13,0,"B")} in 13 weeks`:""}. `:""}${sp!=null?`SOFR is ${Math.abs(sp*100).toFixed(0)}bp ${sp>0?"above":"below"} IORB. `:""}${up!=null&&up>20?`The Fed has grown its balance sheet by $${up.toFixed(0)}B from its low. `:""}${M?`M2 is up ${sgn1(M[1],1,"%")} on the year.`:""}`
-    :`${rl!=null?`緩衝材のリバースレポは${(rl*10).toFixed(1)}億ドル${rl<50?"とほぼ尽きた":""}。`:""}${L?`準備預金は${(L[2]/1e6).toFixed(2)}兆ドル${d13!=null?`で、13週に${Math.abs(d13*10).toFixed(0)}億ドル${d13<0?"減った":"増えた"}`:""}。`:""}${sp!=null?`SOFRはIORBを${Math.abs(sp*100).toFixed(0)}bp${sp>0?"上回り、資金の綱が張っている":"下回る"}。`:""}${up!=null&&up>20?`FRBは総資産を底から${Math.round(up*10).toLocaleString("en-US")}億ドル増やしている。`:""}${M?`市中のお金M2は前年比${sgn1(M[1],1,"%")}。`:""}`;
+  if(!LQ||EN())return"";const R=LQ.rrp&&LQ.rrp.hist,F=LQ.fed&&LQ.fed.hist||[],S=LQ.money&&LQ.money.spread;
+  const rl=R&&R.length?R[R.length-1][1]:null,L=lastOf(F),d13=F.length>13?(L[2]-F[F.length-14][2])/1e3:null,sp=S&&S.length?S[S.length-1][2]:null,t=[];
+  if(rl!=null&&rl<50)t.push("緩衝材のリバースレポは尽き、ドルが吸われれば準備預金という本体が直接削られる段階にある。");
+  else if(rl!=null)t.push("緩衝材のリバースレポがまだ残り、ドルが吸われても本体の準備預金は守られている。");
+  if(d13!=null&&d13<-100)t.push("その本体は、ここ3ヶ月で目に見えて細っている。");
+  if(sp!=null)t.push(sp>0?"SOFRがIORBを上回り、資金の綱は張っている。下限がどこにあるかは誰にも分からない。":"短期金利は落ち着き、配管に詰まりはまだ見えない。");
+  return t.join("");
 }
 // time series chart for the monthly and weekly pages: lines (or bars for the first series when o.bars), dates along
 // the bottom by year, a few gridlines, dashed reference lines (o.ref), the last value of each line at its end
