@@ -180,6 +180,16 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .trend .tlh i.on small{color:var(--ink2)}
 .trend .tlv{text-align:right;font-family:var(--f-tick);font-stretch:82%;font-size:12.5px;color:var(--ink2);white-space:nowrap;line-height:1.35}
 .trend .tlv b{display:block;font-family:var(--f-body);font-stretch:100%;font-weight:600;font-size:10.5px;color:var(--muted)}
+.anom .ar{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;align-items:start}
+.anom .ar+.ar{border-top:1px solid var(--line)}
+.anom .av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;line-height:1;margin-top:1px}
+.anom .av.o{background:rgba(76,175,80,.18);color:#6fd47a;box-shadow:inset 0 0 0 1.5px #4CAF50}
+.anom .av.t{background:rgba(255,152,0,.15);color:#FFB547;box-shadow:inset 0 0 0 1.5px #FF9800}
+.anom .av.x{background:rgba(138,138,166,.12);color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line)}
+.anom .an{font-size:14.5px;font-weight:700;color:var(--ink)}
+.anom .an small{font-size:11px;font-weight:600;color:var(--muted);margin-left:8px;letter-spacing:.04em}
+.anom .ad{margin:3px 0 0;font-size:13px;line-height:1.65;color:var(--ink2)}
+.anom .ax{margin-top:10px;font-size:11.5px;line-height:1.6;color:var(--muted)}
 .mtop .inds{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
 .mtop .indh{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:4px}
 .mtop .indh span{font-family:var(--f-tick);font-stretch:85%;font-size:11.5px;font-weight:600;color:var(--muted)}
@@ -421,6 +431,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="fedw" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
+    <section class="panel anom" id="anom" hidden></section>
     <div class="sec" id="sec-rel"></div>
     <section class="panel" id="gdp" hidden></section>
     <section class="panel" id="infl" hidden></section>
@@ -447,7 +458,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v150";
+const APP_VER="fi-v151";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -888,6 +899,78 @@ function sigLights(D,day){
   return `<div class="tsig"><h3>シグナル</h3>`+S.map(s=>`<div class="tl"><div class="tln">${s.name}<small><em class="sk${s.side==="buy"?" buy":""}">${s.side.toUpperCase()}</em>${s.basis}</small></div>
     <div class="tlh">${C.map((c,i)=>`<i class="${i<s.lv?"on":""}" style="--c:${c}"><small>${TH[s.k][i]}</small></i>`).join("")}</div>
     <div class="tlv">${s.on?`<b>点灯</b>${ymd(s.since)}`:s.reset?`<b>リセット</b>${ymd(s.reset)}`:"–"}</div></div>`).join("")+`</div>`;
+}
+// アノマリー: the calendar of the next US session, read against 『相場のアノマリーを斬る』 (100 years to July 2026).
+// Each claim that falls on that day shows the book's verdict (○ remains, △ faded / undecided, × never there or another
+// name), its number and its type. Read like a horoscope, but the numbers are the book's, and the book says the past.
+const NYSE_HOL=new Set(["20260101","20260119","20260216","20260403","20260525","20260619","20260703","20260907","20261126","20261225",
+  "20270101","20270118","20270215","20270326","20270531","20270618","20270705","20270906","20271125","20271224",
+  "20280117","20280221","20280414","20280529","20280619","20280704","20280904","20281123","20281225",
+  "20290101","20290115","20290219","20290330","20290528","20290619","20290704","20290903","20291122","20291225",
+  "20300101","20300121","20300218","20300419","20300527","20300619","20300704","20300902","20301128","20301225"]);
+const NEWM=[20250129, 20250227, 20250329, 20250427, 20250526, 20250625, 20250724, 20250823, 20250921, 20251021, 20251120, 20251219, 20260118, 20260217, 20260318, 20260417, 20260516, 20260614, 20260714, 20260812, 20260910, 20261010, 20261109, 20261208, 20270107, 20270206, 20270308, 20270406, 20270506, 20270604, 20270703, 20270802, 20270831, 20270929, 20271029, 20271127, 20271227, 20280126, 20280225, 20280325, 20280424, 20280524, 20280622, 20280721, 20280820, 20280918, 20281017, 20281116, 20281215, 20290114, 20290213, 20290314, 20290413, 20290513, 20290611, 20290711, 20290809, 20290908, 20291007, 20291105, 20291205, 20300103, 20300202, 20300304, 20300402, 20300502, 20300601, 20300630, 20300730, 20300828, 20300927, 20301026, 20301125, 20301224, 20310122],FULLM=[20250113, 20250212, 20250314, 20250412, 20250512, 20250611, 20250710, 20250809, 20250907, 20251006, 20251105, 20251204, 20260103, 20260201, 20260303, 20260401, 20260501, 20260531, 20260629, 20260729, 20260827, 20260926, 20261025, 20261124, 20261223, 20270122, 20270220, 20270322, 20270420, 20270520, 20270618, 20270718, 20270817, 20270915, 20271015, 20271113, 20271213, 20280111, 20280210, 20280310, 20280409, 20280508, 20280607, 20280706, 20280805, 20280903, 20281003, 20281102, 20281201, 20281231, 20290130, 20290228, 20290329, 20290428, 20290527, 20290625, 20290725, 20290823, 20290922, 20291022, 20291120, 20291220, 20300119, 20300218, 20300319, 20300417, 20300517, 20300615, 20300714, 20300813, 20300911, 20301011, 20301109, 20301209, 20310108],MERC=[[20250316, 20250407], [20250718, 20250811], [20251110, 20251129], [20260227, 20260320], [20260630, 20260723], [20261025, 20261113], [20270210, 20270303], [20270611, 20270704], [20271008, 20271028], [20280125, 20280214], [20280522, 20280614], [20280920, 20281011], [20290108, 20290127], [20290502, 20290525], [20290903, 20290924], [20291223, 20300111], [20300413, 20300506], [20300816, 20300908], [20301206, 20301225]];
+const ymdOf=d=>d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate();
+const dOf=n=>new Date(Date.UTC(Math.floor(n/10000),Math.floor(n/100)%100-1,n%100));
+const addD=(n,k)=>{const d=dOf(n);d.setUTCDate(d.getUTCDate()+k);return ymdOf(d)};
+const isTD=n=>{const w=dOf(n).getUTCDay();return w>0&&w<6&&!NYSE_HOL.has(String(n))};
+const nextTD=n=>{do n=addD(n,1);while(!isTD(n));return n},prevTD=n=>{do n=addD(n,-1);while(!isTD(n));return n};
+function nextSession(){
+  const f=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
+  const g=t=>+f.find(x=>x.type===t).value,today=g("year")*10000+g("month")*100+g("day");
+  return isTD(today)&&g("hour")<16?today:nextTD(today);
+}
+function anomRows(n){
+  const y=Math.floor(n/10000),m=Math.floor(n/100)%100,dd=n%100,w=dOf(n).getUTCDay(),R=[];
+  const add=(v,name,type,desc)=>R.push({v,name,type,desc});
+  // position in the month by trading days
+  let k=0,t=n;while(Math.floor(t/100)===Math.floor(n/100)){k++;t=prevTD(t)}             // D+k
+  let e=0;t=n;while(Math.floor(t/100)===Math.floor(n/100)){e++;t=nextTD(t)}             // D-(e-1)
+  const fromEnd=e,last=Math.floor(nextTD(n)/100)!==Math.floor(n/100);
+  // the presidential cycle (election years 2024, 2028: midterm year y%4==2)
+  const mid=y%4===2,pre=y%4===3;
+  if((mid&&m>=10)||(pre&&m<=6))add("o","甘い9か月は強い","残っている",`中間選挙の年の10月から翌年6月まで。24回の平均は+20.57%で、22回が上昇した。任期の4年の値上がりの4割がここに入る。いまは9か月の${mid?m-9:m+3}か月目。`);
+  if(mid&&m>=4&&m<=9)add("o","弱い6か月は弱い","残っている","中間選挙の年の4月から9月まで。24回の平均は-1.33%で、上昇は11回。ほかの年の同じ6か月はどれもプラスだった。");
+  if(m===9)add("o","9月は悪い","残っている","月次で全期間の平均より-1.74%。100年の4区間すべてで下を向き、くじ引き2万回で9月より低いのは7本だけだった。");
+  if(m===10)add("t","10月は荒れる","減った","日次の振れは全営業日の1.33倍で、3σを超える下げは43日と12か月で最多。ただ直近25年は幅の内側で、2020年代の10月はむしろ静か。");
+  if(m===11)add("t","11月は上がる","減った","月次で+0.85%。最初の25年だけが逆を向き、近年ほど大きい。");
+  if(m===8)add("x","夏枯れで8月は弱い","初めから無かった","実測は+0.19%で、通説と逆を向いた。");
+  if(m===1)add("x","1月のバロメーター","初めから無かった","1月がプラスなら年もプラス、の的中率は62.6%。いつも「上」と答えるだけで75.8%当たる。");
+  if(m===5)add("x","Sell in May","別のものの言い換え","冬と夏の差の8割は、9月の弱さと年末年始の7営業日でできていた。");
+  // the Santa window: the last 5 trading days of December and the first 2 of January
+  if((m===12&&fromEnd<=5)||(m===1&&k<=2))add("t","サンタクロース・ラリー","減った","年末の5営業日と年初の2営業日。100回のうち77回上昇、平均+1.53%。直近25年は+0.64%で幅の内側だが、上がる年は7割を保つ。");
+  else if(fromEnd<=2||k<=3)add("t","月末月初は上がる","減った","月末の2営業日と月初の3営業日は日次+0.091%。100年では幅の外、直近25年は幅の内側に入った。");
+  if(fromEnd===5)add("x","月末の5営業日前","通説なし","100年ずっと下を向いている日だが、通説が無いので本書は判定を保留した。");
+  // a holiday next: the trading day before a weekday the exchange is closed
+  if(addD(n,w===5?3:1)!==nextTD(n))add("t","祝日の前は上がる","減った","日次+0.223%は全営業日の5倍。上がり幅は3分の1に減ったが、直近25年も勝率が9.5pt高い。△の中で最も生きている。");
+  if(w===1)add("t","月曜は下がる","反転した","100年では日次-0.130%。だが9分の1まで縮み、直近5年半で符号が逆を向いた。");
+  if(w===5)add("t","金曜は上がる","反転した","100年では+0.030%。直近25年で符号が反転した。");
+  // SQ: the third Friday of March, June, September, December (a holiday moves it back)
+  if([3,6,9,12].includes(m)){let f=Math.floor(n/100)*100+1;while(dOf(f).getUTCDay()!==5)f=addD(f,1);f=addD(f,14);if(!isTD(f))f=prevTD(f);
+    if(f===n)add("x","SQの日は荒れる","初めから無かった","その日の振れは全営業日の0.81から0.83倍。むしろ静かだった。");}
+  // FOMC: the day before and the day of the decision
+  try{const D=(FW&&FW.meetings||[]).map(x=>+x.date.replace(/-/g,""));if(D.some(x=>x===n||prevTD(x)===n))
+    add("x","FOMCの発表前は上がる","公表されて消えた","1994〜2011年は発表前の2日で+0.51%。論文が出た翌年の2016年からは+0.14%で、ふだんの2日と変わらない。")}catch(e){}
+  // the moon: within 7 days of a new moon, or of a full moon
+  const near=(L)=>Math.min(...L.map(x=>Math.abs((dOf(x)-dOf(n))/864e5)));
+  if(near(NEWM)<=7)add("t","新月のころは上がる","決められない","新月をはさむ15日は、満月まわりより年3.09%高い。向きは100年続くが、幅の内側。");
+  else add("t","満月のころは下がる","決められない","満月をはさむ15日は、新月まわりより年3.09%低い。向きは100年続くが、幅の内側。");
+  // daylight
+  const md=m*100+dd;
+  if(md>=921&&md<=1220)add("x","日が短くなる秋は弱い","別のものの言い換え","秋の弱さは9月の弱さだった。9月を除くと消える。");
+  if(md>=1221||md<=320)add("x","冬は強い","別のものの言い換え","冬の強さは年末年始の7営業日だった。それを除くと消える。");
+  if(MERC.some(([a,b])=>n>=a&&n<=b))add("x","水星逆行中は下がる","初めから無かった","逆行中の日次は+0.0446%、それ以外は+0.0426%。100年で何もない。");
+  const O={o:0,t:1,x:2};return R.sort((a,b)=>O[a.v]-O[b.v]);
+}
+function renderAnom(){
+  const el=$("anom");let n;try{n=nextSession()}catch(e){el.hidden=true;return}
+  const R=anomRows(n),y=Math.floor(n/10000),m=Math.floor(n/100)%100,d=n%100;
+  const O=R.filter(r=>r.v==="o"),T=R.filter(r=>r.v==="t"),X=R.filter(r=>r.v==="x");
+  const auto=[`${m}/${d}（${WD(wdOf(y,m,d))}）に重なる通説 ${R.length}つ`,O.length?`残った○は${O.map(r=>"「"+r.name.replace(/は.*$/,"")+"」").join("と")}`:"残った○はひとつもない"];
+  const sum=`○${O.length}　△${T.length}　×${X.length}。${O.length?"100年で4区間すべて同じ向きに出て、くじ引きの幅の外にあるものが"+O.length+"つ重なる。":"本書の関門を通り抜けたものは、この日には重ならない。"}${X.length?"×は、初めから無かったか、別のものの言い換えだった通説だ。":""}`;
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>アノマリー</h2><span class="asof">${m}/${d}（${WD(wdOf(y,m,d))}）の米国市場</span></div>${headHTML("anomHead",auto)}${note("anom",sum)}`
+    +R.map(r=>`<div class="ar"><div class="av ${r.v}">${r.v==="o"?"○":r.v==="t"?"△":"×"}</div><div><div class="an">${esc(r.name)}<small>${esc(r.type)}</small></div><p class="ad">${esc(r.desc)}</p></div></div>`).join("")
+    +`<div class="ax">判定と数字は『相場のアノマリーを斬る』（米国株、1926年7月から2026年7月までの100年）から。○は残っている、△は減ったか決められない、×は初めから無かったか別のものの言い換え。過去の数字であって、これからを約束しない。</div>`;
 }
 // the three indicators behind the MRI (row [date, VIX, SKEW, CAPE, VIX score, SKEW score, CAPE score, MRI, ...]),
 // drawn as in the MRI app: each score is a percentile, coloured by the MRI's bands, with ±1σ / ±2σ marks;
@@ -1601,12 +1684,12 @@ async function loadMarkets(){
     fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null),
     fetch(`../mri-app/data/fedwatch.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FW=j).catch(()=>FW=null)]);
   applyPre();
-  renderFedw();renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();
+  renderFedw();renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();renderAnom();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderKokoro();renderMriTop();renderMriTrend();renderNums();renderEye();
+  renderKokoro();renderAnom();renderMriTop();renderMriTrend();renderNums();renderEye();
 }
 // the evening edition carries the data it was written on, frozen before the US open (paper.json "pre": futures.json
 // with the pre-open MRI, markets.json, indices.json, fedwatch.json), so its numbers stay with its text all night
