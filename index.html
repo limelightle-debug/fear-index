@@ -42,17 +42,17 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 [hidden]{display:none!important}
 a{color:inherit}
 .num{font-family:var(--f-tick);font-stretch:82%;font-variant-numeric:tabular-nums}
-.mhero{position:relative;overflow:hidden;margin-top:12px;height:224px;border-radius:16px;background:#000;border:1px solid var(--line)}
+.mhero{position:relative;overflow:hidden;margin-top:12px;height:204px;border-radius:16px;background:#000;border:1px solid var(--line)}
 .mhero .hbg{position:absolute;top:50%;right:-6%;height:118%;width:auto;transform:translateY(-50%);-webkit-mask-image:linear-gradient(to right,transparent 0,#000 38%);mask-image:linear-gradient(to right,transparent 0,#000 38%)}
 .mhero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.92) 0,rgba(0,0,0,.55) 48%,rgba(0,0,0,0) 75%),linear-gradient(0deg,rgba(0,0,0,.55),rgba(0,0,0,0) 45%)}
 .mhero .htx{position:absolute;z-index:1;left:18px;right:12px;top:16px;bottom:16px;display:flex;flex-direction:column;justify-content:space-between}
-.mhero h1{margin:0;line-height:0}.mhero h1 img{display:block;width:250px;height:auto;filter:drop-shadow(0 2px 10px rgba(0,0,0,.9))}
+.mhero h1{margin:0;line-height:0}.mhero h1 img{display:block;width:190px;height:auto;filter:drop-shadow(0 2px 10px rgba(0,0,0,.9))}
 .mhero .hd{font-size:26px;font-weight:800;color:#fff;letter-spacing:.02em;line-height:1.1;text-shadow:0 1px 10px rgba(0,0,0,.9);margin-top:auto}.mhero .hd small{font-size:16px;font-weight:700;margin-left:2px}
 .mhero .hi{display:flex;align-items:center;gap:9px;margin-top:9px;min-height:30px}
 .mhero .ed{font-style:normal;font-size:19px;font-weight:900;letter-spacing:.18em;padding:4px 8px 4px 12px;border-radius:7px;line-height:1.2;color:#0b0d1a}.mhero .ed.mor{background:#ffb547;box-shadow:0 0 14px #ffb54766}.mhero .ed.eve{background:#7fa2ff;box-shadow:0 0 14px #7fa2ff77}
 .mhero .hi b{font-family:var(--f-tick);font-stretch:82%;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.9)}.mhero .hi span{font-size:13px;color:#d8d8e0}
 .mhero.eve{border-color:#7fa2ff88;box-shadow:0 0 0 1px #7fa2ff33,0 0 22px #7fa2ff22}
-@media (max-width:380px){.mhero{height:208px}.mhero h1 img{width:220px}.mhero .hd{font-size:23px}}
+@media (max-width:380px){.mhero{height:196px}.mhero h1 img{width:170px}.mhero .hd{font-size:23px}}
 html.embed .mhero{display:none}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 0 8px}
 .brand{display:flex;align-items:center;gap:10px}
@@ -496,7 +496,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v162";
+const APP_VER="fi-v163";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
