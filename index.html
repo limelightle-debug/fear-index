@@ -21,7 +21,7 @@ if(EMBED){document.documentElement.classList.add("embed");
 <meta name="theme-color" content="#050506">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@800&text=IVX%E3%81%91%E3%81%97%E3%81%A8%E3%81%AB%E3%81%AE%E3%81%B9%E3%82%8B%E3%82%92%E3%82%A2%E3%83%8E%E3%83%9E%E3%83%AA%E3%83%BC%E5%85%B5%E5%88%8A%E5%88%A9%E5%8A%9B%E5%A0%B4%E5%A3%B0%E5%A4%9C%E5%A4%B1%E5%AD%A6%E5%B7%AE%E5%B8%AB%E5%B8%B3%E6%95%97%E6%96%AC%E6%9C%9D%E6%B3%95%E7%89%A9%E7%9B%B8%E7%B0%BF%E8%81%B4%E8%A1%93%E9%87%8D%E9%87%91%E9%AD%94&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@800&text=IVX%E3%81%91%E3%81%97%E3%81%A8%E3%81%AB%E3%81%AE%E3%81%B9%E3%82%8B%E3%82%92%E3%82%A2%E3%83%8E%E3%83%9E%E3%83%AA%E3%83%BC%E5%85%B5%E5%88%8A%E5%88%A9%E5%8A%9B%E5%A0%B4%E5%A3%B0%E5%A4%9C%E5%A4%B1%E5%AD%A6%E5%B7%AE%E5%B8%AB%E5%B8%B3%E6%95%97%E6%96%AC%E6%9C%9D%E6%B3%95%E7%89%A9%E7%9B%B8%E7%B0%BF%E8%81%B4%E8%A1%93%E9%87%8D%E9%87%91%E9%AD%94%E6%97%A5%E6%9B%9C%E7%89%88%E9%80%B1%E6%9D%A5%E4%BA%88%E5%AE%9A&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=LINE+Seed+JP:wght@400;700;800&display=swap">
 <style>
 :root{
@@ -50,7 +50,7 @@ a{color:inherit}
 .mhero h1{margin:0;line-height:0}.mhero h1 img{display:block;width:190px;height:auto;filter:drop-shadow(0 2px 10px rgba(0,0,0,.95))}
 .mhero .hd{font-size:26px;font-weight:800;color:#fff;letter-spacing:.02em;line-height:1.1;text-shadow:0 1px 10px rgba(0,0,0,.9);margin-top:auto}.mhero .hd small{font-size:16px;font-weight:700;margin-left:2px}
 .mhero .he{margin-top:2px;min-height:27px}.mhero .hi{display:flex;align-items:baseline;gap:8px;margin-top:6px;min-height:26px}
-.mhero .ed{font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;font-style:normal;font-size:21px;font-weight:800;letter-spacing:.3em;line-height:1;padding:0 0 4px;margin-right:2px;color:#fff;border-bottom:2px solid;text-shadow:0 1px 8px rgba(0,0,0,.9)}.mhero .ed.mor{border-color:#e3342b}.mhero .ed.eve{border-color:#9db8ff}
+.mhero .ed{font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;font-style:normal;font-size:21px;font-weight:800;letter-spacing:.3em;line-height:1;padding:0 0 4px;margin-right:2px;color:#fff;border-bottom:2px solid;text-shadow:0 1px 8px rgba(0,0,0,.9)}.mhero .ed.mor{border-color:#e3342b}.mhero .ed.eve{border-color:#9db8ff}.mhero .ed.sun{border-color:#ffd27a}
 .mhero .hi b{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.9)}.mhero .hi span{font-size:13px;color:#d8d8e0}
 @media (max-width:380px){.mhero{height:218px}.mhero h1 img{width:170px}.mhero .hd{font-size:23px}}
 html.embed .mhero{display:none}
@@ -129,6 +129,16 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .head .h2b{display:block;font-size:16px;margin-top:1px}
 .sub{font-size:12.5px;color:var(--ink2);margin:0 0 8px}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+/* the Sunday edition: only the points, the week and the week ahead */
+body.sun #t-paper>section:not(#issue):not(#sunwk):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
+.wkr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.wkr .k{font-size:13.5px;color:var(--ink2)}.wkr .v{font-family:var(--f-tick);font-stretch:82%;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.wkr .c.rup{color:var(--neg)}.wkr .c.rdn{color:var(--pos)}
+.wkr .c{font-family:var(--f-tick);font-stretch:85%;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;min-width:62px}
+.cal{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+.cal td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:baseline}
+.cal td.d{white-space:nowrap;color:var(--ink2);width:1%}.cal td.t{white-space:nowrap;font-family:var(--f-tick);font-variant-numeric:tabular-nums;color:var(--ink2);width:1%}
+.cal tr.hi td.e{color:#ffd27a;font-weight:700}.cal tr.day td{border-top:1px solid #ffffff33}
 .tile{border-radius:9px;padding:7px 10px 8px;color:#fff;min-width:0}
 .tile .tn{font-size:12px;font-weight:700;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile .tb{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-top:1px}
@@ -464,6 +474,8 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 
   <div id="t-paper">
     <section class="panel issue" id="issue"></section>
+    <section class="panel" id="sunwk" hidden></section>
+    <section class="panel" id="sunnx" hidden></section>
     <section class="panel eye" id="eye" hidden></section>
     <div class="sec" id="sec-daily"></div>
     <section class="panel mtop" id="mritop" hidden></section>
@@ -503,7 +515,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v189";
+const APP_VER="fi-v190";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -709,7 +721,9 @@ let IDX=null, STORY=null, FUT=null;
 const etYMD=d=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
 // the evening edition carries the article into the session it was written before (after the US open the numbers turn to that day)
 const sameDay=d=>!!STORY&&(STORY.date===d||!!(STORY.preAt&&etYMD(new Date(STORY.preAt))===d));
-const EVE=()=>!!(STORY&&STORY.preAt&&FUT&&FUT.items&&FUT.items.length&&FUT.day===etYMD(new Date(STORY.preAt)));
+// the Sunday edition (paper.json sunAt, newer than the morning and evening articles): the week and the week ahead
+const SUN=()=>!!(STORY&&STORY.sunAt);
+const EVE=()=>!SUN()&&!!(STORY&&STORY.preAt&&FUT&&FUT.items&&FUT.items.length&&FUT.day===etYMD(new Date(STORY.preAt)));
 const preLab=()=>FUT&&FUT.updatedAt?tx(`日本時間 ${fmtJ(new Date(FUT.updatedAt))}（寄り前）`,`${fmtJ(new Date(FUT.updatedAt))} Japan time (pre-open)`):"";
 const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const nyLabel=t=>{  // Cboe "2026-10-27T16:14:59" or Nasdaq "Oct 27, 2026": the day, and the close or the time
@@ -737,18 +751,20 @@ const fmtPct=v=>v==null?"-":(v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2)+"%";
 function renderIssue(st){
   // a revised edition (after the after-hours earnings) shows the revision time instead
   // the pre-open edition (before the US open, after the morning's releases) shows its own time
-  const t=new Date(st&&(st.preAt||st.revisedAt||st.writtenAt)||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
+  const sun=SUN();if(sun)st=STORY;
+  const t=new Date(st&&(st.sunAt||st.preAt||st.revisedAt||st.writtenAt)||IDX&&IDX.updatedAt||Date.now()), j=new Date(t.getTime()+9*36e5);
   // the edition (朝刊 or 夜刊) as a label; beside the time, 改訂 for a revised morning article, 更新 when only the numbers came in
   // (no article yet: the edition by the Japan hour, the evening from 17:00 to 5:00)
-  const eve=st?!!st.preAt:(j.getUTCHours()>=17||j.getUTCHours()<5), note=st?(!st.preAt&&st.revisedAt?tx("改訂","Revised"):""):tx("更新","Updated");
+  const eve=!sun&&(st?!!st.preAt:(j.getUTCHours()>=17||j.getUTCHours()<5)), note=sun?"":st?(!st.preAt&&st.revisedAt?tx("改訂","Revised"):""):tx("更新","Updated");
   const w=WD(j.getUTCDay()), hm=`${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`;
   // the day's points to watch (paper.json "points"), picked from what the paper carries below
   // usually 3, up to 5 on a heavy day (the morning run decides)
-  const P=st&&Array.isArray(SP(st,"points"))?SP(st,"points").slice(0,5):[];
+  const pk=sun?"sunPoints":"points",P=st&&Array.isArray(SP(st,pk))?SP(st,pk).slice(0,5):[];
   // the issue's date, edition and time go on the masthead picture at the top; the panel below keeps the points
   $("hero").classList.toggle("eve",eve);
   $("ed").innerHTML=EN()?`${MON[j.getUTCMonth()]} ${j.getUTCDate()}<small> ${w}</small>`:`${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small>`;
-  $("hedl").innerHTML=`<i class="ed ${eve?"eve":"mor"}">${eve?tx("夜刊","Evening"):tx("朝刊","Morning")}</i>`;
+  $("hedl").innerHTML=`<i class="ed ${sun?"sun":eve?"eve":"mor"}">${sun?tx("日曜版","Sunday"):eve?tx("夜刊","Evening"):tx("朝刊","Morning")}</i>`;
+  document.body.classList.toggle("sun",sun);
   $("hed").innerHTML=`<b>${hm}</b>${note?`<span>${note}</span>`:""}`;
   $("issue").hidden=!P.length;
   $("issue").innerHTML=P.length?`<ul class="pts">${P.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
@@ -786,6 +802,45 @@ function renderIdxEve(el,st,asof){
   el.innerHTML=`<div class="ph"><h2>${tx("株価指数先物","Index futures")}</h2><span class="asof">${preLab()}</span></div><div class="head">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div><div style="height:8px"></div>${fc?`<div class="ccm"><p>${esc(fc)}</p></div>`:""}<div class="tiles">${F.map(tile).join("")}</div>
     <div class="rxn">${tx("前日の清算値からの騰落。半導体は先物がないため、半導体ETF（SOXX）の寄り前の値。","Change from the previous settlement. Semiconductors: no future trades, so the SOXX ETF's pre-market quote.")}</div><div class="ndxw" id="ndxw"></div>`
     +(st&&st.sources&&st.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div></div>`:"");
+}
+// the Sunday edition: the week's moves (MRI app data/weekly.json, mri.json, oas.json) under the week's article
+// (paper.json sunHead, sunBody), then the week ahead (sunNextHead, sunNext, cal: [[date, Japan time, event, 1 if key]])
+let WK=null;
+const ymdMon=s=>{const d=new Date(Date.UTC(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8)));d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10).replace(/-/g,"")};
+// [first day of the last week, last day, last value, the last value of the week before] from [[YYYYMMDD, v], ...]
+function wkMove(rows){
+  if(!rows||rows.length<2)return null;const L=rows[rows.length-1],mon=ymdMon(String(L[0])),inw=rows.filter(r=>String(r[0])>=mon),pv=[...rows].reverse().find(r=>String(r[0])<mon);
+  return pv&&inw.length?{a:String(inw[0][0]),b:String(L[0]),v:L[1],p:pv[1]}:null}
+function renderSun(){
+  const w=$("sunwk"),n=$("sunnx");
+  if(!SUN()){w.hidden=n.hidden=true;return}
+  const st=STORY,md=s=>`${+s.slice(4,6)}/${+s.slice(6,8)}`,I=WK&&WK.items||{};
+  const H=(h)=>Array.isArray(h)&&h.length?`<div class="head">${esc(h[0])}${h[1]?`<span class="h2b">${esc(h[1])}</span>`:""}</div><div style="height:8px"></div>`:"";
+  const ix=["SPX","NDX","DJI","RUT","SOX"].map(k=>[k,I[k]&&wkMove(I[k].d)]).filter(x=>x[1]),sp=ix.length&&ix[0][1];
+  const tile=([k,m])=>{const pct=(m.v/m.p-1)*100,lv=m.v.toLocaleString("en-US",{minimumFractionDigits:k==="DJI"?0:2,maximumFractionDigits:k==="DJI"?0:2}),nm=I[k].ja;
+    return k==="SPX"?`<div class="tile hero" style="background:${tileColor(pct,5)}"><div><div class="tn">${nm}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(pct)}</div></div>`
+      :`<div class="tile" style="background:${tileColor(pct,5)}"><div class="tn">${nm}</div><div class="tb"><span class="tp">${fmtPct(pct)}</span><span class="tl">${lv}</span></div></div>`};
+  // the week's readings: MRI (close to close), the high yield spread (FRED, a day behind), the 10-year yield
+  const row=(k,a,b,c,cls)=>`<div class="wkr"><span class="k">${k}</span><span class="v">${a} → ${b}</span><span class="c ${cls}">${c}</span></div>`;
+  const dc=(d,dec,u)=>`${d>1e-9?"▲":d<-1e-9?"▼":""} ${Math.abs(d).toFixed(dec)}${u}`,rc=d=>d>1e-9?"rup":d<-1e-9?"rdn":"";
+  let rows="";
+  const M=TEMP&&TEMP.mri&&TEMP.mri.daily,mm=M&&wkMove(M.map(r=>[String(r[0]),r[7]*100]));
+  if(mm)rows+=row("MRI",mm.p.toFixed(1),mm.v.toFixed(1),dc(mm.v-mm.p,1,""),rc(mm.v-mm.p));
+  const O=OASD&&OASD.hist,om=O&&wkMove(O.map(r=>[String(r[0]),r[1]]));
+  if(om)rows+=row(`ハイイールドOAS（${md(om.b)}まで）`,om.p.toFixed(2)+"%",om.v.toFixed(2)+"%",dc(om.v-om.p,2,"pt"),rc(om.v-om.p));
+  const ty=I.us10y&&wkMove(I.us10y.d);
+  if(ty)rows+=row("米10年債利回り",ty.p.toFixed(2)+"%",ty.v.toFixed(2)+"%",dc((ty.v-ty.p)*100,0,"bp"),rc(ty.v-ty.p));
+  for(const [k,dec,u] of [["gold",0,"ドル"],["wti",2,"ドル"],["usdjpy",2,"円"],["btc",0,"ドル"]]){const m=I[k]&&wkMove(I[k].d);if(!m)continue;const pct=(m.v/m.p-1)*100;
+    rows+=row(I[k].ja,m.p.toLocaleString("en-US",{maximumFractionDigits:dec,minimumFractionDigits:dec}),m.v.toLocaleString("en-US",{maximumFractionDigits:dec,minimumFractionDigits:dec}),`${pct>0?"+":pct<0?"−":"±"}${Math.abs(pct).toFixed(2)}%`,pct>0?"up":pct<0?"dn":"")}
+  const body=SP(st,"sunBody");
+  w.hidden=false;
+  w.innerHTML=`<div class="ph"><h2>${tx("今週の米国市場","The week")}</h2><span class="asof">${sp?`${md(sp.a)}〜${md(sp.b)}`:""}</span></div>${H(SP(st,"sunHead"))}${body?`<div class="ccm"><p>${esc(body)}</p></div>`:""}
+    ${ix.length?`<div class="tiles">${ix.map(tile).join("")}</div><div class="rxn">${tx("前週末の終値からの騰落","Change from the previous week's close")}</div>`:""}${rows?`<div style="margin-top:10px">${rows}</div>`:""}`;
+  const cal=Array.isArray(SP(st,"cal"))?SP(st,"cal"):[],nx=SP(st,"sunNext");
+  let last="";const tr=cal.map(r=>{const d=r[0]!==last;last=r[0];return`<tr class="${r[3]?"hi":""}${d&&last?" day":""}"><td class="d">${d?esc(r[0]):""}</td><td class="t">${esc(r[1]||"")}</td><td class="e">${esc(r[2]||"")}</td></tr>`}).join("");
+  n.hidden=!(cal.length||nx);
+  const rng=cal.length?`${String(cal[0][0]).replace(/（.*/,"")}〜${String(cal[cal.length-1][0]).replace(/（.*/,"")}　日本時間`:"";
+  n.innerHTML=`<div class="ph"><h2>${tx("来週の予定","The week ahead")}</h2><span class="asof">${rng}</span></div>${H(SP(st,"sunNextHead"))}${nx?`<div class="ccm"><p>${esc(nx)}</p></div>`:""}${tr?`<table class="cal">${tr}</table>`:""}`;
 }
 // page 2: the scene of the day, judged as in the Mind app, and the three readings behind it
 const ACT=["第一幕","第二幕","第三幕","第四幕"];
@@ -1975,12 +2030,12 @@ async function loadMarkets(){
     fetch(`../mri-app/data/fedwatch.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FW=j).catch(()=>FW=null),
     fetch(`../ndx-heatmap/data/ndx.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>NDXD=j).catch(()=>NDXD=null)]);
   applyPre();
-  renderFedw();renderNums();renderRates();renderCanary();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();renderAnom();drawNdx();
+  renderFedw();renderNums();renderRates();renderCanary();renderCmdty();renderSun();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();renderAnom();drawNdx();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderKokoro();renderAnom();renderMriTop();renderMriTrend();renderNums();renderEye();renderCanary();
+  renderKokoro();renderAnom();renderMriTop();renderMriTrend();renderNums();renderEye();renderCanary();renderSun();
 }
 // the evening edition carries the data it was written on, frozen before the US open (paper.json "pre": futures.json
 // with the pre-open MRI, markets.json, indices.json, fedwatch.json), so its numbers stay with its text all night
@@ -1991,10 +2046,14 @@ function applyPre(){
 async function loadPaper(){
   await Promise.all([
     fetch(PAPER+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():false).then(j=>IDX=j).catch(()=>IDX=false),
-    fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{STORY=j;if(j&&j.preAt&&!(new Date(j.preAt)>new Date(j.revisedAt||j.writtenAt||0)))delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
-    fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null)]);
+    fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{STORY=j;if(!j)return;const w=+new Date(j.revisedAt||j.writtenAt||0);
+      if(j.preAt&&!(+new Date(j.preAt)>w))delete j.preAt;  // a preAt left over from the evening
+      if(j.sunAt&&!(+new Date(j.sunAt)>Math.max(w,j.preAt?+new Date(j.preAt):0)))delete j.sunAt;  // the Sunday edition until the next article
+      if(j.sunAt)delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
+    fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null),
+    fetch("../mri-app/data/weekly.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WK=j).catch(()=>WK=null)]);
   applyPre();
-  renderIdx();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
+  renderIdx();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
