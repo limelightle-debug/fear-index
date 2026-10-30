@@ -108,7 +108,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .sgv b{display:block;font-family:var(--f-body);font-stretch:100%;font-weight:600;font-size:10px;color:var(--muted)}
 /* key figures */
 .kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.kv div{background:#0d0d22;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+.kv div{background:#0a0a0c;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
 .kv span{display:block;font-size:10.5px;color:var(--muted);white-space:nowrap}
 .kv b{display:block;font-family:var(--f-tick);font-stretch:82%;font-weight:700;font-size:20px;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kv small{display:block;font-family:var(--f-tick);font-stretch:82%;font-size:11.5px;color:var(--ink2);white-space:nowrap}
@@ -374,17 +374,17 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .story .src{margin-top:6px;font-size:11.5px;color:var(--muted)}
 .story .src a{color:var(--muted)}
 .up{color:var(--up)}.dn{color:var(--dn)}
-.layer{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#0d0d22}
+.layer{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:#0a0a0c}
 .lh{display:flex;align-items:center;gap:8px;margin:0 0 4px}
 .lh b{font-size:13px;letter-spacing:.06em}
 .lh span{font-size:11px;color:var(--muted)}
 .node{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);text-decoration:none}
 .lh+.node{border-top:0}
-.node img{width:44px;height:44px;border-radius:10px;flex:none;box-shadow:0 0 0 1px var(--line)}
+.node img{width:44px;height:44px;border-radius:10px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.85)}
 .node b{display:block;font-size:14.5px}
 .node span{display:block;font-size:12px;color:var(--muted);line-height:1.45}
 .node em{margin-left:auto;font-style:normal;color:var(--accent);font-size:18px}
-.node.home{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:10px;background:#0d0d22}
+.node.home{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:10px;background:#0a0a0c}
 .arrow{text-align:center;color:var(--accent);font-size:18px;line-height:1;padding:5px 0}
 .soonl{margin-top:12px;border-style:dashed;background:transparent}
 .chips{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 2px}
@@ -496,7 +496,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v164";
+const APP_VER="fi-v165";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
