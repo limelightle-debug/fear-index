@@ -499,7 +499,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v180";
+const APP_VER="fi-v181";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1334,8 +1334,21 @@ function autoCanary(Z,H){
   const G=HYGD&&HYGD.hist?HYGD.hist.slice(-252):null,gOff=G?(G[G.length-1][1]/Math.max(...G.map(r=>r[1]))-1)*100:null;
   const it={};(MK&&MK.items||[]).forEach(q=>it[q.k]=q);const r10=it.us10y&&it.us10y.price;
   const S=[];let relapse=false;
+  // the low before: a spread pressed to the bottom of its range could not last; how the market has done since that
+  // day, and whether an earlier low at the same level came before a burst
+  const loP=Math.round(vs.filter(q=>q<=lo3[1]).length/vs.length*100);
+  const LOW=[];
+  if(up>=.3&&loP<=5){
+    const spAt=SPXD&&SPXD.hist?SPXD.hist.find(r=>String(r[0])===lo3[0]):null,spNow=SPXD&&SPXD.hist?SPXD.hist[SPXD.hist.length-1]:null;
+    const spCh=spAt&&spNow?(spNow[2]/spAt[2]-1)*100:null;
+    const prior=H.slice(0,-126).reduce((a,b)=>!a||b[1]<a[1]?b:a,null),pi=prior?H.indexOf(prior):-1;
+    const pb=prior&&Math.abs(prior[1]-lo3[1])<=.1?past.find(b=>b[0]>pi&&b[0]-pi<=90):null;
+    LOW.push(en?`On ${md(lo3[0])} the high yield spread was ${lo3[1].toFixed(2)}%, among the lowest ${loP<1?"1":loP}% of ${yrs} years: a level lenders could not hold.${spCh!=null&&Math.abs(spCh)<3?` The S&P 500 has barely moved since that day (${spCh>=0?"+":"−"}${Math.abs(spCh).toFixed(1)}%).`:""}${pb?` The ${prior[1].toFixed(2)}% of ${ym(prior[0])} likewise came before the jump of ${ym(H[pb[1]][0])}.`:""}`
+      :`${md(lo3[0])}のハイイールド債の上乗せ金利は${lo3[1].toFixed(2)}%と、過去${yrs}年で下から${loP<1?"1":loP}%に入る低さで、貸し手が保てる水準ではなかった。${spCh!=null&&Math.abs(spCh)<3?`S&P500はその日からほとんど上がっていない（${spCh>=0?"+":"−"}${Math.abs(spCh).toFixed(1)}%）。`:""}${pb?`${ym(prior[0])}の${prior[1].toFixed(2)}%も、${ym(H[pb[1]][0])}の急騰の手前だった。`:""}`);
+  }
+  S.push(...LOW);
   if(cur){const a=H[cur[0]],z=H[cur[1]];
-    S.push(en?`The high yield spread jumped from ${a[1].toFixed(2)}% on ${md(a[0])} to ${z[1].toFixed(2)}% on ${md(z[0])}: ${cur[2].toFixed(2)}pt in ${cur[1]-cur[0]} trading days.`:`ハイイールド債の上乗せ金利は、${md(a[0])}の${a[1].toFixed(2)}%から${md(z[0])}の${z[1].toFixed(2)}%へ、${cur[1]-cur[0]}営業日で${cur[2].toFixed(2)}pt跳ねた。`);
+    S.push(en?`${LOW.length?"Then it":"The high yield spread"} jumped from ${a[1].toFixed(2)}% on ${md(a[0])} to ${z[1].toFixed(2)}% on ${md(z[0])}: ${cur[2].toFixed(2)}pt in ${cur[1]-cur[0]} trading days.`:`${LOW.length?"やがて":"ハイイールド債の上乗せ金利は、"}${md(a[0])}の${a[1].toFixed(2)}%から${md(z[0])}の${z[1].toFixed(2)}%へ、${cur[1]-cur[0]}営業日で${cur[2].toFixed(2)}pt跳ねた。`);
     const pk=hi3[0]>z[0]?hi3:z;
     S.push(en?`${hi3[0]>z[0]?`It climbed on to ${hi3[1].toFixed(2)}% on ${md(hi3[0])}, and n`:"N"}ow, at ${v.toFixed(2)}%, it has ${back>=.1?`given back ${back.toFixed(2)}pt and paused`:"not eased"}.`:`${hi3[0]>z[0]?`その後も${md(hi3[0])}に${hi3[1].toFixed(2)}%まで上がり、`:""}いまは${v.toFixed(2)}%${back>=.1?`と山から${back.toFixed(2)}pt戻し、一息ついている`:"で、まだ緩んでいない"}。`);
     if(past.length){
