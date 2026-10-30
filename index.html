@@ -499,7 +499,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v178";
+const APP_VER="fi-v179";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1305,33 +1305,56 @@ function ratesMore(){
 // カナリア: the corporate bond spread (OAS), the canary in the mine. Lenders get nervous before shareholders do: a
 // sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks; a spread
 // pressed low means lenders fear nothing (『金利の重力』: low credit spreads are the danger, not high ones)
+// sharp widenings of the junk spread: a burst starts on the first day the spread stands 0.5pt or more above its lowest
+// of the 10 trading days before; its peak is the highest rise within the next 10 days; later jumps within 30 days
+// belong to its aftermath. For each: [low index, peak index, rise, highest later level in 30 days, its index]
+function oasBursts(H){
+  const out=[];let i=10;
+  const rise=k=>{let j=k-10;for(let q=k-10;q<k;q++)if(H[q][1]<H[j][1])j=q;return [j,H[k][1]-H[j][1]]};
+  while(i<H.length){const [j,ch]=rise(i);
+    if(ch>=.5){let pk=i,pj=j,pc=ch;for(let k=i+1;k<Math.min(H.length,i+10);k++){const [jj,cc]=rise(k);if(cc>pc){pk=k;pj=jj;pc=cc}}
+      let mx=-1;for(let k=pk+1;k<Math.min(H.length,pk+31);k++)if(mx<0||H[k][1]>H[mx][1])mx=k;
+      out.push([pj,pk,pc,mx>=0?H[mx][1]:null,mx]);i=pk+31}else i++}
+  return out;
+}
 function autoCanary(Z,H){
-  // a reading built from the numbers: how far the junk spread has moved from its low of the last three months, set
-  // against the stock market (how far the S&P 500 is from its high), the investment grade spread (is the retreat
-  // choosing whom to leave), HYG (with the long rate's weight in its price) and where the spread sits in three years
+  // a reading built from the numbers, the burst first: how fast and how far the junk spread jumped, where it peaked and
+  // how much it has given back; how the other bursts of three years went on (calmed for good, or paused and jumped
+  // again, and whether a VIX event came); then the stock market's distance from its high, investment grade, HYG
   const x=Z.hy;if(!x)return"";const en=EN(),v=x.v,vs=H.map(q=>q[1]),pct=Math.round(vs.filter(q=>q<=v).length/vs.length*100),yrs=Math.round(H.length/261);
-  const md=s=>`${+String(s).slice(4,6)}/${+String(s).slice(6,8)}`;
-  const H3=H.slice(-63),lo3=H3.reduce((a,b)=>b[1]<a[1]?b:a),hi3=H3.reduce((a,b)=>b[1]>a[1]?b:a),up=v-lo3[1],dn=hi3[1]-v;
+  const md=s=>`${+String(s).slice(4,6)}/${+String(s).slice(6,8)}`,ym=s=>en?`${MON[+String(s).slice(4,6)-1]} ${String(s).slice(0,4)}`:`${String(s).slice(0,4)}年${+String(s).slice(4,6)}月`;
+  const H3=H.slice(-63),lo3=H3.reduce((a,b)=>b[1]<a[1]?b:a),hi3=H3.reduce((a,b)=>b[1]>a[1]?b:a),up=v-lo3[1],back=hi3[1]-v;
+  const B=oasBursts(H),rb=B.filter(b=>b[1]>=H.length-63),cur=rb.length?rb[rb.length-1]:null,past=B.filter(b=>b[1]<H.length-63);
+  const evd=TEMP&&TEMP.vix&&TEMP.vix.eventInfo?Object.values(TEMP.vix.eventInfo).map(e=>String(e.day)):[];
+  const dt=s=>Date.UTC(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8));
+  const evOf=b=>{const a=dt(H[b[0]][0]),z=dt(H[b[4]>=0?b[4]:b[1]][0])+20*864e5;return evd.find(d=>dt(d)>=a&&dt(d)<=z)};
   const RAW=(OASD&&OASD.hist)||(CV&&CV.oas&&CV.oas.hist)||[],rl=RAW.find(r=>r[0]===lo3[0]);
   const ig=Z.ig?Z.ig.v:null,igLo=rl&&rl[2]!=null?rl[2]:null,igUp=ig!=null&&igLo!=null?ig-igLo:null;
   const SP=SPXD&&SPXD.hist?SPXD.hist.slice(-252):null,spOff=SP?(SP[SP.length-1][2]/Math.max(...SP.map(r=>r[2]))-1)*100:null;
   const G=HYGD&&HYGD.hist?HYGD.hist.slice(-252):null,gOff=G?(G[G.length-1][1]/Math.max(...G.map(r=>r[1]))-1)*100:null;
   const it={};(MK&&MK.items||[]).forEach(q=>it[q.k]=q);const r10=it.us10y&&it.us10y.price;
-  const S=[];
-  if(en){
-    S.push(up>=.3?`The high yield spread is ${v.toFixed(2)}%, ${up.toFixed(2)}pt wider than its three-month low of ${lo3[1].toFixed(2)}% on ${md(lo3[0])}.`:dn>=.3?`The high yield spread is ${v.toFixed(2)}%, ${dn.toFixed(2)}pt narrower than its three-month high on ${md(hi3[0])}.`:`The high yield spread is ${v.toFixed(2)}%${x.dv!=null?`, ${x.dv>0?"wider":"narrower"} by ${Math.abs(x.dv).toFixed(2)}pt on the day`:""}.`);
-    if(up>=.3&&spOff!=null)S.push(spOff>-5?`Meanwhile the S&P 500 is only ${Math.abs(spOff).toFixed(1)}% below its high. With stock prices calm, lenders alone are raising the price of risk.`:`The S&P 500 is ${Math.abs(spOff).toFixed(1)}% below its high; stocks and credit are repricing risk together.`);
-    if(up>=.3&&igUp!=null)S.push(igUp<.15?`The widening is on the low-quality side; investment grade, at ${ig.toFixed(2)}%, has barely moved. Money is choosing whom to leave.`:`Investment grade has widened too, to ${ig.toFixed(2)}%; the retreat reaches the stronger borrowers.`);
-    if(gOff!=null&&gOff<=-3)S.push(`HYG is ${Math.abs(gOff).toFixed(1)}% below its 52-week high${r10&&r10>=4.5?`, a fall that also carries the weight of a long rate near ${r10.toFixed(1)}%`:""}.`);
-    S.push(pct<=20?`Over ${yrs} years only ${pct}% of days were lower: lenders ask little for default risk, and a canary singing this calmly is no proof the air is clean.`:pct>=80?`Only ${100-pct}% of days in ${yrs} years were higher: lenders are demanding a real premium now.`:`In its ${yrs}-year range of ${Math.min(...vs).toFixed(2)}% to ${Math.max(...vs).toFixed(2)}% it sits ${pct>=50?"above":"below"} the middle.${up>=.3?" The canary still sings, but its voice has changed.":""}`);
-    return S.join(" ");
-  }
-  S.push(up>=.3?`ハイイールド債の上乗せ金利は${v.toFixed(2)}%。直近3か月で最も低かった${md(lo3[0])}の${lo3[1].toFixed(2)}%から、${up.toFixed(2)}pt広がった。`:dn>=.3?`ハイイールド債の上乗せ金利は${v.toFixed(2)}%。直近3か月で最も高かった${md(hi3[0])}から${dn.toFixed(2)}pt縮んだ。`:`ハイイールド債の上乗せ金利は${v.toFixed(2)}%${x.dv!=null?`と、前日から${Math.abs(x.dv).toFixed(2)}pt${x.dv>0?"広がった":x.dv<0?"縮んだ":"変わらない"}`:""}。`);
-  if(up>=.3&&spOff!=null)S.push(spOff>-5?`その間、S&P500は最高値から${Math.abs(spOff).toFixed(1)}%しか下げていない。株価が平穏なまま、貸し手だけが先に危険への対価を引き上げている。`:`S&P500も最高値から${Math.abs(spOff).toFixed(1)}%下げ、株と社債がそろって危険を値付けし直している。`);
-  if(up>=.3&&igUp!=null)S.push(igUp<.15?`広がっているのは信用の低い側で、投資適格は${ig.toFixed(2)}%とほとんど動かない。資金は相手を選んで退いている。`:`投資適格も${ig.toFixed(2)}%まで広がり、退く動きは信用の高い側にも及んでいる。`);
-  if(gOff!=null&&gOff<=-3)S.push(`HYGが52週の高値から${Math.abs(gOff).toFixed(1)}%下げた中には${r10&&r10>=4.5?`、${r10.toFixed(1)}%前後の長期金利の重さも混じる`:"、貸し手の後退がそのまま映る"}。`);
-  S.push(pct<=20?`過去${yrs}年でこれより低かった日は${pct}%しかない。貸し手は返ってこない危険にほとんど対価を求めておらず、カナリアが静かに歌っていることは空気がきれいな証拠ではない。`:pct>=80?`過去${yrs}年でこれより高かった日は${100-pct}%だけで、貸し手ははっきりと対価を求めている。`:`過去${yrs}年の幅${Math.min(...vs).toFixed(2)}%から${Math.max(...vs).toFixed(2)}%の中では、${pct>=50?"中ほどより上":"中ほどより下"}にいる。${up>=.3?"カナリアはまだ歌っているが、声の調子は変わり始めた。":""}`);
-  return S.join("");
+  const S=[];let relapse=false;
+  if(cur){const a=H[cur[0]],z=H[cur[1]];
+    S.push(en?`The high yield spread jumped from ${a[1].toFixed(2)}% on ${md(a[0])} to ${z[1].toFixed(2)}% on ${md(z[0])}: ${cur[2].toFixed(2)}pt in ${cur[1]-cur[0]} trading days.`:`ハイイールド債の上乗せ金利は、${md(a[0])}の${a[1].toFixed(2)}%から${md(z[0])}の${z[1].toFixed(2)}%へ、${cur[1]-cur[0]}営業日で${cur[2].toFixed(2)}pt跳ねた。`);
+    const pk=hi3[0]>z[0]?hi3:z;
+    S.push(en?`${hi3[0]>z[0]?`It climbed on to ${hi3[1].toFixed(2)}% on ${md(hi3[0])}, and n`:"N"}ow, at ${v.toFixed(2)}%, it has ${back>=.1?`given back ${back.toFixed(2)}pt and paused`:"not eased"}.`:`${hi3[0]>z[0]?`その後も${md(hi3[0])}に${hi3[1].toFixed(2)}%まで上がり、`:""}いまは${v.toFixed(2)}%${back>=.1?`と山から${back.toFixed(2)}pt戻し、一息ついている`:"で、まだ緩んでいない"}。`);
+    if(past.length){
+      const tell=b=>{const P=H[b[1]],e=evOf(b),jump=b[3]!=null&&b[3]>P[1]+.2,n=b[4]-b[1];if(jump)relapse=true;
+        return en?`in ${ym(P[0])} it reached ${P[1].toFixed(2)}%${jump?`, eased, then jumped to ${b[3].toFixed(2)}% ${n} trading days later`:" and settled there"}${e?" (a VIX event)":""}`
+          :`${ym(P[0])}は${P[1].toFixed(2)}%まで上げ${jump?`、いったん落ち着いてから${n}営業日後に${b[3].toFixed(2)}%まで跳ねた`:"、そこで収まった"}${e?"（VIXイベント）":""}`};
+      S.push(en?`In ${yrs} years a jump this fast came only ${past.length} other time${past.length>1?"s":""}: ${past.map(tell).join("; ")}.`:`過去${yrs}年で、10営業日に0.5pt以上の拡大はほかに${past.length}回しかない。${past.map(tell).join("。")}。`);
+      const same=past.find(b=>b[3]!=null&&b[3]>H[b[1]][1]+.2&&Math.abs(H[b[1]][1]-pk[1])<=.1);
+      if(same)S.push(en?`This time's peak of ${pk[1].toFixed(2)}% is the very level where ${ym(H[same[1]][0])} paused.`:`今回の山の${pk[1].toFixed(2)}%は、${ym(H[same[1]][0])}に一度止まった水準と同じだ。`);
+      if(relapse&&back>=.1)S.push(en?"A pause after a jump is not proof that it is over.":"跳ねた後の落ち着きは、終わった証拠ではない。");
+    }
+  }else S.push(en?(up>=.3?`The high yield spread is ${v.toFixed(2)}%, ${up.toFixed(2)}pt wider than its three-month low on ${md(lo3[0])}.`:`The high yield spread is ${v.toFixed(2)}%${x.dv!=null?`, ${x.dv>0?"wider":"narrower"} by ${Math.abs(x.dv).toFixed(2)}pt on the day`:""}.`)
+      :(up>=.3?`ハイイールド債の上乗せ金利は${v.toFixed(2)}%。直近3か月で最も低かった${md(lo3[0])}の${lo3[1].toFixed(2)}%から、${up.toFixed(2)}pt広がった。`:`ハイイールド債の上乗せ金利は${v.toFixed(2)}%${x.dv!=null?`と、前日から${Math.abs(x.dv).toFixed(2)}pt${x.dv>0?"広がった":x.dv<0?"縮んだ":"変わらない"}`:""}。`));
+  if(up>=.3&&spOff!=null)S.push(en?(spOff>-5?`Meanwhile the S&P 500 is only ${Math.abs(spOff).toFixed(1)}% below its high: with stocks calm, lenders alone are raising the price of risk.`:`The S&P 500 is ${Math.abs(spOff).toFixed(1)}% below its high; stocks and credit are repricing risk together.`)
+      :(spOff>-5?`この間、S&P500は最高値から${Math.abs(spOff).toFixed(1)}%しか下げていない。株価が平穏なまま、貸し手だけが先に危険への対価を引き上げている。`:`S&P500も最高値から${Math.abs(spOff).toFixed(1)}%下げ、株と社債がそろって危険を値付けし直している。`));
+  if(up>=.3&&igUp!=null)S.push(en?(igUp<.15?`The widening is on the low-quality side; investment grade, at ${ig.toFixed(2)}%, has barely moved.`:`Investment grade has widened too, to ${ig.toFixed(2)}%.`):(igUp<.15?`広がっているのは信用の低い側で、投資適格は${ig.toFixed(2)}%とほとんど動かない。`:`投資適格も${ig.toFixed(2)}%まで広がり、退く動きは信用の高い側にも及んでいる。`));
+  if(gOff!=null&&gOff<=-3)S.push(en?`HYG is ${Math.abs(gOff).toFixed(1)}% below its 52-week high${r10&&r10>=4.5?`, a fall that also carries a long rate near ${r10.toFixed(1)}%`:""}.`:`HYGが52週の高値から${Math.abs(gOff).toFixed(1)}%下げた中には${r10&&r10>=4.5?`、${r10.toFixed(1)}%前後の長期金利の重さも混じる`:"、貸し手の後退がそのまま映る"}。`);
+  if(!cur)S.push(en?(pct<=20?"A canary singing this calmly is no proof the air is clean.":up>=.3?"The canary still sings, but its voice has changed.":""):(pct<=20?"カナリアが静かに歌っていることは、空気がきれいな証拠ではない。":up>=.3?"カナリアはまだ歌っているが、声の調子は変わった。":""));
+  return S.filter(Boolean).join(en?" ":"");
 }
 function hygParts(){
   const q=MK&&MK.items&&MK.items.find(x=>x.k==="hyg"),H=HYGD&&HYGD.hist;
@@ -1354,6 +1377,8 @@ function renderCanary(){
   const lvl=pct<=10?tx("極めて低い","very low"):pct<=30?tx("低い","low"):pct<70?tx("ふつう","normal"):pct<90?tx("高い","high"):tx("極めて高い","very high");
   const h1=tx(`ハイイールドOAS ${v.toFixed(2)}%`,`High yield OAS ${v.toFixed(2)}%`),h2=(()=>{const H3=O.hist.slice(-63),lo3=H3.reduce((a,b)=>b[1]<a[1]?b:a),up=v-lo3[1];
     const SP=SPXD&&SPXD.hist?SPXD.hist.slice(-252):null,spOff=SP?(SP[SP.length-1][2]/Math.max(...SP.map(r=>r[2]))-1)*100:null;
+    const B=oasBursts(O.hist).filter(b=>b[1]>=O.hist.length-63),cb=B.length?B[B.length-1]:null;
+    if(cb){const m=+O.hist[cb[1]][0].slice(4,6);return tx(`${m}月に${cb[1]-cb[0]}営業日で${cb[2].toFixed(2)}pt急騰${spOff!=null&&spOff>-5?"、株は高値圏":""}`,`Jumped ${cb[2].toFixed(2)}pt in ${cb[1]-cb[0]} days in ${MON[m-1]}${spOff!=null&&spOff>-5?", stocks near highs":""}`)}
     if(up>=.3)return tx(`3か月で${up.toFixed(2)}pt拡大${spOff!=null&&spOff>-5?"、株は高値圏":""}`,`${up.toFixed(2)}pt wider than its 3-month low${spOff!=null&&spOff>-5?", stocks still near highs":""}`);
     return tx(`過去${yrs}年で${lvl}（低い順に${pct}%）`,`${lvl} for ${yrs} years (${pct}th percentile)`)})();
   const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
@@ -1886,7 +1911,7 @@ async function loadMarkets(){
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderKokoro();renderAnom();renderMriTop();renderMriTrend();renderNums();renderEye();
+  renderKokoro();renderAnom();renderMriTop();renderMriTrend();renderNums();renderEye();renderCanary();
 }
 // the evening edition carries the data it was written on, frozen before the US open (paper.json "pre": futures.json
 // with the pre-open MRI, markets.json, indices.json, fedwatch.json), so its numbers stay with its text all night
