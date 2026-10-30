@@ -503,7 +503,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v188";
+const APP_VER="fi-v189";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1296,7 +1296,7 @@ function histChart(S,W,col,id,c){
     <path d="${d}L${x(n-1)},${MT+PH}L${x(0)},${MT+PH}Z" fill="url(#${id})"/><path d="${d}" fill="none" stroke="${col}" stroke-width="1.6"/>
     <circle cx="${x(n-1)}" cy="${y(L)}" r="3" fill="${col}"/><text x="${ML+PW+6}" y="${y(L)+3.5}" style="fill:${col};font-weight:700">${L.toFixed(2)}</text></svg>`;
 }
-// the OAS: this app's data/oas.json (the morning paper's run reads FRED each day), else the MRI app's curve.json
+// the OAS: the MRI app's data/oas.json (FRED, hourly) or this app's, whichever is newer; else the MRI app's curve.json
 let OASD=null,HYGD=null,SPXD=null;  // HYGD: the junk bond ETF HYG, daily closes (MRI app, data/hyg.json)
 function oasData(){if(OASD&&OASD.date)return{...OASD,hist:(OASD.hist||[]).map(r=>[r[0],r[1]])};return CV&&CV.oas}
 // the latest 10Y real yield, breakeven and OAS: the official value, or when the latest session is newer than the
@@ -1965,7 +1965,9 @@ async function loadMarkets(){
   await Promise.all([
     fetch(`../mri-app/data/markets.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MK=j).catch(()=>MK=null),
     fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null),
-    fetch(`data/oas.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>OASD=j).catch(()=>OASD=null),
+    // OAS: the MRI app's data/oas.json (read from FRED every hour by its data job) or this app's, whichever is newer
+    Promise.all([`../mri-app/data/oas.json`,`data/oas.json`].map(u=>fetch(`${u}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)))
+      .then(([a,b])=>{OASD=[a,b].filter(j=>j&&j.date).sort((x,y)=>y.date.localeCompare(x.date))[0]||null}),
     fetch(`../mri-app/data/hyg.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>HYGD=j).catch(()=>HYGD=null),
     fetch(`../mri-app/data/spx_daily.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>SPXD=j).catch(()=>SPXD=null),
     fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
