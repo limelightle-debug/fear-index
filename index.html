@@ -52,7 +52,6 @@ a{color:inherit}
 .mhero .he{margin-top:2px;min-height:27px}.mhero .hi{display:flex;align-items:baseline;gap:8px;margin-top:6px;min-height:26px}
 .mhero .ed{font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;font-style:normal;font-size:21px;font-weight:800;letter-spacing:.3em;line-height:1;padding:0 0 4px;margin-right:2px;color:#fff;border-bottom:2px solid;text-shadow:0 1px 8px rgba(0,0,0,.9)}.mhero .ed.mor{border-color:#e3342b}.mhero .ed.eve{border-color:#9db8ff}
 .mhero .hi b{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.9)}.mhero .hi span{font-size:13px;color:#d8d8e0}
-.mhero.eve{border-color:#7fa2ff88;box-shadow:0 0 0 1px #7fa2ff33,0 0 22px #7fa2ff22}
 @media (max-width:380px){.mhero{height:218px}.mhero h1 img{width:170px}.mhero .hd{font-size:23px}}
 html.embed .mhero{display:none}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 0 8px}
@@ -504,7 +503,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v183";
+const APP_VER="fi-v184";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
