@@ -503,7 +503,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v185";
+const APP_VER="fi-v186";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -855,8 +855,8 @@ function autoMriLive(r,p,at,frozen){
   const C=[["VIX",r[4]-p[4]],["SKEW",r[5]-p[5]],["CAPE",r[6]-p[6]]].sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0],cv=Math.abs(C[1]*100).toFixed(1);
   let pre=true;if(at){const f=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"numeric",hourCycle:"h23"}).formatToParts(at),h=+f.find(x=>x.type==="hour").value,mi=+f.find(x=>x.type==="minute").value;pre=h*60+mi<570||h>=16}
   const t=at?fmtJ(at):"",a=Math.abs(dm).toFixed(2),toS=(80-m).toFixed(2),toB=(m-8).toFixed(2);
-  if(en)return `${frozen?"On pre-open estimates":pre?"In realtime, including pre-open estimates":"In realtime, during the session"}, the MRI was ${m.toFixed(2)} at ${t} Japan time, ${dm>=0?"up":"down"} ${a}pt from the last close of ${(p[7]*100).toFixed(2)}. The ${C[0]} score ${C[1]>=0?"rose":"fell"} ${cv}pt, the largest move, and the MRI is ${same?"still in":"now in"} ${lv[1]}. `+(m>=80?`It is above SELL 80 by ${(m-80).toFixed(2)}pt.`:m<=8?`It is below BUY 8 by ${(8-m).toFixed(2)}pt.`:`SELL 80 is ${toS}pt away, BUY 8 ${toB}pt.`);
-  return `${frozen?"寄り前の推定で":pre?"寄り前の推定を含むリアルタイムで":"取引中のリアルタイムで"}、MRIは日本時間${t.replace(":","時")}分に${m.toFixed(2)}と、前日確定の${(p[7]*100).toFixed(2)}から${a}pt${dm>=0?"上がった":"下がった"}。いちばん動いたのは${C[0]}スコアで${cv}pt${C[1]>=0?"上げ":"下げ"}、${lv[1]}圏${same?"にとどまる":"に入った"}。`+(m>=80?`SELLの80を${(m-80).toFixed(2)}pt上回っている。`:m<=8?`BUYの8を${(8-m).toFixed(2)}pt下回っている。`:m>=70?`SELLの80まであと${toS}ptに迫っている。`:m<=18?`BUYの8まであと${toB}ptに迫っている。`:"");
+  if(en)return `${pre?"In realtime, including pre-open estimates":"In realtime, during the session"}, the MRI was ${m.toFixed(2)} at ${t} Japan time, ${dm>=0?"up":"down"} ${a}pt from the last close of ${(p[7]*100).toFixed(2)}. The ${C[0]} score ${C[1]>=0?"rose":"fell"} ${cv}pt, the largest move, and the MRI is ${same?"still in":"now in"} ${lv[1]}. `+(m>=80?`It is above SELL 80 by ${(m-80).toFixed(2)}pt.`:m<=8?`It is below BUY 8 by ${(8-m).toFixed(2)}pt.`:`SELL 80 is ${toS}pt away, BUY 8 ${toB}pt.`);
+  return `${pre?"寄り前の推定を含むリアルタイムで":"取引中のリアルタイムで"}、MRIは日本時間${t.replace(":","時")}分に${m.toFixed(2)}と、前日確定の${(p[7]*100).toFixed(2)}から${a}pt${dm>=0?"上がった":"下がった"}。いちばん動いたのは${C[0]}スコアで${cv}pt${C[1]>=0?"上げ":"下げ"}、${lv[1]}圏${same?"にとどまる":"に入った"}。`+(m>=80?`SELLの80を${(m-80).toFixed(2)}pt上回っている。`:m<=8?`BUYの8を${(8-m).toFixed(2)}pt下回っている。`:m>=70?`SELLの80まであと${toS}ptに迫っている。`:m<=18?`BUYの8まであと${toB}ptに迫っている。`:"");
 }
 // a panel's bold two-line headline; the article for the session can supply its own (paper.json key, [line1, line2])
 const headHTML=(key,auto)=>{const o=STORY&&SP(STORY,key),[h1,h2]=Array.isArray(o)&&o.length?o:auto;
@@ -869,11 +869,10 @@ function renderMriTop(){
   // out for that session: paper.json preAt on the live day (US Eastern date)
   const etDay=iso=>{const t=new Date(iso),f=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(t);return +f.replace(/-/g,"")};
   const lr=mri.liveDay&&mri.daily.find(x=>x[0]===mri.liveDay&&x[7]!=null);
-  // the MRI panel stays realtime all night (mri.json, the session in progress); the frozen pre-open reading is only
-  // the fallback when the live row is not there yet
-  const lv0=!!(lr&&STORY&&STORY.preAt&&etDay(STORY.preAt)===mri.liveDay);
-  const snap=!lv0&&EVE()&&FUT.mri&&FUT.mri.row&&FUT.mri.prev?FUT.mri:null;
-  const live=!!(snap||lv0);
+  // the evening edition freezes the reading before the open (futures.json "mri", carried in paper.json "pre"); it is the
+  // realtime reading taken when the edition was written, so the panel still says リアルタイム
+  const snap=EVE()&&FUT.mri&&FUT.mri.row&&FUT.mri.prev?FUT.mri:null;
+  const live=!!(snap||lr&&STORY&&STORY.preAt&&etDay(STORY.preAt)===mri.liveDay);
   const r=snap?snap.row:live?lr:rows[rows.length-1],p=snap?snap.prev:live?rows[rows.length-1]:rows[rows.length-2],day=r[0];
   const m=r[7],lv=level(m),dm=(m-p[7])*100,ymd=String(day).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3");
   // the comment comes with the day's article (paper.json "mri"), only for the same session; the evening edition's
@@ -889,7 +888,7 @@ function renderMriTop(){
   el.hidden=false;
   const Y=Math.floor(day/1e4),Mo=Math.floor(day/100)%100,Dd=day%100;
   const hm=at?(EN()?fmtJ(at)+" Japan time":"日本時間 "+fmtJ(at)):"";
-  el.innerHTML=live?`<div class="ph"><h2>${snap?tx("MRI 寄り前","MRI, pre-open"):tx("MRI リアルタイム","MRI, realtime")}</h2><span class="asof">${hm}</span></div>`
+  el.innerHTML=live?`<div class="ph"><h2>${tx("MRI リアルタイム","MRI, realtime")}</h2><span class="asof">${hm}</span></div>`
     :`<div class="ph"><h2>${tx("MRI 確定値","MRI, confirmed")}</h2><span class="asof">${dayLab(Mo,Dd,wdOf(Y,Mo,Dd))} ${CLOSE()}</span></div>`;
   el.innerHTML+=`
     <div class="head mhd">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div>
