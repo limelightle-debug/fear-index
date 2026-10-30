@@ -503,7 +503,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v186";
+const APP_VER="fi-v187";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -846,17 +846,40 @@ function mriHeadline(mri,r,p){
   }
   const dir=a<.3?"ほぼ横ばい":(a<2?"小幅":a<5?"":"大幅")+(dm>0?"上昇":"低下");
   const h1=on?`${on.name}${on.k==="tbub"?"":" シグナル"} 点灯`:off?`${off.name}${off.k==="tbub"?"":" シグナル"} リセット`:`MRI ${dir}　${lv[1]}圏${same?"を維持":"に入る"}`;
+  const vs=(r[4]-p[4])*100,ss=(r[5]-p[5])*100,opp=Math.abs(vs)>=.3&&Math.abs(ss)>=.3&&vs*ss<0&&a>=.3;
+  if(opp){const [lead,back]=(vs*dm>0)?["VIX","SKEW"]:["SKEW","VIX"],lv2=Math.abs(lead==="VIX"?vs:ss).toFixed(1);
+    return [h1,dm<0&&lead==="VIX"?"低下は安心ではない、保険は買われ続ける":dm>0&&lead==="SKEW"?"静かな表の裏で、保険が積まれる":`${lead}スコアが${lv2}pt${dm>0?"押し上げ":"押し下げ"}、${back}は${dm>0?"低下":"上昇"}`]}
   return [h1,C[1]*dm>0&&a>=.3?`${C[0]}スコアが${cv}pt${dm>0?"押し上げ":"押し下げ"}`:`${C[0]}スコアが${cv}pt${C[1]>=0?"上昇":"低下"}`];
 }
 // the realtime MRI's comment from the numbers: the value and time, the move from the last close, the score that moved
 // most, the band, and the distance to SELL 80 and BUY 8 (before 9:30 ET the reading includes pre-open estimates)
-function autoMriLive(r,p,at,frozen){
+function autoMriLive(r,p,at,frozen,hist){
   const m=r[7]*100,dm=m-p[7]*100,lv=level(r[7]),same=level(p[7])===lv,en=EN();
-  const C=[["VIX",r[4]-p[4]],["SKEW",r[5]-p[5]],["CAPE",r[6]-p[6]]].sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0],cv=Math.abs(C[1]*100).toFixed(1);
-  let pre=true;if(at){const f=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"numeric",hourCycle:"h23"}).formatToParts(at),h=+f.find(x=>x.type==="hour").value,mi=+f.find(x=>x.type==="minute").value;pre=h*60+mi<570||h>=16}
-  const t=at?fmtJ(at):"",a=Math.abs(dm).toFixed(2),toS=(80-m).toFixed(2),toB=(m-8).toFixed(2);
-  if(en)return `${pre?"In realtime, including pre-open estimates":"In realtime, during the session"}, the MRI was ${m.toFixed(2)} at ${t} Japan time, ${dm>=0?"up":"down"} ${a}pt from the last close of ${(p[7]*100).toFixed(2)}. The ${C[0]} score ${C[1]>=0?"rose":"fell"} ${cv}pt, the largest move, and the MRI is ${same?"still in":"now in"} ${lv[1]}. `+(m>=80?`It is above SELL 80 by ${(m-80).toFixed(2)}pt.`:m<=8?`It is below BUY 8 by ${(8-m).toFixed(2)}pt.`:`SELL 80 is ${toS}pt away, BUY 8 ${toB}pt.`);
-  return `${pre?"寄り前の推定を含むリアルタイムで":"取引中のリアルタイムで"}、MRIは日本時間${t.replace(":","時")}分に${m.toFixed(2)}と、前日確定の${(p[7]*100).toFixed(2)}から${a}pt${dm>=0?"上がった":"下がった"}。いちばん動いたのは${C[0]}スコアで${cv}pt${C[1]>=0?"上げ":"下げ"}、${lv[1]}圏${same?"にとどまる":"に入った"}。`+(m>=80?`SELLの80を${(m-80).toFixed(2)}pt上回っている。`:m<=8?`BUYの8を${(8-m).toFixed(2)}pt下回っている。`:m>=70?`SELLの80まであと${toS}ptに迫っている。`:m<=18?`BUYの8まであと${toB}ptに迫っている。`:"");
+  const toS=(80-m).toFixed(2),toB=(m-8).toFixed(2);
+  if(en)return `The MRI is ${m.toFixed(2)}, ${dm>=0?"up":"down"} ${Math.abs(dm).toFixed(2)}pt from the last close, ${same?"still in":"now in"} ${lv[1]}.`;
+  // the value, time and change are on the panel already; the comment says only what the numbers mean together.
+  // The window: the run of sessions the S&P 500 (row[8]) has moved one way, ending at the live reading
+  const seq=(hist||[]).filter(x=>x[0]<r[0]&&x[8]&&x[2]).concat([r]);let k=0;
+  const dir=r[8]&&p[8]?Math.sign(r[8]-p[8]):0;
+  if(dir)for(let i=seq.length-1;i>0&&Math.sign(seq[i][8]-seq[i-1][8])===dir;i--)k++;
+  const s0=seq[seq.length-1-Math.max(k,1)]||p,sp=(r[8]/s0[8]-1)*100,dv=r[1]-p[1],ds=r[2]-s0[2],dsd=r[2]-p[2];
+  const dn=sp<=-.3,up=sp>=.3,vu=dv>=.3,vd=dv<=-.3,su=ds>=1||(dsd>=.3&&ds>=.3),sd=ds<=-1;
+  const run=k>=2?`${k}日続けて`:"",vs=(r[4]-p[4])*100,ss=r[5]*100;
+  const f0=x=>x.toFixed(0);
+  let t="";
+  if(dn&&vu&&su)t=`MRIの低下を安心と読むのは誤りだ。下がったのはVIXが上がり、油断の目盛りが外れたからにすぎない。株が${run||""}下げるあいだ、SKEWは${f0(s0[2])}から${f0(r[2])}へ上がり続け、崩れに備える保険が先に買われてきた。表の恐怖はいま、裏の備えに追いついたところだ。保険が厚いまま恐怖が表に出る局面は、静かな油断の局面とは危うさの質が違う。`;
+  else if(dn&&vu)t=`MRIが下がったのはVIXが上がり、油断が剥がれたからだ。ただ株が${run}下げても、崩れに備える保険の買いは伴っていない。恐怖は表層にとどまり、底が抜けることへの備えは増えていない。`;
+  else if(dn&&su)t=`株が${run}下げても表の恐怖は静かなまま、裏で保険だけが積まれている。恐怖を表に出さない下げはMRIを押し上げる側に働き、油断と警戒が同居する危うい形になる。`;
+  else if(dn)t=`株は${run}下げたが、表の恐怖も裏の保険も大きくは振れていない。売りはまだ恐怖の計器に届いていない。`;
+  else if(up&&vd&&su)t=`上げ相場で表の恐怖は引いたが、保険はむしろ積み増されている。安心と警戒が同居し、MRIはその両方に押し上げられる。`;
+  else if(up&&vd)t=`表の恐怖も${sd?"裏の保険も":""}引き、油断が広がる向きの動きだ。MRIが上がるのはこの形で、静かな上げが長く続くほど危うさは溜まっていく。`;
+  else if(up&&vu)t=`株が上がりながらVIXも上がる。値上がりを信じ切れない上げで、恐怖は消えていない。`;
+  else if(up&&su)t=`株が上がる裏で、崩れに備える保険だけが積み増されている。`;
+  else if(vu&&su)t=`株は大きく動かないまま、表の恐怖と裏の保険がそろって増している。`;
+  else t=`表の恐怖も裏の保険も大きくは振れず、景色は前日から変わっていない。`;
+  if(!su&&ss>=60)t+=`SKEWスコアは${f0(ss)}%と高く、保険の需要はもともと厚い。`;
+  t+=m>=80?`MRIはSELLの80を超えている。`:m<=8?`MRIはBUYの8を下回っている。`:m>=70?`SELLの80まであと${toS}ptに迫る。`:m<=18?`BUYの8まであと${toB}ptに迫る。`:"";
+  return t;
 }
 // a panel's bold two-line headline; the article for the session can supply its own (paper.json key, [line1, line2])
 const headHTML=(key,auto)=>{const o=STORY&&SP(STORY,key),[h1,h2]=Array.isArray(o)&&o.length?o:auto;
@@ -882,7 +905,7 @@ function renderMriTop(){
   // the realtime reading moves every few minutes, so its headline and comment are built from the numbers on screen
   // (a written comment would go stale within the hour)
   const at=snap?new Date(snap.at):live&&mri.live&&mri.live.vix&&mri.live.vix.at?new Date(mri.live.vix.at):(live?new Date(mri.updatedAt):null);
-  if(live){cm=autoMriLive(r,p,at,!!snap);mh=null}
+  if(live){cm=autoMriLive(r,p,at,!!snap,rows.slice(-12));mh=null}
   else{cm=STORY&&sameDay(ymd)&&SP(STORY,"mri");mh=STORY&&sameDay(ymd)&&SP(STORY,"mriHead")}
   const [h1,h2]=Array.isArray(mh)&&mh.length?mh:auto;
   el.hidden=false;
