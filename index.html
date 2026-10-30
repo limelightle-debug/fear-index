@@ -499,7 +499,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v181";
+const APP_VER="fi-v182";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -680,7 +680,7 @@ function renderGuide(){
 function renderBooks(){
   // the tree (tap a title to open its Amazon page), then the same books as a list; the English edition sits in its own panel below
   $("books").innerHTML=`<div class="ph"><h2>${tx("書籍体系図","The book map")}</h2><span class="asof">Gold Locks / ${tx("恐怖指数研究所","Fear Index Research Institute")}</span></div>
-    <div class="tree"><div class="tin"><img src="icons/book-map.jpg?v=2" alt="書籍体系図" width="1200" height="902" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='icons/book-map.jpg?r='+Date.now()}">${BOOKS.filter(x=>x[4]).map(([b,url,,,r])=>`<a href="${url}" target="_blank" rel="noopener" aria-label="『${b}』" style="left:${r[0]}%;top:${r[1]}%;width:${r[2]}%;height:${r[3]}%"></a>`).join("")}</div></div>
+    <div class="tree"><div class="tin"><img src="icons/book-map.jpg?v=3" alt="書籍体系図" width="1200" height="902" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='icons/book-map.jpg?r='+Date.now()}">${BOOKS.filter(x=>x[4]).map(([b,url,,,r])=>`<a href="${url}" target="_blank" rel="noopener" aria-label="『${b}』" style="left:${r[0]}%;top:${r[1]}%;width:${r[2]}%;height:${r[3]}%"></a>`).join("")}</div></div>
     <div class="bmap">${BOOKS.filter(x=>!x[5]).map(bookRow).join("")}</div>`;
   $("books-en").innerHTML=`<div class="ph"><h2>${tx("英語版","English edition")}</h2><span class="asof">${tx("English edition","")}</span></div><div class="bmap solo">${BOOKS.filter(x=>x[5]).map(bookRow).join("")}</div>`;
 }
