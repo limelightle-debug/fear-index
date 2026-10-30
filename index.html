@@ -499,7 +499,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v179";
+const APP_VER="fi-v180";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1353,7 +1353,8 @@ function autoCanary(Z,H){
       :(spOff>-5?`この間、S&P500は最高値から${Math.abs(spOff).toFixed(1)}%しか下げていない。株価が平穏なまま、貸し手だけが先に危険への対価を引き上げている。`:`S&P500も最高値から${Math.abs(spOff).toFixed(1)}%下げ、株と社債がそろって危険を値付けし直している。`));
   if(up>=.3&&igUp!=null)S.push(en?(igUp<.15?`The widening is on the low-quality side; investment grade, at ${ig.toFixed(2)}%, has barely moved.`:`Investment grade has widened too, to ${ig.toFixed(2)}%.`):(igUp<.15?`広がっているのは信用の低い側で、投資適格は${ig.toFixed(2)}%とほとんど動かない。`:`投資適格も${ig.toFixed(2)}%まで広がり、退く動きは信用の高い側にも及んでいる。`));
   if(gOff!=null&&gOff<=-3)S.push(en?`HYG is ${Math.abs(gOff).toFixed(1)}% below its 52-week high${r10&&r10>=4.5?`, a fall that also carries a long rate near ${r10.toFixed(1)}%`:""}.`:`HYGが52週の高値から${Math.abs(gOff).toFixed(1)}%下げた中には${r10&&r10>=4.5?`、${r10.toFixed(1)}%前後の長期金利の重さも混じる`:"、貸し手の後退がそのまま映る"}。`);
-  if(!cur)S.push(en?(pct<=20?"A canary singing this calmly is no proof the air is clean.":up>=.3?"The canary still sings, but its voice has changed.":""):(pct<=20?"カナリアが静かに歌っていることは、空気がきれいな証拠ではない。":up>=.3?"カナリアはまだ歌っているが、声の調子は変わった。":""));
+  // the canary sounds the alarm: it sings when lenders draw back, and its silence when spreads are pressed low is no all-clear
+  S.push(en?(cur?"The canary is singing.":up>=.3?"The canary has begun to sing.":pct<=20?"The canary is silent, and silence is no proof the air is clean.":""):(cur?"カナリアは鳴いている。":up>=.3?"カナリアが鳴き始めた。":pct<=20?"カナリアは黙っている。黙っていることは、空気がきれいな証拠ではない。":""));
   return S.filter(Boolean).join(en?" ":"");
 }
 function hygParts(){
