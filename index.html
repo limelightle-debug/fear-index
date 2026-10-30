@@ -503,7 +503,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v184";
+const APP_VER="fi-v185";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -869,9 +869,11 @@ function renderMriTop(){
   // out for that session: paper.json preAt on the live day (US Eastern date)
   const etDay=iso=>{const t=new Date(iso),f=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(t);return +f.replace(/-/g,"")};
   const lr=mri.liveDay&&mri.daily.find(x=>x[0]===mri.liveDay&&x[7]!=null);
-  // the evening edition freezes the reading before the open (futures.json "mri", carried in paper.json "futSnap")
-  const snap=EVE()&&FUT.mri&&FUT.mri.row&&FUT.mri.prev?FUT.mri:null;
-  const live=!!(snap||lr&&STORY&&STORY.preAt&&etDay(STORY.preAt)===mri.liveDay);
+  // the MRI panel stays realtime all night (mri.json, the session in progress); the frozen pre-open reading is only
+  // the fallback when the live row is not there yet
+  const lv0=!!(lr&&STORY&&STORY.preAt&&etDay(STORY.preAt)===mri.liveDay);
+  const snap=!lv0&&EVE()&&FUT.mri&&FUT.mri.row&&FUT.mri.prev?FUT.mri:null;
+  const live=!!(snap||lv0);
   const r=snap?snap.row:live?lr:rows[rows.length-1],p=snap?snap.prev:live?rows[rows.length-1]:rows[rows.length-2],day=r[0];
   const m=r[7],lv=level(m),dm=(m-p[7])*100,ymd=String(day).replace(/(\d{4})(\d\d)(\d\d)/,"$1-$2-$3");
   // the comment comes with the day's article (paper.json "mri"), only for the same session; the evening edition's
