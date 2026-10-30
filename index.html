@@ -317,7 +317,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .nr .k small{font-family:var(--f-tick);font-size:10.5px;color:var(--muted);margin-left:6px}
 .nr .tag{font-family:var(--f-body);font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px}
 /* rates: 3M, 2Y, 10Y, 30Y, the spreads and the curve's state; the curve now / 3 / 6 months ago; both spreads over 5 years */
-.rsum{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.rsum{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.rsum.c2{grid-template-columns:1fr 1fr}
 .rsum div{background:var(--chip);border-radius:10px;padding:8px 9px 7px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em}
 .rsum b{display:block;font-family:var(--f-tick);font-stretch:82%;font-size:22px;font-weight:700;color:var(--ink);letter-spacing:0;margin-top:1px;font-variant-numeric:tabular-nums}
 .rsum small{display:block;font-family:var(--f-tick);font-stretch:85%;font-size:11px;font-weight:600;margin-top:1px;font-variant-numeric:tabular-nums}
@@ -499,7 +499,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v173";
+const APP_VER="fi-v174";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1321,22 +1321,21 @@ function autoCanary(Z,H){
 }
 // HYG, the high yield bond ETF: the session's price (markets.json; the evening edition's pre-open copy) and five years
 // of closes (hyg.json). It trades all day, so it moves before the spread (FRED's OAS comes a day late)
-function hygBlock(el){
+function hygParts(){
   const q=MK&&MK.items&&MK.items.find(x=>x.k==="hyg"),H=HYGD&&HYGD.hist;
-  if(!q&&!(H&&H.length>1))return"";
   let S=H?H.map(r=>[r[0],r[1]]):[];
   if(q&&q.time&&q.price!=null){const d=String(q.time).slice(0,10).replace(/-/g,"");S=[...S.filter(r=>r[0]<d),[d,q.price]]}
   const last=S.length?S[S.length-1]:null,hi52=S.length?Math.max(...S.slice(-252).map(r=>r[1])):null;
   const dd=q&&q.pct!=null?q.pct:null,off=last&&hi52?(last[1]/hi52-1)*100:null;
-  const card=q?`<div><i class="pre">${tx("ETF","ETF")}</i>HYG<b>${q.price.toFixed(2)}</b>${dd==null?"":`<small class="${dd<0?"u":dd>0?"d":""}">${dd>0?"▲":dd<0?"▼":""} ${Math.abs(dd).toFixed(2)}%</small>`}</div>`:"";
-  const card2=off!=null?`<div><i class="pre">${tx("52週高値から","From 52w high")}</i>${tx("下落率","Drawdown")}<b>${off<=-.005?"−":""}${Math.abs(off).toFixed(1)}%</b></div>`:"";
-  return `<div class="rcap"><span>${tx("ハイイールド債ETF（HYG）","High yield bond ETF (HYG)")}</span>${q&&q.time?`<span class="asof">${+String(q.time).slice(5,7)}/${+String(q.time).slice(8,10)}</span>`:""}</div><div class="rsum rx2">${card}${card2}</div>`
-    +(S.length>1?`<div class="rcap"><span>${tx("HYGの推移（ドル）","HYG ($)")}</span>${rpSeg("hg")}</div><div class="rchart">${tsChart([{c:RC.now,p:rCut(S,"hg").map(r=>[dms(`${r[0].slice(0,4)}-${r[0].slice(4,6)}-${r[0].slice(6)}`),r[1]]),w:1.6}],pw(el),{H:128,dec:2})}</div>`:"");
+  const cards=(q?`<div><i class="pre">ETF</i>HYG<b>${q.price.toFixed(2)}</b>${dd==null?"":`<small class="${dd<0?"u":dd>0?"d":""}">${dd>0?"▲":dd<0?"▼":""} ${Math.abs(dd).toFixed(2)}%</small>`}</div>`:"")
+    +(off!=null?`<div><i class="pre">HYG</i>${tx("52週高値比","vs 52w high")}<b>${off<=-.005?"−":""}${Math.abs(off).toFixed(1)}%</b></div>`:"");
+  return{S,cards};
 }
 function renderCanary(){
   const el=$("canary"),Z=rLatest(),O=Z.O;
   if(!O||!Z.hy||!O.hist||O.hist.length<30){el.hidden=true;return}
   el.hidden=false;
+  const G=hygParts(),t0=G.S.length?(O.hist[0][0]>G.S[0][0]?O.hist[0][0]:G.S[0][0]):"",ts=S=>rCut(S,"hy").filter(r=>r[0]>=t0).map(r=>[dms(`${r[0].slice(0,4)}-${r[0].slice(4,6)}-${r[0].slice(6)}`),r[1]]);
   const HH=withEst(O.hist,Z.hy),vs=O.hist.map(q=>q[1]),v=Z.hy.v,pct=Math.round(vs.filter(q=>q<=v).length/vs.length*100),yrs=Math.round(O.hist.length/261);
   const d=(Z.hy.est?Z.hy.day:O.date)||"",[,mo,dd]=d.split("-").map(Number),w=d?WD(new Date(d+"T12:00:00Z").getUTCDay()):"";
   const asof=d?tx(`${mo}/${dd}（${w}）${Z.hy.est?" 推定":""}`,`${MON[mo-1]} ${dd}${Z.hy.est?" est.":""}`):"";
@@ -1344,9 +1343,10 @@ function renderCanary(){
   const h1=tx(`ハイイールドOAS ${v.toFixed(2)}%`,`High yield OAS ${v.toFixed(2)}%`),h2=tx(`過去${yrs}年で${lvl}（低い順に${pct}%）`,`${lvl} for ${yrs} years (${pct}th percentile)`);
   const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
   el.innerHTML=`<div class="ph"><h2>${tx("カナリア","Canary")}</h2><span class="asof">${asof}</span></div>${headHTML("canaryHead",[h1,h2])}${note("canary",autoCanary(Z,O.hist))}
-    <div class="rcap"><span>${tx("社債の上乗せ金利（OAS）","Corporate bond spreads (OAS)")}</span></div><div class="rsum rx2">${row(tx("ハイイールド","High yield"),Z.hy,"OAS HY")}${row(tx("投資適格","Inv. grade"),Z.ig,"OAS IG")}</div>
-    <div class="rcap"><span>${tx("ハイイールドOASの推移","High yield OAS")}</span>${rpSeg("hy")}</div>${Z.hy.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(HH,pw(el),RC.now,"hyf","hy")}</div>
-    ${hygBlock(el)}
+    <div class="rcap"><span>${tx("社債の上乗せ金利とハイイールド債ETF","Corporate spreads and the high yield ETF")}</span></div><div class="rsum rx2 c2">${row(tx("ハイイールド","High yield"),Z.hy,"OAS HY")}${row(tx("投資適格","Inv. grade"),Z.ig,"OAS IG")}${G.cards}</div>
+    <div class="rcap"><span>${tx("推移","History")}</span>${rpSeg("hy")}</div>
+    <div class="rkey rleg">${tx("ハイイールドOAS（%）","High yield OAS (%)")}${Z.hy.est?tx("　最後の点は推定値","  last point is an estimate"):""}</div><div class="rchart">${tsChart([{c:RC.now,p:ts(HH),w:1.6}],pw(el),{H:118,dec:2})}</div>
+    ${G.S.length>1?`<div class="rkey rleg" style="margin-top:10px">${tx("HYG（ドル）","HYG ($)")}</div><div class="rchart">${tsChart([{c:RC.now,p:ts(G.S),w:1.6}],pw(el),{H:118,dec:2})}</div>`:""}
     <div class="rxn">${tx("OAS は、米社債の利回りが国債をどれだけ上回るか。社債ごとにお金が返ってくる時期に合わせた国債の利回りと比べ、指数全体で平均している。HY＝ハイイールド債（平均満期5年前後）、IG＝投資適格債（同10年前後）。貸し手は株主より先に不安を嗅ぎつける。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。HYG は iShares のハイイールド社債ETFで、一日中取引されるので、1日遅れて出る OAS より先に動く。チャートは直近1年が日次、それより前は週次。下げ（▼）を赤で示す。出典 FRED（ICE BofA）、CNBC","OAS is how far US corporate bond yields sit above Treasuries, matched to when each bond pays back and averaged over the index. HY is high yield (about 5 years), IG investment grade (about 10 years). Lenders sense trouble before shareholders: a sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks. HYG is iShares' high yield corporate bond ETF; it trades all day, so it moves before the OAS, which comes a day late. The chart is daily for the last year, weekly before. A fall is shown in red. Sources: FRED (ICE BofA), CNBC")}</div>`;
 }
 // 2年−3ヶ月: where the market expects the policy rate over the next two years vs today (3M ≈ the policy rate)
@@ -1893,7 +1893,7 @@ async function load(){
   if(!Object.keys(DATA).length)$("empty").textContent="データを読み込めませんでした";
   renderPaper();
 }
-document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);if(c==="fa"||c==="sf")renderLiq();else if(c==="hy"||c==="hg")renderCanary();else renderRates()}});
+document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);if(c==="fa"||c==="sf")renderLiq();else if(c==="hy")renderCanary();else renderRates()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
 renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderSecs();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
