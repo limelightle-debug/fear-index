@@ -499,7 +499,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v177";
+const APP_VER="fi-v178";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1272,7 +1272,7 @@ function histChart(S,W,col,id,c){
     <circle cx="${x(n-1)}" cy="${y(L)}" r="3" fill="${col}"/><text x="${ML+PW+6}" y="${y(L)+3.5}" style="fill:${col};font-weight:700">${L.toFixed(2)}</text></svg>`;
 }
 // the OAS: this app's data/oas.json (the morning paper's run reads FRED each day), else the MRI app's curve.json
-let OASD=null,HYGD=null;  // HYGD: the junk bond ETF HYG, daily closes (MRI app, data/hyg.json)
+let OASD=null,HYGD=null,SPXD=null;  // HYGD: the junk bond ETF HYG, daily closes (MRI app, data/hyg.json)
 function oasData(){if(OASD&&OASD.date)return{...OASD,hist:(OASD.hist||[]).map(r=>[r[0],r[1]])};return CV&&CV.oas}
 // the latest 10Y real yield, breakeven and OAS: the official value, or when the latest session is newer than the
 // official day, the estimate from that session's bond ETF moves (markets.json) on top of it, marked est
@@ -1306,21 +1306,33 @@ function ratesMore(){
 // sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks; a spread
 // pressed low means lenders fear nothing (『金利の重力』: low credit spreads are the danger, not high ones)
 function autoCanary(Z,H){
+  // a reading built from the numbers: how far the junk spread has moved from its low of the last three months, set
+  // against the stock market (how far the S&P 500 is from its high), the investment grade spread (is the retreat
+  // choosing whom to leave), HYG (with the long rate's weight in its price) and where the spread sits in three years
   const x=Z.hy;if(!x)return"";const en=EN(),v=x.v,vs=H.map(q=>q[1]),pct=Math.round(vs.filter(q=>q<=v).length/vs.length*100),yrs=Math.round(H.length/261);
-  const lo=Math.min(...vs),hi=Math.max(...vs),dv=x.dv,m1=H.length>22?v-H[H.length-22][1]:null;
+  const md=s=>`${+String(s).slice(4,6)}/${+String(s).slice(6,8)}`;
+  const H3=H.slice(-63),lo3=H3.reduce((a,b)=>b[1]<a[1]?b:a),hi3=H3.reduce((a,b)=>b[1]>a[1]?b:a),up=v-lo3[1],dn=hi3[1]-v;
+  const RAW=(OASD&&OASD.hist)||(CV&&CV.oas&&CV.oas.hist)||[],rl=RAW.find(r=>r[0]===lo3[0]);
+  const ig=Z.ig?Z.ig.v:null,igLo=rl&&rl[2]!=null?rl[2]:null,igUp=ig!=null&&igLo!=null?ig-igLo:null;
+  const SP=SPXD&&SPXD.hist?SPXD.hist.slice(-252):null,spOff=SP?(SP[SP.length-1][2]/Math.max(...SP.map(r=>r[2]))-1)*100:null;
+  const G=HYGD&&HYGD.hist?HYGD.hist.slice(-252):null,gOff=G?(G[G.length-1][1]/Math.max(...G.map(r=>r[1]))-1)*100:null;
+  const it={};(MK&&MK.items||[]).forEach(q=>it[q.k]=q);const r10=it.us10y&&it.us10y.price;
+  const S=[];
   if(en){
-    const a=`The high yield spread is ${v.toFixed(2)}%${dv!=null?`, ${dv>0?"wider":dv<0?"narrower":"unchanged"} by ${Math.abs(dv).toFixed(2)}pt on the day`:""}. Over ${yrs} years it has ranged from ${lo.toFixed(2)}% to ${hi.toFixed(2)}%.`;
-    const b=pct<=30?` Only ${pct}% of days were lower; lenders ask little for the risk of default.${pct<=20?" A canary that sings this calmly is not proof the air is clean; the spread is lowest just before it widens.":""}`:pct>=70?` Only ${100-pct}% of days were higher; lenders have begun to ask more for the risk of default.`:" It sits in the middle of that range.";
-    const c=m1!=null&&Math.abs(m1)>=.3?` Over the past month it has ${m1>0?"widened":"narrowed"} ${Math.abs(m1).toFixed(2)}pt.${m1>=.4?" A sudden widening can be the moment the canary stops singing.":""}`:"";
-    return a+b+c;
+    S.push(up>=.3?`The high yield spread is ${v.toFixed(2)}%, ${up.toFixed(2)}pt wider than its three-month low of ${lo3[1].toFixed(2)}% on ${md(lo3[0])}.`:dn>=.3?`The high yield spread is ${v.toFixed(2)}%, ${dn.toFixed(2)}pt narrower than its three-month high on ${md(hi3[0])}.`:`The high yield spread is ${v.toFixed(2)}%${x.dv!=null?`, ${x.dv>0?"wider":"narrower"} by ${Math.abs(x.dv).toFixed(2)}pt on the day`:""}.`);
+    if(up>=.3&&spOff!=null)S.push(spOff>-5?`Meanwhile the S&P 500 is only ${Math.abs(spOff).toFixed(1)}% below its high. With stock prices calm, lenders alone are raising the price of risk.`:`The S&P 500 is ${Math.abs(spOff).toFixed(1)}% below its high; stocks and credit are repricing risk together.`);
+    if(up>=.3&&igUp!=null)S.push(igUp<.15?`The widening is on the low-quality side; investment grade, at ${ig.toFixed(2)}%, has barely moved. Money is choosing whom to leave.`:`Investment grade has widened too, to ${ig.toFixed(2)}%; the retreat reaches the stronger borrowers.`);
+    if(gOff!=null&&gOff<=-3)S.push(`HYG is ${Math.abs(gOff).toFixed(1)}% below its 52-week high${r10&&r10>=4.5?`, a fall that also carries the weight of a long rate near ${r10.toFixed(1)}%`:""}.`);
+    S.push(pct<=20?`Over ${yrs} years only ${pct}% of days were lower: lenders ask little for default risk, and a canary singing this calmly is no proof the air is clean.`:pct>=80?`Only ${100-pct}% of days in ${yrs} years were higher: lenders are demanding a real premium now.`:`In its ${yrs}-year range of ${Math.min(...vs).toFixed(2)}% to ${Math.max(...vs).toFixed(2)}% it sits ${pct>=50?"above":"below"} the middle.${up>=.3?" The canary still sings, but its voice has changed.":""}`);
+    return S.join(" ");
   }
-  const a=`ハイイールド債の上乗せ金利は${v.toFixed(2)}%${dv!=null?`と、前日から${Math.abs(dv).toFixed(2)}pt${dv>0?"広がった":dv<0?"縮んだ":"変わらない"}`:""}。過去${yrs}年の幅は${lo.toFixed(2)}%から${hi.toFixed(2)}%。`;
-  const b=pct<=30?`これより低かった日は${pct}%しかない。貸し手は返ってこない危険にほとんど対価を求めていない。${pct<=20?"カナリアが静かに歌っていることは、空気がきれいな証拠ではない。上乗せ金利がいちばん低いのは、広がる直前である。":""}`:pct>=70?`これより高かった日は${100-pct}%だけだ。貸し手が、返ってこない危険に上乗せを求め始めている。`:"その幅のちょうど中ほどにある。";
-  const c=m1!=null&&Math.abs(m1)>=.3?`この1か月で${Math.abs(m1).toFixed(2)}pt${m1>0?"広がった":"縮んだ"}。${m1>=.4?"急な拡大は、カナリアが歌うのをやめた合図になりうる。":""}`:"";
-  return a+b+c;
+  S.push(up>=.3?`ハイイールド債の上乗せ金利は${v.toFixed(2)}%。直近3か月で最も低かった${md(lo3[0])}の${lo3[1].toFixed(2)}%から、${up.toFixed(2)}pt広がった。`:dn>=.3?`ハイイールド債の上乗せ金利は${v.toFixed(2)}%。直近3か月で最も高かった${md(hi3[0])}から${dn.toFixed(2)}pt縮んだ。`:`ハイイールド債の上乗せ金利は${v.toFixed(2)}%${x.dv!=null?`と、前日から${Math.abs(x.dv).toFixed(2)}pt${x.dv>0?"広がった":x.dv<0?"縮んだ":"変わらない"}`:""}。`);
+  if(up>=.3&&spOff!=null)S.push(spOff>-5?`その間、S&P500は最高値から${Math.abs(spOff).toFixed(1)}%しか下げていない。株価が平穏なまま、貸し手だけが先に危険への対価を引き上げている。`:`S&P500も最高値から${Math.abs(spOff).toFixed(1)}%下げ、株と社債がそろって危険を値付けし直している。`);
+  if(up>=.3&&igUp!=null)S.push(igUp<.15?`広がっているのは信用の低い側で、投資適格は${ig.toFixed(2)}%とほとんど動かない。資金は相手を選んで退いている。`:`投資適格も${ig.toFixed(2)}%まで広がり、退く動きは信用の高い側にも及んでいる。`);
+  if(gOff!=null&&gOff<=-3)S.push(`HYGが52週の高値から${Math.abs(gOff).toFixed(1)}%下げた中には${r10&&r10>=4.5?`、${r10.toFixed(1)}%前後の長期金利の重さも混じる`:"、貸し手の後退がそのまま映る"}。`);
+  S.push(pct<=20?`過去${yrs}年でこれより低かった日は${pct}%しかない。貸し手は返ってこない危険にほとんど対価を求めておらず、カナリアが静かに歌っていることは空気がきれいな証拠ではない。`:pct>=80?`過去${yrs}年でこれより高かった日は${100-pct}%だけで、貸し手ははっきりと対価を求めている。`:`過去${yrs}年の幅${Math.min(...vs).toFixed(2)}%から${Math.max(...vs).toFixed(2)}%の中では、${pct>=50?"中ほどより上":"中ほどより下"}にいる。${up>=.3?"カナリアはまだ歌っているが、声の調子は変わり始めた。":""}`);
+  return S.join("");
 }
-// HYG, the high yield bond ETF: the session's price (markets.json; the evening edition's pre-open copy) and five years
-// of closes (hyg.json). It trades all day, so it moves before the spread (FRED's OAS comes a day late)
 function hygParts(){
   const q=MK&&MK.items&&MK.items.find(x=>x.k==="hyg"),H=HYGD&&HYGD.hist;
   let S=H?H.map(r=>[r[0],r[1]]):[];
@@ -1340,7 +1352,10 @@ function renderCanary(){
   const d=(Z.hy.est?Z.hy.day:O.date)||"",[,mo,dd]=d.split("-").map(Number),w=d?WD(new Date(d+"T12:00:00Z").getUTCDay()):"";
   const asof=d?tx(`${mo}/${dd}（${w}）${Z.hy.est?" 推定":""}`,`${MON[mo-1]} ${dd}${Z.hy.est?" est.":""}`):"";
   const lvl=pct<=10?tx("極めて低い","very low"):pct<=30?tx("低い","low"):pct<70?tx("ふつう","normal"):pct<90?tx("高い","high"):tx("極めて高い","very high");
-  const h1=tx(`ハイイールドOAS ${v.toFixed(2)}%`,`High yield OAS ${v.toFixed(2)}%`),h2=tx(`過去${yrs}年で${lvl}（低い順に${pct}%）`,`${lvl} for ${yrs} years (${pct}th percentile)`);
+  const h1=tx(`ハイイールドOAS ${v.toFixed(2)}%`,`High yield OAS ${v.toFixed(2)}%`),h2=(()=>{const H3=O.hist.slice(-63),lo3=H3.reduce((a,b)=>b[1]<a[1]?b:a),up=v-lo3[1];
+    const SP=SPXD&&SPXD.hist?SPXD.hist.slice(-252):null,spOff=SP?(SP[SP.length-1][2]/Math.max(...SP.map(r=>r[2]))-1)*100:null;
+    if(up>=.3)return tx(`3か月で${up.toFixed(2)}pt拡大${spOff!=null&&spOff>-5?"、株は高値圏":""}`,`${up.toFixed(2)}pt wider than its 3-month low${spOff!=null&&spOff>-5?", stocks still near highs":""}`);
+    return tx(`過去${yrs}年で${lvl}（低い順に${pct}%）`,`${lvl} for ${yrs} years (${pct}th percentile)`)})();
   const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
   el.innerHTML=`<div class="ph"><h2>${tx("カナリア","Canary")}</h2><span class="asof">${asof}</span></div>${headHTML("canaryHead",[h1,h2])}${note("canary",autoCanary(Z,O.hist))}
     <div class="rcap"><span>${tx("社債の上乗せ金利と社債ETF","Corporate spreads and bond ETFs")}</span></div><div class="rsum rx2 c4">${row("HY",Z.hy,"OAS")}${row("IG",Z.ig,"OAS")}${G.cards}</div>
@@ -1860,6 +1875,7 @@ async function loadMarkets(){
     fetch(`../mri-app/data/curve.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>CV=j).catch(()=>CV=null),
     fetch(`data/oas.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>OASD=j).catch(()=>OASD=null),
     fetch(`../mri-app/data/hyg.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>HYGD=j).catch(()=>HYGD=null),
+    fetch(`../mri-app/data/spx_daily.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>SPXD=j).catch(()=>SPXD=null),
     fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
     fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null),
     fetch(`../mri-app/data/fedwatch.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FW=j).catch(()=>FW=null),
