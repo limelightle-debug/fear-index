@@ -469,6 +469,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="rates" hidden></section>
     <section class="panel" id="fedw" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
+    <section class="panel" id="canary" hidden></section>
     <section class="panel kokoro" id="kokoro" hidden></section>
     <section class="panel anom" id="anom" hidden></section>
     <div class="sec" id="sec-rel"></div>
@@ -498,7 +499,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v170";
+const APP_VER="fi-v171";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1291,17 +1292,47 @@ function rLatest(){
 // a chart's series with the estimate as its last point, when the latest value is one
 const withEst=(H,x)=>!H||!x||!x.est||!x.day?H:[...H.filter(q=>q[0]<x.day.replace(/-/g,"")),[x.day.replace(/-/g,""),x.v]];
 function ratesMore(){
-  const Z=rLatest(),{I,O}=Z;if(!I&&!O)return"";
+  const Z=rLatest(),{I}=Z;if(!I)return"";
   const RW=pw($("rates"));
   // cards as the yields above: the value, the day's change, and 推定値 while it is an estimate
   // the maturity (or what it covers) over each name, so the 10-year cards and the corporate ones read apart
   const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
-  const RH=withEst(I&&I.hist,Z.real),HH=withEst(O&&O.hist,Z.hy);
-  return `<div class="rcap"><span>${tx("実質金利・インフレ期待・OAS","Real yield, breakeven, OAS")}</span></div><div class="rsum rx2">
-    ${row(tx("実質金利","Real yield"),Z.real,tx("10年","10Y"))}${row(tx("インフレ期待","Breakeven"),Z.be,tx("10年","10Y"))}${row("OAS HY",Z.hy,tx("米社債","US corp."))}${row("OAS IG",Z.ig,tx("米社債","US corp."))}</div>
-    <div class="rxn">${tx("OAS は、米社債の利回りが国債をどれだけ上回るか。決まった年限の国債1本ではなく、社債ごとにお金が返ってくる時期に合わせた国債の利回り（国債カーブ）と比べ、指数全体で平均している。HY＝ハイイールド債（平均満期5年前後）、IG＝投資適格債（同10年前後）。矢印は前日比。","OAS is how far US corporate bond yields sit above Treasuries: not against one Treasury maturity, but against the Treasury curve at the times each bond pays back, averaged over the index. HY = high yield (average maturity about 5 years), IG = investment grade (about 10 years). Arrows: change from the day before.")}</div>
-    ${RH&&RH.length>1?`<div class="rcap"><span>${tx("10年実質金利の推移","10Y real yield")}</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}
-    ${HH&&HH.length>1?`<div class="rcap"><span>${tx("OAS ハイイールドの推移","High yield OAS")}</span>${rpSeg("hy")}</div>${Z.hy&&Z.hy.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(HH,RW,RC.now,"hyf","hy")}</div>`:""}`;
+  const RH=withEst(I&&I.hist,Z.real);
+  return `<div class="rcap"><span>${tx("実質金利・インフレ期待","Real yield, breakeven")}</span></div><div class="rsum rx2">
+    ${row(tx("実質金利","Real yield"),Z.real,tx("10年","10Y"))}${row(tx("インフレ期待","Breakeven"),Z.be,tx("10年","10Y"))}</div>
+    ${RH&&RH.length>1?`<div class="rcap"><span>${tx("10年実質金利の推移","10Y real yield")}</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}`;
+}
+// カナリア: the corporate bond spread (OAS), the canary in the mine. Lenders get nervous before shareholders do: a
+// sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks; a spread
+// pressed low means lenders fear nothing (『金利の重力』: low credit spreads are the danger, not high ones)
+function autoCanary(Z,H){
+  const x=Z.hy;if(!x)return"";const en=EN(),v=x.v,vs=H.map(q=>q[1]),pct=Math.round(vs.filter(q=>q<=v).length/vs.length*100),yrs=Math.round(H.length/261);
+  const lo=Math.min(...vs),hi=Math.max(...vs),dv=x.dv,m1=H.length>22?v-H[H.length-22][1]:null;
+  if(en){
+    const a=`The high yield spread is ${v.toFixed(2)}%${dv!=null?`, ${dv>0?"wider":dv<0?"narrower":"unchanged"} by ${Math.abs(dv).toFixed(2)}pt on the day`:""}. Over ${yrs} years it has ranged from ${lo.toFixed(2)}% to ${hi.toFixed(2)}%.`;
+    const b=pct<=30?` Only ${pct}% of days were lower; lenders ask little for the risk of default.${pct<=20?" A canary that sings this calmly is not proof the air is clean; the spread is lowest just before it widens.":""}`:pct>=70?` Only ${100-pct}% of days were higher; lenders have begun to ask more for the risk of default.`:" It sits in the middle of that range.";
+    const c=m1!=null&&Math.abs(m1)>=.3?` Over the past month it has ${m1>0?"widened":"narrowed"} ${Math.abs(m1).toFixed(2)}pt.${m1>=.4?" A sudden widening can be the moment the canary stops singing.":""}`:"";
+    return a+b+c;
+  }
+  const a=`ハイイールド債の上乗せ金利は${v.toFixed(2)}%${dv!=null?`と、前日から${Math.abs(dv).toFixed(2)}pt${dv>0?"広がった":dv<0?"縮んだ":"変わらない"}`:""}。過去${yrs}年の幅は${lo.toFixed(2)}%から${hi.toFixed(2)}%。`;
+  const b=pct<=30?`これより低かった日は${pct}%しかない。貸し手は返ってこない危険にほとんど対価を求めていない。${pct<=20?"カナリアが静かに歌っていることは、空気がきれいな証拠ではない。上乗せ金利がいちばん低いのは、広がる直前である。":""}`:pct>=70?`これより高かった日は${100-pct}%だけだ。貸し手が、返ってこない危険に上乗せを求め始めている。`:"その幅のちょうど中ほどにある。";
+  const c=m1!=null&&Math.abs(m1)>=.3?`この1か月で${Math.abs(m1).toFixed(2)}pt${m1>0?"広がった":"縮んだ"}。${m1>=.4?"急な拡大は、カナリアが歌うのをやめた合図になりうる。":""}`:"";
+  return a+b+c;
+}
+function renderCanary(){
+  const el=$("canary"),Z=rLatest(),O=Z.O;
+  if(!O||!Z.hy||!O.hist||O.hist.length<30){el.hidden=true;return}
+  el.hidden=false;
+  const HH=withEst(O.hist,Z.hy),vs=O.hist.map(q=>q[1]),v=Z.hy.v,pct=Math.round(vs.filter(q=>q<=v).length/vs.length*100),yrs=Math.round(O.hist.length/261);
+  const d=(Z.hy.est?Z.hy.day:O.date)||"",[,mo,dd]=d.split("-").map(Number),w=d?WD(new Date(d+"T12:00:00Z").getUTCDay()):"";
+  const asof=d?tx(`${mo}/${dd}（${w}）${Z.hy.est?" 推定":""}`,`${MON[mo-1]} ${dd}${Z.hy.est?" est.":""}`):"";
+  const lvl=pct<=10?tx("極めて低い","very low"):pct<=30?tx("低い","low"):pct<70?tx("ふつう","normal"):pct<90?tx("高い","high"):tx("極めて高い","very high");
+  const h1=tx(`ハイイールドOAS ${v.toFixed(2)}%`,`High yield OAS ${v.toFixed(2)}%`),h2=tx(`過去${yrs}年で${lvl}（低い順に${pct}%）`,`${lvl} for ${yrs} years (${pct}th percentile)`);
+  const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
+  el.innerHTML=`<div class="ph"><h2>${tx("カナリア","Canary")}</h2><span class="asof">${asof}</span></div>${headHTML("canaryHead",[h1,h2])}${note("canary",autoCanary(Z,O.hist))}
+    <div class="rcap"><span>${tx("社債の上乗せ金利（OAS）","Corporate bond spreads (OAS)")}</span></div><div class="rsum rx2">${row(tx("ハイイールド","High yield"),Z.hy,"OAS HY")}${row(tx("投資適格","Inv. grade"),Z.ig,"OAS IG")}</div>
+    <div class="rcap"><span>${tx("ハイイールドOASの推移","High yield OAS")}</span>${rpSeg("hy")}</div>${Z.hy.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(HH,pw(el),RC.now,"hyf","hy")}</div>
+    <div class="rxn">${tx("OAS は、米社債の利回りが国債をどれだけ上回るか。社債ごとにお金が返ってくる時期に合わせた国債の利回りと比べ、指数全体で平均している。HY＝ハイイールド債（平均満期5年前後）、IG＝投資適格債（同10年前後）。貸し手は株主より先に不安を嗅ぎつける。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。出典 FRED（ICE BofA）","OAS is how far US corporate bond yields sit above Treasuries, matched to when each bond pays back and averaged over the index. HY is high yield (about 5 years), IG investment grade (about 10 years). Lenders sense trouble before shareholders: a sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks. Source: FRED (ICE BofA)")}</div>`;
 }
 // 2年−3ヶ月: where the market expects the policy rate over the next two years vs today (3M ≈ the policy rate)
 function pathOf(v){return v>.15?[tx("利上げ寄り","Leaning to hikes"),"#ff8a7a"]:v<-.15?[tx("利下げ織り込み","Cuts priced"),"#7fd6a4"]:[tx("据え置き","On hold"),"#9aa3c7"]}
@@ -1819,7 +1850,7 @@ async function loadMarkets(){
     fetch(`../mri-app/data/fedwatch.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FW=j).catch(()=>FW=null),
     fetch(`../ndx-heatmap/data/ndx.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>NDXD=j).catch(()=>NDXD=null)]);
   applyPre();
-  renderFedw();renderNums();renderRates();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();renderAnom();drawNdx();
+  renderFedw();renderNums();renderRates();renderCanary();renderCmdty();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();renderAnom();drawNdx();
 }
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
@@ -1838,7 +1869,7 @@ async function loadPaper(){
     fetch("data/paper.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{STORY=j;if(j&&j.preAt&&!(new Date(j.preAt)>new Date(j.revisedAt||j.writtenAt||0)))delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
     fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null)]);
   applyPre();
-  renderIdx();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderFedw();
+  renderIdx();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
@@ -1846,7 +1877,7 @@ async function load(){
   if(!Object.keys(DATA).length)$("empty").textContent="データを読み込めませんでした";
   renderPaper();
 }
-document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);if(c==="fa"||c==="sf")renderLiq();else renderRates()}});
+document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);if(c==="fa"||c==="sf")renderLiq();else if(c==="hy")renderCanary();else renderRates()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
 renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderSecs();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
