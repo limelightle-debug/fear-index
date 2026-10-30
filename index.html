@@ -49,7 +49,7 @@ a{color:inherit}
 .mhero .htx{position:absolute;z-index:1;left:18px;right:12px;top:16px;bottom:16px;display:flex;flex-direction:column;justify-content:space-between}
 .mhero h1{margin:0;line-height:0}.mhero h1 img{display:block;width:190px;height:auto;filter:drop-shadow(0 2px 10px rgba(0,0,0,.95))}
 .mhero .hd{font-size:26px;font-weight:800;color:#fff;letter-spacing:.02em;line-height:1.1;text-shadow:0 1px 10px rgba(0,0,0,.9);margin-top:auto}.mhero .hd small{font-size:16px;font-weight:700;margin-left:2px}
-.mhero .he{margin-top:2px;min-height:27px}.mhero .hi{display:flex;align-items:baseline;gap:8px;margin-top:6px;min-height:26px}
+.mhero .he{margin:0 0 10px;min-height:27px}.mhero .hi{display:flex;align-items:baseline;gap:8px;margin-top:6px;min-height:26px}
 .mhero .ed{font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;font-style:normal;font-size:21px;font-weight:800;letter-spacing:.3em;line-height:1;padding:0 0 4px;margin-right:2px;color:#fff;border-bottom:2px solid;text-shadow:0 1px 8px rgba(0,0,0,.9)}.mhero .ed.mor{border-color:#e3342b}.mhero .ed.eve{border-color:#9db8ff}
 .mhero .hi b{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.9)}.mhero .hi span{font-size:13px;color:#d8d8e0}
 .mhero.eve{border-color:#7fa2ff88;box-shadow:0 0 0 1px #7fa2ff33,0 0 22px #7fa2ff22}
@@ -444,8 +444,8 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
   <header class="mhero" id="hero">
     <img class="hbg" src="icons/icon-512.png" alt="" width="512" height="512">
     <div class="htx">
-      <h1 id="ttl"><img src="icons/title-red.png" alt="恐怖新聞" width="1038" height="398"></h1>
       <div class="he" id="hedl"></div>
+      <h1 id="ttl"><img src="icons/title-red.png" alt="恐怖新聞" width="1038" height="398"></h1>
       <div class="hd" id="ed">読み込み中…</div>
       <div class="hi" id="hed"></div>
     </div>
@@ -498,7 +498,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v168";
+const APP_VER="fi-v169";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
