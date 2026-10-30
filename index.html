@@ -33,7 +33,7 @@ if(EMBED){document.documentElement.classList.add("embed");
   color-scheme:dark;
 }
 /* black, red and neon, as every app of the institute */
-:root{--bg:#050506; --panel:#0e0e11; --ink:#f4f4f6; --ink2:#cfcfd6; --muted:#8c8c96; --line:#25252b; --chip:#17171b; --accent:#ff2d55; --neon:#2ee6ff}
+:root{--bg:#050506; --panel:#0e0e11; --ink:#f4f4f6; --ink2:#cfcfd6; --muted:#8c8c96; --line:#25252b; --chip:#17171b; --accent:#2ee6ff; --neon:#2ee6ff}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
@@ -253,7 +253,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .kokoro .kq+.ccm{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
 /* the day's other news, one line each with a tag */
 .nws{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:baseline}
-.nws b{font-size:11px;font-weight:700;color:var(--accent);border:1px solid rgba(255,45,85,.5);border-radius:999px;padding:1px 8px;white-space:nowrap;justify-self:start}
+.nws b{font-size:11px;font-weight:700;color:var(--accent);border:1px solid rgba(46,230,255,.5);border-radius:999px;padding:1px 8px;white-space:nowrap;justify-self:start}
 .nws p{margin:0;font-size:14px;line-height:1.6}
 /* the numbers behind the story: rates, currencies, commodities, one row each */
 .lq{display:grid;grid-template-columns:minmax(0,1fr) auto 70px 70px;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
@@ -343,7 +343,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .issue{padding:10px 14px 10px 10px}.issue .irow{display:flex;align-items:center;gap:12px}
 .issue .pts{list-style:none;margin:10px 0 0 4px;padding:9px 0 0;border-top:1px solid var(--line)}
 .issue .pts li{position:relative;padding-left:15px;font-size:15px;font-weight:700;line-height:1.55;margin-top:3px}
-.issue .pts li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--sell)}
+.issue .pts li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--accent)}
 /* the title piece: the institute's picture with 恐怖新聞 across it, as on a paper's front page */
 .issue .mast{display:block;width:150px;height:58px;flex:none;border-radius:9px}
 .issue .ib{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:0}
@@ -388,7 +388,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 /* room above 空; the title links sit on .tin, so their % boxes still match the picture */
 .tin{position:relative}.tree img{display:block;width:100%;height:auto}
 .tree a{position:absolute;border-radius:6px}
-.tree a:active{background:rgba(255,45,85,.25)}
+.tree a:active{background:rgba(46,230,255,.25)}
 .book .ly{display:inline-block;font-style:normal;font-size:10px;font-weight:700;color:var(--ink2);border:1px solid var(--line);border-radius:999px;padding:0 6px;margin-bottom:2px}
 .lh .kan{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;font-size:14px;margin-right:2px}
 .node .ch{font-style:normal;font-weight:400;font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
@@ -420,7 +420,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 .ng{font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.04em;margin:16px 0 4px}.ng:first-of-type{margin-top:4px}
 .ph h2{font-size:13px}.ph .asof,.rstate .note,.rxn,.story .src{font-size:11.5px}
 .nws b,.nr .tag,.rx2 em,.nr .k .nest{font-family:var(--f-body);font-style:normal;font-size:10.5px;font-weight:700;line-height:1.5;border-radius:999px;padding:0 8px;letter-spacing:.02em}
-.nws b{border:1px solid rgba(255,45,85,.5);background:rgba(255,45,85,.1)}
+.nws b{border:1px solid rgba(46,230,255,.5);background:rgba(46,230,255,.1)}
 .rx2 em,.nr .k .nest{color:var(--est);border:1px solid #ffb54766;background:#ffb5471a}
 .nr .tag{border:1px solid currentColor}
 .rstate .pill{font-size:11.5px}
@@ -483,7 +483,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v158";
+const APP_VER="fi-v159";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
