@@ -130,7 +130,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .sub{font-size:12.5px;color:var(--ink2);margin:0 0 8px}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 /* the Sunday edition: only the points, the week and the week ahead */
-body.sun #t-paper>section:not(#issue):not(#sunwk):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
+body.sun #t-paper>section:not(#issue):not(#sunwk):not(#sunwe):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
 .wkr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
 .wkr .k{font-size:13.5px;color:var(--ink2)}.wkr .v{font-family:var(--f-tick);font-stretch:82%;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .wkr .c.rup{color:var(--neg)}.wkr .c.rdn{color:var(--pos)}
@@ -475,6 +475,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
   <div id="t-paper">
     <section class="panel issue" id="issue"></section>
     <section class="panel" id="sunwk" hidden></section>
+    <section class="panel" id="sunwe" hidden></section>
     <section class="panel" id="sunnx" hidden></section>
     <section class="panel eye" id="eye" hidden></section>
     <div class="sec" id="sec-daily"></div>
@@ -515,7 +516,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v190";
+const APP_VER="fi-v191";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -805,7 +806,7 @@ function renderIdxEve(el,st,asof){
 }
 // the Sunday edition: the week's moves (MRI app data/weekly.json, mri.json, oas.json) under the week's article
 // (paper.json sunHead, sunBody), then the week ahead (sunNextHead, sunNext, cal: [[date, Japan time, event, 1 if key]])
-let WK=null;
+let WK=null,WE=null;
 const ymdMon=s=>{const d=new Date(Date.UTC(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8)));d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10).replace(/-/g,"")};
 // [first day of the last week, last day, last value, the last value of the week before] from [[YYYYMMDD, v], ...]
 function wkMove(rows){
@@ -813,7 +814,8 @@ function wkMove(rows){
   return pv&&inw.length?{a:String(inw[0][0]),b:String(L[0]),v:L[1],p:pv[1]}:null}
 function renderSun(){
   const w=$("sunwk"),n=$("sunnx");
-  if(!SUN()){w.hidden=n.hidden=true;return}
+  const we=$("sunwe");
+  if(!SUN()){w.hidden=n.hidden=we.hidden=true;return}
   const st=STORY,md=s=>`${+s.slice(4,6)}/${+s.slice(6,8)}`,I=WK&&WK.items||{};
   const H=(h)=>Array.isArray(h)&&h.length?`<div class="head">${esc(h[0])}${h[1]?`<span class="h2b">${esc(h[1])}</span>`:""}</div><div style="height:8px"></div>`:"";
   const ix=["SPX","NDX","DJI","RUT","SOX"].map(k=>[k,I[k]&&wkMove(I[k].d)]).filter(x=>x[1]),sp=ix.length&&ix[0][1];
@@ -836,6 +838,14 @@ function renderSun(){
   w.hidden=false;
   w.innerHTML=`<div class="ph"><h2>${tx("今週の米国市場","The week")}</h2><span class="asof">${sp?`${md(sp.a)}〜${md(sp.b)}`:""}</span></div>${H(SP(st,"sunHead"))}${body?`<div class="ccm"><p>${esc(body)}</p></div>`:""}
     ${ix.length?`<div class="tiles">${ix.map(tile).join("")}</div><div class="rxn">${tx("前週末の終値からの騰落","Change from the previous week's close")}</div>`:""}${rows?`<div style="margin-top:10px">${rows}</div>`:""}`;
+  // the weekend: bitcoin from Friday's close (weekly.json) to the latest quote (weekend.json), and the weekend's news
+  // (paper.json sunWeHead, sunWeekend, sunNews)
+  const bf=I.btc&&I.btc.d[I.btc.d.length-1],bh=WE&&WE.hist&&WE.hist.length&&bf?WE.hist[WE.hist.length-1]:null,wn=Array.isArray(SP(st,"sunNews"))?SP(st,"sunNews"):[],wt=SP(st,"sunWeekend");
+  we.hidden=!(bh||wn.length||wt);
+  if(!we.hidden){const pct=bh?(bh[1]/bf[1]-1)*100:null,at=bh?new Date(bh[0]):null;
+    we.innerHTML=`<div class="ph"><h2>${tx("週末の動き","The weekend")}</h2><span class="asof">${at?tx(`日本時間 ${fmtJ(at)}`,`${fmtJ(at)} Japan time`):""}</span></div>${H(SP(st,"sunWeHead"))}${wt?`<div class="ccm"><p>${esc(wt)}</p></div>`:""}
+      ${bh?`<div class="tiles"><div class="tile hero" style="background:${tileColor(pct,5)}"><div><div class="tn">${tx("ビットコイン","Bitcoin")}</div><div class="tl">${Math.round(bh[1]).toLocaleString("en-US")} ${tx("ドル","USD")}</div></div><div class="tp">${fmtPct(pct)}</div></div></div><div class="rxn">${tx(`金曜の米国市場の引け（${Math.round(bf[1]).toLocaleString("en-US")}ドル）からの騰落。株や債券が休む週末も、ビットコインは取引が続く。`,"From Friday's US close. Bitcoin trades through the weekend.")}</div>`:""}
+      ${wn.length?`<div class="nws" style="margin-top:12px">${wn.map(([t,x])=>`<b>${esc(t)}</b><p>${esc(x)}</p>`).join("")}</div>`:""}`}
   const cal=Array.isArray(SP(st,"cal"))?SP(st,"cal"):[],nx=SP(st,"sunNext");
   let last="";const tr=cal.map(r=>{const d=r[0]!==last;last=r[0];return`<tr class="${r[3]?"hi":""}${d&&last?" day":""}"><td class="d">${d?esc(r[0]):""}</td><td class="t">${esc(r[1]||"")}</td><td class="e">${esc(r[2]||"")}</td></tr>`}).join("");
   n.hidden=!(cal.length||nx);
@@ -2051,7 +2061,8 @@ async function loadPaper(){
       if(j.sunAt&&!(+new Date(j.sunAt)>Math.max(w,j.preAt?+new Date(j.preAt):0)))delete j.sunAt;  // the Sunday edition until the next article
       if(j.sunAt)delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
     fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null),
-    fetch("../mri-app/data/weekly.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WK=j).catch(()=>WK=null)]);
+    fetch("../mri-app/data/weekly.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WK=j).catch(()=>WK=null),
+    fetch("../mri-app/data/weekend.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WE=j).catch(()=>WE=null)]);
   applyPre();
   renderIdx();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
 }
