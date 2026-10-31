@@ -519,7 +519,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v194";
+const APP_VER="fi-v195";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -868,7 +868,7 @@ let TEMP=null;
 const mdN=n=>`${Math.floor(n/100)%100}/${n%100}`;
 function mriChart(R,W){
   // daily MRI over the last 3 months on a 0-100 scale, with the SELL (80) and BUY (8) lines and the green bottom zone
-  const H=200,ML=24,MR=34,MT=6,MB=16,PW=W-ML-MR,PH=H-MT-MB,n=R.length;
+  const H=240,ML=24,MR=34,MT=6,MB=16,PW=W-ML-MR,PH=H-MT-MB,n=R.length;
   const x=i=>ML+(n<2?PW:i/(n-1)*PW),y=v=>MT+(1-v)*PH;
   const pts=R.map((r,i)=>`${x(i).toFixed(1)},${y(r[7]).toFixed(1)}`).join(" ");
   const ref=(v,c,lab)=>`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" stroke-width="1" stroke-dasharray="4 3"/><text x="${ML-4}" y="${y(v)+3}" text-anchor="end">${lab}</text>`;
@@ -1290,7 +1290,7 @@ let CV=null;
 // real yield and OAS charts); blue the second line it is read against (3 months ago, 10Y-3M); grey dashed the third
 const RC={now:"#f2f2f7",m3:"#2ee6ff",m6:"#8a8aa6"};
 function curveChart(c,W){
-  const H=170,ML=28,MR=40,MT=10,MB=20,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors.filter(([k])=>["3M","2Y","10Y","30Y"].includes(k));  // the four points of the cards and the spreads
+  const H=230,ML=28,MR=40,MT=10,MB=20,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors.filter(([k])=>["3M","2Y","10Y","30Y"].includes(k));  // the four points of the cards and the spreads
   const xs=v=>Math.sqrt(v),x0=xs(T[0][1]),x1=xs(T[T.length-1][1]),x=v=>ML+(xs(v)-x0)/(x1-x0)*PW;
   const all=[c.now,c.m3,c.m6].flatMap(q=>T.map(([k])=>q.y[k]).filter(v=>v!=null));
   const lo=Math.floor(Math.min(...all)*2)/2,hi=Math.ceil(Math.max(...all)*2)/2,y=v=>MT+(hi-v)/(hi-lo)*PH;
@@ -1327,7 +1327,7 @@ const rTicks=S=>{const out=[],short=S.length&&(+S[S.length-1][0].slice(0,4)*12+ 
     else if(q[0].slice(0,4)!==p.slice(0,4))out.push([i,q[0].slice(0,4)])});return out};
 function spreadChart(S,W){
   S=rCut(S,"sp");
-  const H=128,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.flatMap(q=>[q[1],q[2]]).filter(v=>v!=null);
+  const H=200,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.flatMap(q=>[q[1],q[2]]).filter(v=>v!=null);
   const lo=Math.min(-.5,Math.floor(Math.min(...vs)*2)/2),hi=Math.max(.5,Math.ceil(Math.max(...vs)*2)/2);
   const x=i=>ML+i/(n-1)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH,z=y(0);
   const pts=j=>S.map((q,i)=>q[j]==null?null:[x(i),y(q[j])]).filter(Boolean);
@@ -1352,7 +1352,7 @@ function spreadChart(S,W){
 // one series day by day ([yyyymmdd, value]) as a line with a soft fill, years along the bottom, the last value at the end
 function histChart(S,W,col,id,c){
   S=rCut(S,c);
-  const H=118,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.map(q=>q[1]);
+  const H=190,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.map(q=>q[1]);
   const lo=Math.floor(Math.min(...vs)*2)/2,hi=Math.ceil(Math.max(...vs)*2)/2||lo+.5;
   const x=i=>ML+i/(n-1)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH;
   const d=S.map((q,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(q[1]).toFixed(1)}`).join("");
@@ -1491,8 +1491,8 @@ function renderCanary(){
   const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
   el.innerHTML=`<div class="ph"><h2>${tx("カナリア","Canary")}</h2><span class="asof">${asof}</span></div>${headHTML("canaryHead",[h1,h2])}${note("canary",autoCanary(Z,O.hist))}
     <div class="rcap"><span>${tx("社債の上乗せ金利と社債ETF","Corporate spreads and bond ETFs")}</span></div><div class="rsum rx2 c4">${row("HY",Z.hy,"OAS")}${row("IG",Z.ig,"OAS")}${G.cards}</div>
-    <div class="rcap"><span>${tx("ハイイールドOASの推移（%）","High yield OAS (%)")}</span>${rpSeg("hy")}</div>${Z.hy.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${tsChart([{c:RC.now,p:ts(HH),w:1.6}],pw(el),{H:118,dec:2})}</div>
-    ${G.S.length>1?`<div class="rcap"><span>${tx("HYGの推移（ドル）","HYG ($)")}</span></div><div class="rchart">${tsChart([{c:RC.now,p:ts(G.S),w:1.6}],pw(el),{H:118,dec:2})}</div>`:""}
+    <div class="rcap"><span>${tx("ハイイールドOASの推移（%）","High yield OAS (%)")}</span>${rpSeg("hy")}</div>${Z.hy.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${tsChart([{c:RC.now,p:ts(HH),w:1.6}],pw(el),{H:190,dec:2})}</div>
+    ${G.S.length>1?`<div class="rcap"><span>${tx("HYGの推移（ドル）","HYG ($)")}</span></div><div class="rchart">${tsChart([{c:RC.now,p:ts(G.S),w:1.6}],pw(el),{H:190,dec:2})}</div>`:""}
     <div class="rxn">${tx("OAS は、米社債の利回りが国債をどれだけ上回るか。社債ごとにお金が返ってくる時期に合わせた国債の利回りと比べ、指数全体で平均している。HY＝ハイイールド債（平均満期5年前後）、IG＝投資適格債（同10年前後）。貸し手は株主より先に不安を嗅ぎつける。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。HYG は iShares のハイイールド社債ETF、LQD は投資適格社債ETF。一日中取引されるので、1日遅れて出る OAS より先に動く。チャートは直近1年が日次、それより前は週次。下げ（▼）を赤で示す。出典 FRED（ICE BofA）、CNBC","OAS is how far US corporate bond yields sit above Treasuries, matched to when each bond pays back and averaged over the index. HY is high yield (about 5 years), IG investment grade (about 10 years). Lenders sense trouble before shareholders: a sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks. HYG is iShares' high yield corporate bond ETF and LQD its investment grade one; they trade all day, so it moves before the OAS, which comes a day late. The chart is daily for the last year, weekly before. A fall is shown in red. Sources: FRED (ICE BofA), CNBC")}</div>`;
 }
 // 2年−3ヶ月: where the market expects the policy rate over the next two years vs today (3M ≈ the policy rate)
@@ -1664,7 +1664,7 @@ function renderFedw(){
   const h2=Math.abs(mv)<.2?(en?`little change priced through ${L.date.slice(0,4)}`:`${L.date.slice(0,4)}年末までほぼ据え置きを織り込む`):(en?`${Math.abs(mv).toFixed(1)} ${mv>0?"hikes":"cuts"} priced by ${ymd(L.date)}`:`${L.date.slice(0,4)}年${L.date.slice(5,7)==="12"?"末":`${+L.date.slice(5,7)}月`}までに${mv>0?"利上げ":"利下げ"}${Math.abs(mv).toFixed(1)}回分を織り込む`);
   // the expected policy rate after each meeting, from today's level
   const pts=[[Date.now(),FW.now]].concat(M.map(m=>[dms(m.date),m.after]));
-  const chart=tsChart([{c:"#6ec3ff",p:pts,w:2}],W,{H:130,dec:2,unit:"%",ref:[(lo+hi)/2]});
+  const chart=tsChart([{c:"#6ec3ff",p:pts,w:2}],W,{H:200,dec:2,unit:"%",ref:[(lo+hi)/2]});
   const ranges=[...new Set(M.flatMap(m=>Object.keys(m.probs)))].sort();
   const tab=`<table class="fw"><tr><th>${tx("会合","Meeting")}</th>${ranges.map(r=>`<th>${r.replace(/(\d\.\d\d)-(\d\.\d\d)/,(x,a,b)=>`${a}〜${b}`.replace(/\.(\d\d)/g,".$1"))}</th>`).join("")}</tr>${M.map(m=>{const best=Object.entries(m.probs).sort((a,b)=>b[1]-a[1]);
     return `<tr><td>${en?`${MON[+m.date.slice(5,7)-1]} ${+m.date.slice(8)} ’${m.date.slice(2,4)}`:`${m.date.slice(2,4)}/${md(m.date)}`}</td>${ranges.map(r=>{const v=m.probs[r];return `<td class="${v==null?"":r===best[0][0]?"mx":"sd"}">${v==null?"":v.toFixed(1)}</td>`}).join("")}</tr>`}).join("")}</table>`;
@@ -1756,7 +1756,7 @@ function autoLiq(){
 const dms=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d||15)};
 function tsChart(S,W,o={}){
   S=S.filter(x=>x.p&&x.p.length>1);if(!S.length)return"";
-  const H=o.H||140,ML=30,MR=44,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,dec=o.dec??1,u=o.unit||"";
+  const H=o.H||210,ML=30,MR=44,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,dec=o.dec??1,u=o.unit||"";
   const ts=S.flatMap(x=>x.p.map(q=>q[0])),vs=S.flatMap(x=>x.p.map(q=>q[1])).concat(o.ref||[]).concat(o.bars||o.zero?[0]:[]);
   let t0=Math.min(...ts),t1=Math.max(...ts);
   if(o.bars){const pad=(t1-t0)/Math.max(1,S[0].p.length-1)/2;t0-=pad;t1+=pad}  // room for the first and last bars
@@ -1786,7 +1786,7 @@ function tsChart(S,W,o={}){
 }
 // M2: the level as a line on the left axis ($ trillion), the change on a year as bars on the right axis (%)
 function m2Chart(A,Y,W){
-  const H=150,ML=34,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB;
+  const H=220,ML=34,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB;
   const L=A.map(([k,v])=>[dms(k),v/1000]),B=Y.map(([k,v])=>[dms(k),v]);
   const t0=L[0][0],t1=L[L.length-1][0],n=L.length,pad=(t1-t0)/Math.max(1,n-1)/2,x=t=>ML+(t-t0+pad)/(t1-t0+2*pad)*PW;
   const nice=(lo,hi,k)=>{const sp=hi-lo||1,st=[.1,.2,.25,.5,1,2,2.5,5,10].find(q=>sp/q<=k)||10;return[Math.floor(lo/st)*st,Math.ceil(hi/st)*st,st]};
@@ -1850,10 +1850,10 @@ function renderGDP(){
   const cut=String(new Date().getUTCFullYear()-4)+"-Q1";
   const bars=G.map(([k,v])=>[qq(k),v]).filter(q=>q[0]>=cut).map(([k,v])=>{const [y,n]=k.split("-Q");return [Date.UTC(+y,n*3-2,15),v]});
   // the nowcast as a lighter bar in the next quarter's place
-  let chart=tsChart([{c:"#2ee6ff",p:bars}],W,{H:140,bars:true,sign:true,unit:"%",zero:true});
-  if(ahead&&nl){const [y,n]=nq.split("-Q");chart=tsChart([{c:"#2ee6ff",p:bars.concat([[Date.UTC(+y,n*3-2,15),nl[1]]])}],W,{H:140,bars:true,sign:true,unit:"%",zero:true,lastC:"#ffb547"})}
+  let chart=tsChart([{c:"#2ee6ff",p:bars}],W,{H:210,bars:true,sign:true,unit:"%",zero:true});
+  if(ahead&&nl){const [y,n]=nq.split("-Q");chart=tsChart([{c:"#2ee6ff",p:bars.concat([[Date.UTC(+y,n*3-2,15),nl[1]]])}],W,{H:210,bars:true,sign:true,unit:"%",zero:true,lastC:"#ffb547"})}
   let evo="";
-  if(ahead&&ev&&ev.length>1)evo=`<div class="rcap"><span>${tx(`GDPNow ${qLab(nq)}の推移`,`GDPNow for ${qLab(nq)}, each update`)}</span></div>`+tsChart([{c:"#ffb547",p:ev.map(q=>[dms(q[0]),q[1]])}],W,{H:120,unit:"%",zero:true,days:true})
+  if(ahead&&ev&&ev.length>1)evo=`<div class="rcap"><span>${tx(`GDPNow ${qLab(nq)}の推移`,`GDPNow for ${qLab(nq)}, each update`)}</span></div>`+tsChart([{c:"#ffb547",p:ev.map(q=>[dms(q[0]),q[1]])}],W,{H:190,unit:"%",zero:true,days:true})
     +`<div class="lsrc" style="margin-top:2px">${tx("最新の更新","Latest update")} ${+nl[0].slice(5,7)}/${+nl[0].slice(8)}：${esc(nl[2]).replace(/\n/g," ")}</div>`;
   const T=N&&N.track&&N.track.length?N.track.slice(-6).reverse():[];
   const tr=T.length?`<div class="rcap"><span>${tx("GDPNow の実績","GDPNow track record")}</span></div><div class="mtab" style="margin-top:2px"><div class="lq hd"><span></span><span>${tx("直前の予測","Last nowcast")}</span><span>${tx("速報値","Advance")}</span></div>${T.map(([q,a,b])=>`<div class="lq"><span class="k">${qLab(q)}<small>${q.slice(0,4)}</small></span><span class="v">${sg(a)}</span><span class="c">${sg(b)}</span></div>`).join("")}</div>`:"";
@@ -1919,16 +1919,16 @@ function renderJobs(){
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>${tx("雇用","Jobs")}</h2><span class="asof">${tx(`${moLab(lp[0])}分まで`,`through ${moLab(lp[0])}`)}</span></div>${headHTML("jobsHead",[h1,h2])}${note("jobs",autoJobs())}
     <div class="rcap"><span>${tx("雇用者数の増減（千人）","Payroll change (thousands)")}</span></div>
-    ${tsChart([{c:"#2ee6ff",p:toT(pay.filter(q=>q[0]>=cut))}],W,{H:130,dec:0,bars:true,sign:true})}
+    ${tsChart([{c:"#2ee6ff",p:toT(pay.filter(q=>q[0]>=cut))}],W,{H:200,dec:0,bars:true,sign:true})}
     <div class="rcap"><span>${tx("求人率と失業率","Job openings and unemployment")}</span></div>${legend([[tx("求人率","Openings rate"),"#7fd6a4"],[tx("失業率","Unemployment"),"#ff8a7a"]])}
-    ${tsChart([{c:"#7fd6a4",p:toT((B.jolts||[]).filter(q=>q[0]>=cut))},{c:"#ff8a7a",p:toT(B.unrate.filter(q=>q[0]>=cut))}],W,{H:130,unit:"%",gap:[0,1]})}${vu}
+    ${tsChart([{c:"#7fd6a4",p:toT((B.jolts||[]).filter(q=>q[0]>=cut))},{c:"#ff8a7a",p:toT(B.unrate.filter(q=>q[0]>=cut))}],W,{H:200,unit:"%",gap:[0,1]})}${vu}
     ${B.ahe&&B.ahe.length>24?(()=>{const wy=yoyOf(B.ahe).filter(q=>q[0]>=cut),cy=yoyOf(B.cpi).filter(q=>q[0]>=cut),lw=lastOf(wy),lc=cy.find(q=>q[0]===(lw&&lw[0]));
       const real=lw&&lc?lw[1]-lc[1]:null;
-      return `<div class="rcap"><span>${tx("平均時給と物価（前年比）","Hourly earnings and prices (on the year)")}</span></div>${legend([[tx("平均時給","Earnings"),"#7fd6a4"],["CPI","#ff8a7a"]])}`+tsChart([{c:"#7fd6a4",p:toT(wy)},{c:"#ff8a7a",p:toT(cy)}],W,{H:130,unit:"%",gap:[0,1]})
+      return `<div class="rcap"><span>${tx("平均時給と物価（前年比）","Hourly earnings and prices (on the year)")}</span></div>${legend([[tx("平均時給","Earnings"),"#7fd6a4"],["CPI","#ff8a7a"]])}`+tsChart([{c:"#7fd6a4",p:toT(wy)},{c:"#ff8a7a",p:toT(cy)}],W,{H:200,unit:"%",gap:[0,1]})
         +(real!=null?`<div class="rstate"><span class="pill" style="color:${real>=0?"#5fd08e":"#ff6b6b"};border-color:${real>=0?"#5fd08e55":"#ff6b6b55"};background:${real>=0?"#5fd08e14":"#ff6b6b14"}"><i></i>${real>=0?tx("賃金が物価を上回る","Wages ahead of prices"):tx("物価が賃金を上回る","Prices ahead of wages")}</span><span class="sp">${moLab(lw[0])} ${tx("実質","real")}<b>${real>0?"+":real<0?"−":"±"}${Math.abs(real).toFixed(1)}pt</b></span></div>`:"")})():""}
     ${B.jolts&&B.jolts.length>12?`<div class="rcap"><span>${tx(`ベヴァリッジ曲線（${B.jolts[0][0].slice(0,4)}年から）`,`Beveridge curve (since ${B.jolts[0][0].slice(0,4)})`)}</span></div>${beveridge(B.unrate,B.jolts,W)}`:""}
-    ${cw.length>1?`<div class="rcap"><span>${tx("失業保険の新規申請（千件、週次）","Initial jobless claims (thousands, weekly)")}</span></div>${tsChart([{c:"#ffb547",p:cw.map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:120,dec:0})}`:""}
-    ${cw.filter(q=>q[2]).length>1?`<div class="rcap"><span>${tx("失業保険の継続申請（万件、週次）","Continuing jobless claims (millions, weekly)")}</span></div>${tsChart([{c:"#e58cff",p:cw.filter(q=>q[2]).map(q=>[dms(q[0]),en?q[2]/1e6:q[2]/1e4]),w:1.4}],W,{H:120,dec:en?2:0})}`:""}
+    ${cw.length>1?`<div class="rcap"><span>${tx("失業保険の新規申請（千件、週次）","Initial jobless claims (thousands, weekly)")}</span></div>${tsChart([{c:"#ffb547",p:cw.map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:190,dec:0})}`:""}
+    ${cw.filter(q=>q[2]).length>1?`<div class="rcap"><span>${tx("失業保険の継続申請（万件、週次）","Continuing jobless claims (millions, weekly)")}</span></div>${tsChart([{c:"#e58cff",p:cw.filter(q=>q[2]).map(q=>[dms(q[0]),en?q[2]/1e6:q[2]/1e4]),w:1.4}],W,{H:190,dec:en?2:0})}`:""}
     <div class="mtab">${rows}</div>
     <div class="lsrc">${tx("出典","Sources")} BLS / ${tx("米労働省","US Labor Dept.")}</div>`;
 }
@@ -1957,13 +1957,13 @@ function liqCharts(){
     if(tot>.05)rows+=row(tx("SRF（常設レポ）","Standing repo"),tx("この30日の利用","taken, last 30 days"),B(tot),pill(tx("利用あり","in use"),C.a))}
   if(rows)h+=`<div class="rcap"><span>${tx("配管の状態","The plumbing")}</span></div><div class="mtab" style="margin-top:2px">${rows}</div>`;
   if(F&&F.hist&&F.hist.length>4){const P=rCut(F.hist,"fa");
-    h+=`<div class="rcap"><span>${tx("FRB総資産（兆ドル）","Fed total assets ($T)")}</span>${rpSeg("fa")}</div>`+tsChart([{c:"#2ee6ff",p:P.map(q=>[dms(q[0]),q[1]/1e6]),w:1.8}],W,{H:140,dec:2})}
+    h+=`<div class="rcap"><span>${tx("FRB総資産（兆ドル）","Fed total assets ($T)")}</span>${rpSeg("fa")}</div>`+tsChart([{c:"#2ee6ff",p:P.map(q=>[dms(q[0]),q[1]/1e6]),w:1.8}],W,{H:210,dec:2})}
   if(F&&F.hist&&R&&R.hist){const s0=F.hist[0][0],wk=new Map();R.hist.forEach(q=>{if(q[0]>=s0){const k=q[0].slice(0,8)+String(Math.min(28,Math.ceil(+q[0].slice(8)/7)*7)).padStart(2,"0");wk.set(k,q)}});
     h+=`<div class="rcap"><span>${tx(`準備預金とリバースレポ（兆ドル、${s0.slice(0,4)}年から）`,`Reserves and reverse repo ($T, since ${s0.slice(0,4)})`)}</span></div>${legend([[tx("準備預金","Reserves"),"#7fd6a4"],[tx("リバースレポ","Reverse repo"),"#ffb547"]])}`
-      +tsChart([{c:"#7fd6a4",p:F.hist.map(q=>[dms(q[0]),q[2]/1e6]),w:1.8},{c:"#ffb547",p:[...wk.values()].map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:150,dec:1,zero:true,ref:[1.4]})
+      +tsChart([{c:"#7fd6a4",p:F.hist.map(q=>[dms(q[0]),q[2]/1e6]),w:1.8},{c:"#ffb547",p:[...wk.values()].map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:220,dec:1,zero:true,ref:[1.4]})
       +`<div class="lsrc" style="margin-top:2px">${tx("点線は2019年9月に短期金利が跳ねたときの準備預金 1.4兆ドル","Dashed: reserves of $1.4T when short rates spiked in September 2019")}</div>`}
   if(Y&&Y.spread&&Y.spread.length>20){
-    h+=`<div class="rcap"><span>${tx("SOFR − IORB（bp）","SOFR − IORB (bp)")}</span>${rpSeg("sf")}</div>`+tsChart([{c:"#ff8a7a",p:rCut(Y.spread,"sf").map(q=>[dms(q[0]),q[2]*100]),w:1.2}],W,{H:110,dec:0,zero:true})
+    h+=`<div class="rcap"><span>${tx("SOFR − IORB（bp）","SOFR − IORB (bp)")}</span>${rpSeg("sf")}</div>`+tsChart([{c:"#ff8a7a",p:rCut(Y.spread,"sf").map(q=>[dms(q[0]),q[2]*100]),w:1.2}],W,{H:180,dec:0,zero:true})
       +`<div class="lsrc" style="margin-top:2px">${tx("0 を上回ると、銀行が準備預金に付く金利より高く資金を取り合っている。IORB は政策金利の上限−0.10","Above 0, banks pay more for cash than reserves earn. IORB: top of the target range less 0.10")}</div>`}
   if(M&&M.hist){const yy=yoyOf(M.hist);h+=M.hist.length>=12?`<div class="rcap"><span>${tx("M2 総額と前年比","M2, level and change on a year")}</span></div>`
     +legend([[tx("総額（兆ドル・左）","Level ($tn, left)"),"#b59cff"],[tx("前年比（%・右）","Year on year (%, right)"),"#5fd08e"]])+m2Chart(M.hist,yy,W):""}
