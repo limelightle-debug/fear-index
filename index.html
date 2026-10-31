@@ -454,6 +454,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 .rx2 em,.nr .k .nest{color:var(--est);border:1px solid #ffb54766;background:#ffb5471a}
 .nr .tag{border:1px solid currentColor}
 .rstate .pill{font-size:11.5px}
+.rstate .sp.main b{font-size:19px}.rstate .sp.inv b{color:#ffb547}.rstate .sp.inv em{display:block;font-style:normal;font-size:10.5px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -519,7 +520,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v199";
+const APP_VER="fi-v200";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1341,8 +1342,8 @@ function spreadChart(S,W){
     <path d="${area}" fill="url(#spf)"/>
     <line x1="${ML}" x2="${ML+PW}" y1="${z}" y2="${z}" stroke="#ffffff" stroke-opacity=".35" stroke-dasharray="2 3"/><text x="${ML-6}" y="${z+3}" text-anchor="end">0</text>
     <text x="${ML-6}" y="${y(hi)+8}" text-anchor="end">+${hi.toFixed(1)}</text><text x="${ML-6}" y="${y(lo)}" text-anchor="end">${lo.toFixed(1)}</text>
-    <path d="${d(p2)}" fill="none" stroke="${RC.m3}" stroke-width="1.2" stroke-opacity=".8"/>
-    <path d="${d(p1)}" fill="none" stroke="${RC.now}" stroke-width="1.6"/>
+    <path d="${d(p2)}" fill="none" stroke="${RC.m3}" stroke-width=".9" stroke-opacity=".45" stroke-dasharray="3 2"/>
+    <path d="${d(p1)}" fill="none" stroke="${RC.now}" stroke-width="2.2"/>
     ${lab(L[1],RC.now,L[1]>=L[2]?-5:5)}${L[2]!=null?lab(L[2],RC.m3,L[2]>L[1]?-5:5):""}</svg>`;
 }
 // under the charts: the 10-year real yield and breakeven inflation, and the corporate bond spreads (OAS)
@@ -1540,13 +1541,15 @@ function renderRates(){
   const el=$("rates");
   if(!CV||!CV.now||!CV.m3){el.hidden=true;return}
   const n=CV.now.y,S=CV.spread,last=S[S.length-1],s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"];
-  // state: inverted now (either spread), or months since the last inversion ended (the year after it ends is the one to watch)
-  let lastNeg=-1;for(let i=S.length-1;i>=0;i--)if(S[i][1]<0||(S[i][2]!=null&&S[i][2]<0)){lastNeg=i;break}
+  // state: by 10Y−2Y, the market's own spread (3M only shadows the policy rate): inverted now, or months since the last
+  // inversion ended (the year after it ends is the one to watch)
+  let lastNeg=-1;for(let i=S.length-1;i>=0;i--)if(S[i][1]<0){lastNeg=i;break}
   const d8=q=>new Date(Date.UTC(+q.slice(0,4),+q.slice(4,6)-1,+q.slice(6,8)));
   const mo=lastNeg<0?null:Math.floor((d8(last[0])-d8(S[lastNeg][0]))/2629.8e6);
   const when=lastNeg<0?"":`${S[lastNeg][0].slice(0,4)}/${+S[lastNeg][0].slice(4,6)}`;
   const since=mo==null?"":tx(`逆イールドの解消（${when}）から${mo}ヶ月`,`${mo} months since the inversion ended (${when})`);
-  const st=(s2<0||s3<0)?[tx("逆イールド","Inverted"),"#ff6b6b",""]:mo!=null&&mo<12?[tx("解消直後","Just uninverted"),"#ffb547",since]:[tx("順イールド","Normal"),"#7fd6a4",since];
+  const st=s2<0?[tx("逆イールド","Inverted"),"#ff6b6b",""]:mo!=null&&mo<12?[tx("解消直後","Just uninverted"),"#ffb547",since]:[tx("順イールド","Normal"),"#7fd6a4",since];
+  const mn3=CV.m3&&CV.m3.y["10Y"]!=null&&CV.m3.y["2Y"]!=null?CV.m3.y["10Y"]-CV.m3.y["2Y"]:null;  // 10Y−2Y three months ago
   const ch=(k,ref)=>{const d=n[k]-ref.y[k];return `${d>=0?"+":"−"}${Math.abs(d).toFixed(2)}`};
   const sg=v=>`${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}`;
   const [Y,M,D]=CV.date.split("-").map(Number);
@@ -1562,9 +1565,9 @@ function renderRates(){
   el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>${headHTML(fq?"ratesEveHead":"ratesHead",rh)}${note("rates",autoRates())}
     ${EVE()&&FUT.markets&&FUT.markets.us10y?`<div class="rcap"><span>${tx("寄り前の利回り","Pre-open yields")}</span><span class="asof">${preLab()}</span></div><div class="rsum rx2">${[[tx("3ヶ月","3M"),"us3m"],[tx("2年","2Y"),"us2y"],[tx("10年","10Y"),"us10y"],[tx("30年","30Y"),"us30y"]].filter(([,k])=>FUT.markets[k]).map(([l,k])=>{const q=FUT.markets[k],dv=q.chg;return `<div>${l}<b>${q.price.toFixed(3)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(3)}</small>`}</div>`}).join("")}</div><div class="rcap"><span>${tx("前日の米国債（財務省）","Last session (Treasury)")}</span></div>`:""}
     <div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
-    <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span><span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(n["2Y"]-n["3M"])}</b><em class="path" style="color:${pathOf(n["2Y"]-n["3M"])[1]}">${pathOf(n["2Y"]-n["3M"])[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
+    <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp main">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span>${s2>=0?`<span class="sp main inv">${tx("逆イールドまで","To inversion")}<b>${tx(`あと${Math.round(s2*100)}bp`,`${Math.round(s2*100)}bp`)}</b>${mn3?`<em>${tx(`3ヶ月前は${Math.round(mn3*100)}bp`,`${Math.round(mn3*100)}bp 3M ago`)}</em>`:""}</span>`:""}<span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(n["2Y"]-n["3M"])}</b><em class="path" style="color:${pathOf(n["2Y"]-n["3M"])[1]}">${pathOf(n["2Y"]-n["3M"])[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
-    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span><i style="border-color:${RC.m3}"></i>${tx("10年−3ヶ月","10Y−3M")}</span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}${rstarBlock()}`;
+    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span style="opacity:.6"><i style="border-color:${RC.m3};border-top-style:dashed"></i>${tx("10年−3ヶ月（参考）","10Y−3M (ref.)")}</span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}${rstarBlock()}`;
 }
 function renderNews(){
   const el=$("news"),day=IDX&&IDX.indices&&IDX.indices.length?(String((IDX.indices.find(x=>x.k==="SPX")||IDX.indices[0]).time).match(/^\d{4}-\d\d-\d\d/)||[""])[0]:"";
@@ -1735,7 +1738,7 @@ function autoRates(){
   else if(d2>=.03&&d10<=-.03)t.push("短い金利が上がり長い金利が下がる。目先の利上げを織り込みながら、先の成長には弱気という平坦化だ。");
   else if(d2<=-.03&&d10>=.03)t.push("短い金利が下がり長い金利が上がる。目先の緩みと、先の物価への警戒が同居する傾きの拡大だ。");
   else t.push("金利は大きくは動かず、債券市場は前日の見方を持ち越した。");
-  if(s2<0||s3<0)t.push("逆イールドは、いまの引き締めがいずれ景気を冷やすと市場が見ている形だ。");
+  if(s2<0)t.push("逆イールドは、いまの引き締めがいずれ景気を冷やすと市場が見ている形だ。");
   else if(gap>=.25)t.push("2年債が3ヶ月債を上回る形は、政策金利がこの先さらに上がると市場が見ていることを示す。");
   else if(gap<=-.25)t.push("2年債が3ヶ月債を下回る形は、市場が先の利下げを見ていることを示す。");
   if(m3!=null&&Math.abs(n["10Y"]-m3)>=.2)t.push(n["10Y"]>m3?"3ヶ月で積み上がった長い金利は、株の値段にとって重しのまま残る。":"3ヶ月で長い金利が下りてきたことは、株の値段にとって追い風になっている。");
