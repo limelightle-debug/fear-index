@@ -516,7 +516,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v191";
+const APP_VER="fi-v192";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -2015,15 +2015,16 @@ function renderKokoro(){
   const el=$("kokoro"),M=window.MindData;
   if(!TEMP||!M||!window.MindEngine){el.hidden=true;return}
   let key;try{key=sceneOf(TEMP)}catch(e){el.hidden=true;return}
-  // one word from 30の言葉 (『VIXの声を聴け』 chapter 4) in large type, then what it says about today's market.
-  // The day's article picks the word and writes the reading (paper.json "kokoroWord" 1-30, "kokoro"); otherwise
+  // one word from 30の言葉 (『VIXの声を聴け』 chapter 4) or 続・30の言葉 (No.31-, from the other five books) in large type,
+  // then what it says about today's market. The day's article picks the word and writes the reading (paper.json
+  // "kokoroWord", "kokoro"); otherwise
   // the scene's words rotate by day, read with the scene's description
-  const [ai,name,what,,words]=M.SCENES[key],W={};M.WORDS.forEach(([g,ws])=>ws.forEach(([n,ja])=>W[n]=[ja,g[0]]));
+  const [ai,name,what,,words]=M.SCENES[key],W={};M.WORDS.concat(M.MORE||[]).forEach(([g,ws])=>ws.forEach(([n,ja])=>W[n]=[ja,g[0]]));
   const day=sessionDay(),own=STORY&&(!day||sameDay(day)),pick=own&&+STORY.kokoroWord,txt=own&&STORY.kokoro;
   const sd=+String(day||"").replace(/-/g,"")||fortuneDay(),wn=pick&&W[pick]?pick:words[dayIdx(sd)%words.length],[w,wg]=W[wn];
   el.hidden=false;
   el.innerHTML=`<div class="ph"><h2>心</h2><span class="asof">${ACT[ai]}・${esc(name[0])}</span></div>
-    <figure class="kq"><p class="kw">「${esc(w)}」</p><figcaption>30の言葉より　${wn}　${esc(wg)}</figcaption></figure>
+    <figure class="kq"><p class="kw">「${esc(w)}」</p><figcaption>${wn>30?"続・":""}30の言葉より　${wn}　${esc(wg)}</figcaption></figure>
     <div class="ccm"><p>${esc(txt&&pick===wn?txt:what[0])}</p></div>`;
 }
 async function loadMarkets(){
