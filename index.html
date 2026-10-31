@@ -131,6 +131,8 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 /* the Sunday edition: only the points, the week and the week ahead */
 body.sun #t-paper>section:not(#issue):not(#intv):not(#sunwk):not(#sunwe):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
+/* the evening edition: the points, the realtime MRI, the futures, the news, rates and commodities, and only the releases of the night (paper.json eveRel) */
+body.evening #t-paper>section:not(#issue):not(#intv):not(#mritop):not(#idx):not(#news):not(#rates):not(#cmdty):not(.evrel),body.evening #t-paper>.sec{display:none!important}
 .wkr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
 .wkr .k{font-size:13.5px;color:var(--ink2)}.wkr .v{font-family:var(--f-tick);font-stretch:82%;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .wkr .c.rup{color:var(--neg)}.wkr .c.rdn{color:var(--pos)}
@@ -783,6 +785,8 @@ function renderIssue(st){
   $("ed").innerHTML=EN()?`${MON[j.getUTCMonth()]} ${j.getUTCDate()}<small> ${w}</small>`:`${j.getUTCMonth()+1}月${j.getUTCDate()}日<small>（${w}）</small>`;
   $("hedl").innerHTML=`<i class="ed ${sun?"sun":eve?"eve":"mor"}">${sun?tx("日曜版","Sunday"):eve?tx("夜刊","Evening"):tx("朝刊","Morning")}</i>`;
   document.body.classList.toggle("sun",sun);
+  const evn=!sun&&!!(st&&st.preAt);document.body.classList.toggle("evening",evn);
+  ["gdp","infl","jobs","liq"].forEach(k=>$(k).classList.toggle("evrel",evn&&Array.isArray(st.eveRel)&&st.eveRel.includes(k)));
   $("hed").innerHTML=`<b>${hm}</b>${note?`<span>${note}</span>`:""}`;
   $("issue").hidden=!P.length;
   $("issue").innerHTML=P.length?`<ul class="pts">${P.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
