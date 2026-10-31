@@ -130,13 +130,23 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 .sub{font-size:12.5px;color:var(--ink2);margin:0 0 8px}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 /* the Sunday edition: only the points, the week and the week ahead */
-body.sun #t-paper>section:not(#issue):not(#sunwk):not(#sunwe):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
+body.sun #t-paper>section:not(#issue):not(#intv):not(#sunwk):not(#sunwe):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
 .wkr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
 .wkr .k{font-size:13.5px;color:var(--ink2)}.wkr .v{font-family:var(--f-tick);font-stretch:82%;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .wkr .c.rup{color:var(--neg)}.wkr .c.rdn{color:var(--pos)}
 .wkr .c{font-family:var(--f-tick);font-stretch:85%;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;min-width:62px}
 .cal{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
 .cal td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:baseline}
+/* the director's special interview (data/interview.json): only when there is one, for a week from its publication */
+.intv .kick{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;color:#ffd27a;border:1px solid rgba(255,210,122,.55);background:rgba(255,210,122,.1);border-radius:999px;padding:1px 9px;margin-bottom:8px}
+.intv .ilead{font-size:13.5px;line-height:1.7;color:var(--ink2);margin:0 0 6px}
+.intv .qa{border-top:1px solid var(--line);padding:10px 0 2px}
+.intv .q{font-size:13.5px;line-height:1.6;color:var(--ink2);margin:0 0 4px}.intv .q span,.intv .a span{font-size:11px;font-weight:700;margin-right:6px;letter-spacing:.04em}
+.intv .q span{color:var(--muted)}.intv .a span{color:#ffd27a}
+.intv .a{font-size:15px;line-height:1.75;margin:0 0 4px}
+.intv details>summary{list-style:none;cursor:pointer;text-align:center;font-size:13px;color:var(--accent);padding:10px 0 4px;border-top:1px solid var(--line)}
+.intv details>summary::-webkit-details-marker{display:none}.intv details[open]>summary.more{display:none}
+.intv .past summary{color:var(--ink2)}.intv .warn{font-size:11.5px;color:var(--muted);margin-top:8px}
 .cal td.d{white-space:nowrap;color:var(--ink2);width:1%}.cal td.t{white-space:nowrap;font-family:var(--f-tick);font-variant-numeric:tabular-nums;color:var(--ink2);width:1%}
 .cal tr.hi td.e{color:#ffd27a;font-weight:700}.cal tr.day td{border-top:1px solid #ffffff33}
 .tile{border-radius:9px;padding:7px 10px 8px;color:#fff;min-width:0}
@@ -478,6 +488,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 
   <div id="t-paper">
     <section class="panel issue" id="issue"></section>
+    <section class="panel intv" id="intv" hidden></section>
     <section class="panel" id="sunwk" hidden></section>
     <section class="panel" id="sunwe" hidden></section>
     <section class="panel" id="sunnx" hidden></section>
@@ -520,7 +531,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v200";
+const APP_VER="fi-v201";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -807,6 +818,23 @@ function renderIdxEve(el,st,asof){
   el.innerHTML=`<div class="ph"><h2>${tx("株価指数先物","Index futures")}</h2><span class="asof">${preLab()}</span></div><div class="head">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div><div style="height:8px"></div>${fc?`<div class="ccm"><p>${esc(fc)}</p></div>`:""}<div class="tiles">${F.map(tile).join("")}</div>
     <div class="rxn">${tx("前日の清算値からの騰落。半導体は先物がないため、半導体ETF（SOXX）の寄り前の値。","Change from the previous settlement. Semiconductors: no future trades, so the SOXX ETF's pre-market quote.")}</div><div class="ndxw" id="ndxw"></div>`
     +(st&&st.sources&&st.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div></div>`:"");
+}
+// the director's special interview: data/interview.json {items: [{date, pub, title: [head, sub], lead, qa: [[q, a]]}]},
+// the newest first; on the paper's first page for 7 days from pub, the first 3 answers open and the rest behind a tap
+let INTV=null;
+function renderIntv(){
+  const el=$("intv"),it=INTV&&INTV.items||[],now=Date.now(),cur=it.find(x=>+new Date(x.pub)<=now&&now<+new Date(x.pub)+7*864e5);
+  if(!cur){el.hidden=true;return}
+  const md=s=>{const [y,m,d]=s.split("-");return`${y}年${+m}月${+d}日`};
+  const QA=q=>q.map(([a,b])=>`<div class="qa"><p class="q"><span>聞き手</span>${esc(a)}</p><p class="a"><span>所長</span>${esc(b)}</p></div>`).join("");
+  const past=it.filter(x=>x!==cur&&+new Date(x.pub)<=now);
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>${tx("特別インタビュー","Special interview")}</h2><span class="asof">${md(cur.date)}</span></div><div class="kick">恐怖指数研究所所長</div>
+    <div class="head">${esc(cur.title[0])}${cur.title[1]?`<span class="h2b">${esc(cur.title[1])}</span>`:""}</div><div style="height:8px"></div>
+    ${cur.lead?`<p class="ilead">${esc(cur.lead)}</p>`:""}${QA(cur.qa.slice(0,3))}
+    ${cur.qa.length>3?`<details><summary class="more">続きを読む（全${cur.qa.length}問）</summary>${QA(cur.qa.slice(3))}</details>`:""}
+    <div class="warn">所長の予想を含む。予想は備えのためのもので、売買の指示ではない。</div>
+    ${past.length?`<details class="past"><summary>過去のインタビュー</summary>${past.map(x=>`<div class="qa"><p class="a">${md(x.date)}　${esc(x.title[0])}</p></div><details><summary>読む</summary>${QA(x.qa)}</details>`).join("")}</details>`:""}`;
 }
 // the Sunday edition: the week's moves (MRI app data/weekly.json, mri.json, oas.json) under the week's article
 // (paper.json sunHead, sunBody), then the week ahead (sunNextHead, sunNext, cal: [[date, Japan time, event, 1 if key]])
@@ -2114,9 +2142,10 @@ async function loadPaper(){
       if(j.sunAt)delete j.preAt}).catch(()=>STORY=null),  // a preAt left over from the evening before a new morning article does not count
     fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null),
     fetch("../mri-app/data/weekly.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WK=j).catch(()=>WK=null),
-    fetch("../mri-app/data/weekend.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WE=j).catch(()=>WE=null)]);
+    fetch("../mri-app/data/weekend.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WE=j).catch(()=>WE=null),
+    fetch("data/interview.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>INTV=j).catch(()=>INTV=null)]);
   applyPre();
-  renderIdx();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
+  renderIdx();renderIntv();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
