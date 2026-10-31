@@ -519,7 +519,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v198";
+const APP_VER="fi-v199";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1395,45 +1395,44 @@ function ratesMore(){
     ${row(tx("実質金利","Real yield"),Z.real,tx("10年","10Y"))}${row(tx("インフレ期待","Breakeven"),Z.be,tx("10年","10Y"))}</div>
     ${RH&&RH.length>1?`<div class="rcap"><span>${tx("10年実質金利の推移","10Y real yield")}</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}`;
 }
-// the natural rate of interest (r*): the real rate that neither cools nor heats the economy (New York Fed, HLW and LW,
-// one-sided, quarterly; the MRI app's data/rstar.json), against the real policy rate (funds rate less the expected
-// inflation HLW uses; the latest from FedWatch's effective rate). Above r* the policy is tight, below it easy.
+// 中立金利: the axis of 『金利の重力』 chapter 8. r* from the New York Fed's LW model (one-sided, quarterly; the MRI app's
+// data/rstar.json), plus the 2% inflation target (not expected inflation) for the nominal neutral rate, plus the
+// standard term premium (10-year +1.0, 30-year +1.5). The axis is held fixed; what is read is the distance from it:
+// the policy rate (the target range's midpoint), and the 10- and 30-year yields.
 let RSTAR=null;
 function rstarBlock(){
   const R=RSTAR&&RSTAR.hist;if(!R||R.length<8)return"";
-  const RW=pw($("rates")),qt=k=>Date.UTC(+k.slice(0,4),(+k.slice(6)-1)*3+1,15),last=R[R.length-1];
+  const RW=pw($("rates")),qt=k=>Date.UTC(+k.slice(0,4),(+k.slice(6)-1)*3+1,15),lw=R.filter(r=>r[2]!=null),last=lw[lw.length-1];if(!last)return"";
+  const rs=last[2],nn=rs+2,n10=nn+1,n30=nn+1.5,tg=FW&&FW.target,pol=tg?(tg[0]+tg[1])/2:null,y=CV&&CV.now&&CV.now.y||{};
+  const gp=pol!=null?pol-nn:null,g10=y["10Y"]!=null?y["10Y"]-n10:null,g30=y["30Y"]!=null?y["30Y"]-n30:null;
+  const sg=v=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(2)}`,side=v=>Math.abs(v)<0.125?[tx("中立","Neutral"),"#9aa0aa"]:v>0?[tx("中立の上","Above neutral"),"#ffb547"]:[tx("中立の下","Below neutral"),"#2ee6ff"];
   const SP=[["10Y","10年",10],["30Y","30年",30],["MAX","全期間",99]],sp=SP.find(r=>r[0]===store.get("rstar.rp","30Y"))||SP[1];
   const from=sp[2]>50?"":String(+last[0].slice(0,4)-sp[2])+last[0].slice(4),Rc=R.filter(r=>r[0]>=from);
-  // one model, as in 『金利の重力』: the New York Fed's headline estimate (HLW)
-  const S=[{c:"#ffb547",p:Rc.filter(r=>r[1]!=null).map(r=>[qt(r[0]),r[1]]),w:1.8},
-    {c:"#2ee6ff",p:Rc.filter(r=>r[3]!=null&&r[4]!=null).map(r=>[qt(r[0]),r[3]-r[4]]),w:1.5}];
-  // the real policy rate now: today's effective funds rate less the latest expected inflation
-  const pie=[...R].reverse().find(r=>r[4]!=null),ff=FW&&FW.effr!=null?FW.effr:last[3],real=pie&&ff!=null?ff-pie[4]:null;
-  const h=[...R].reverse().find(r=>r[1]!=null),gap=real!=null&&h?real-h[1]:null;
-  const st=gap==null?null:gap>0.25?[tx("引き締め的","Tight"),"#ffb547"]:gap<-0.25?[tx("緩和的","Easy"),"#2ee6ff"]:[tx("中立に近い","Near neutral"),"#9aa0aa"];
-  // the reading: where policy stands against r*, what moved the real rate over the year (the nominal rate or expected
-  // inflation), what the priced path would do to the gap, and how low the ceiling of neutral now sits
-  let rd="";
-  if(gap!=null&&!EN()){
-    const yb=R[R.length-5],rb=yb&&yb[3]!=null&&yb[4]!=null?yb[3]-yb[4]:null,dff=yb&&ff!=null?ff-yb[3]:null,dpi=yb&&pie?pie[4]-yb[4]:null;
-    const T=[gap<-0.25?"実質政策金利は r* を下回り、政策はまだ景気を冷やす側に立っていない。":gap>0.25?"実質政策金利は r* を上回り、政策は景気を冷やす側に立っている。":"実質政策金利は r* のすぐそばにあり、政策は中立に近い。"];
-    if(rb!=null&&real!=null&&Math.abs(real-rb)>=0.3){
-      if(real<rb)T.push(dpi!=null&&dff!=null&&dpi>0&&dpi>Math.abs(dff)?"この1年で実質金利を削ったのは、名目の利下げよりも期待インフレの上昇のほうだ。":"この1年で実質金利を下げたのは、名目の政策金利の引き下げだ。");
-      else T.push(dff!=null&&dpi!=null&&dff>Math.abs(dpi)?"この1年で実質金利を押し上げたのは、名目の利上げだ。":"この1年で実質金利が上がったのは、期待インフレが落ち着いたためだ。");}
-    const M=FW&&FW.meetings,end=M&&[...M].reverse().find(m=>m.date<="2027-12-31"),mv=end&&end.moves;
-    if(mv!=null&&Math.abs(mv)>=0.5)T.push(gap<0&&mv>0?"市場が織り込む利上げは、名目の引き締めであると同時に、r* との差を埋める道のりでもある。":gap>0&&mv<0?"市場が織り込む利下げは、r* の上にある実質金利を中立へ戻す道のりと読める。":gap<0&&mv<0?"それでも市場は利下げを織り込み、緩和はさらに深まる形だ。":"r* の上にありながら市場はさらに利上げを織り込み、引き締めは深まる形だ。");
-    const old=R.filter(r=>r[0]>="2000"&&r[0]<"2008"&&r[1]!=null),oa=old.length?old.reduce((a,r)=>a+r[1],0)/old.length:null;
-    if(oa!=null&&h&&oa-h[1]>=1)T.push("r* そのものも2008年より前の水準から大きく下がったままで、中立の天井が低いぶん、同じ金利でも経済にかかる重さは昔より大きい。");
-    rd=T.join("")}
+  const pp=Rc.filter(r=>r[3]!=null).map(r=>[qt(r[0]),r[3]]);if(pol!=null)pp.push([Date.now(),pol]);
+  const S=[{c:"#ffb547",p:Rc.filter(r=>r[2]!=null).map(r=>[qt(r[0]),r[2]+2]),w:1.8},{c:"#2ee6ff",p:pp,w:1.5},{c:"#b59cff",p:Rc.filter(r=>r[2]!=null).map(r=>[qt(r[0]),r[2]]),w:1.1}];
   const qj=k=>tx(`${k.slice(0,4)}年${["1〜3","4〜6","7〜9","10〜12"][+k.slice(6)-1]}月期`,k);
-  const card=(pre,name,v,sub)=>v==null?"":`<div><i class="pre">${pre}</i>${name}<b>${v.toFixed(2)}</b>${sub?`<small>${sub}</small>`:""}</div>`;
-  return `<div class="rcap"><span>${tx("自然利子率（r*）","Natural rate (r*)")}</span><span class="asof">${qj(last[0])}${tx("まで","")}</span></div>
-    <div class="rsum rx2 c3">${card(tx("NY連銀","NY Fed"),"r*",h&&h[1])}${card(tx("FF−期待インフレ","FF − exp. infl."),tx("実質政策金利","Real policy"),real)}${gap==null?"":`<div><i class="pre">${tx("実質−r*","Real − r*")}</i>${tx("差","Gap")}<b>${gap>0?"+":gap<0?"−":"±"}${Math.abs(gap).toFixed(2)}</b></div>`}</div>
-    ${st?`<div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span></div>`:""}${rd?`<div class="ccm" style="margin-top:10px"><p>${esc(rd)}</p></div>`:""}
-    <div class="rcap"><span>${tx("r* と実質政策金利の推移（%）","r* and the real policy rate (%)")}</span><div class="seg rpseg">${SP.map(([k,lb])=>`<button type="button" data-rs="${k}" aria-pressed="${k===sp[0]}">${EN()?k:lb}</button>`).join("")}</div></div>
-    <div class="rkey rleg"><span><i style="border-color:#ffb547"></i>r*</span><span><i style="border-color:#2ee6ff"></i>${tx("実質政策金利","Real policy rate")}</span></div>
+  // the reading: the three distances from the axis, and where r* itself has been heading
+  let rd="";
+  if(!EN()&&gp!=null){
+    const T=[Math.abs(gp)<0.125?"政策金利は名目中立金利とほぼ重なり、引き締めでも緩和でもない位置にある。":gp>0?"政策金利は名目中立金利を上に抜け、振り子は引き締めの側に振れている。":"政策金利は名目中立金利の下にあり、振り子は緩和の側に残っている。"];
+    if(g10!=null)T.push(g10>0.1?"10年金利も10年中立金利の上にあり、市場は中立以上の金利が続く景色を織り込んでいる。":g10<-0.1?"10年金利は10年中立金利の下にあり、市場は先の利下げか景気の減速を見ている。":"10年金利は10年中立金利とほぼ同じ高さにある。");
+    if(g10!=null&&g30!=null&&Math.abs(g30-g10)>=0.2)T.push(g30>g10?"30年の上乗せが10年より厚いのは、遠い先ほどインフレと成長の不確実性が値段に乗っているからだ。":"30年の乖離が10年より小さく、遠い先の不確実性への上乗せは控えめだ。");
+    const ya=lw.find(r=>r[0]===`${+last[0].slice(0,4)-1}${last[0].slice(4)}`);
+    if(ya&&Math.abs(rs-ya[2])>=0.15)T.push(rs>ya[2]?"軸の r* 自体もこの1年で切り上がった。AIへの設備投資と政府の借入が、資金の需要を押し上げている形だ。":"軸の r* 自体はこの1年で切り下がった。資金の需要が細り、中立の水準が下がっている。");
+    rd=T.join("")}
+  const card=(pre,name,v)=>v==null?"":`<div><i class="pre">${pre}</i>${name}<b>${v.toFixed(2)}</b></div>`;
+  // the policy rate's midpoint keeps its third decimal (3.875), as the book writes it
+  const gap=(name,a,b,g,d=2)=>g==null?"":(()=>{const sd=side(g);return `<div class="lq"><span class="k">${name}</span><span class="v">${a.toFixed(d)}<small style="color:var(--muted)"> / ${b.toFixed(2)}</small></span><span class="c" style="color:${sd[1]}">${g>0?"+":g<0?"−":"±"}${Math.abs(g).toFixed(d)}</span></div>`})();
+  const sdp=gp!=null?side(gp):null;
+  return `<div class="rcap"><span>${tx("中立金利（軸）","Neutral rates (the axis)")}</span><span class="asof">${tx(`r* は${qj(last[0])}`,`r* through ${last[0]}`)}</span></div>
+    <div class="rsum rx2 c4">${card(tx("LW","LW"),"r*",rs)}${card(tx("r*+2%","r*+2%"),tx("名目中立","Neutral"),nn)}${card(tx("+1.0","+1.0"),tx("10年中立","10Y neutral"),n10)}${card(tx("+1.5","+1.5"),tx("30年中立","30Y neutral"),n30)}</div>
+    ${sdp?`<div class="rstate"><span class="pill" style="color:${sdp[1]};border-color:${sdp[1]}55;background:${sdp[1]}14"><i></i>${tx("政策金利は","Policy rate ")}${sdp[0]}</span></div>`:""}
+    <div class="mtab"><div class="lq hd"><span>${tx("乖離","Distance")}</span><span>${tx("実際 / 中立","Actual / neutral")}</span><span>${tx("差","Gap")}</span></div>${gap(tx("政策金利（誘導目標の中央）","Policy rate (midpoint)"),pol,nn,gp,3)}${gap(tx("10年金利","10Y yield"),y["10Y"],n10,g10)}${gap(tx("30年金利","30Y yield"),y["30Y"],n30,g30)}</div>
+    ${rd?`<div class="ccm" style="margin-top:10px"><p>${esc(rd)}</p></div>`:""}
+    <div class="rcap"><span>${tx("名目中立金利と政策金利（%）","Neutral rate and policy rate (%)")}</span><div class="seg rpseg">${SP.map(([k,lb])=>`<button type="button" data-rs="${k}" aria-pressed="${k===sp[0]}">${EN()?k:lb}</button>`).join("")}</div></div>
+    <div class="rkey rleg"><span><i style="border-color:#ffb547"></i>${tx("名目中立金利","Neutral rate")}</span><span><i style="border-color:#2ee6ff"></i>${tx("政策金利","Policy rate")}</span><span><i style="border-color:#b59cff"></i>r*</span></div>
     ${tsChart(S,RW,{H:230,unit:"%",ref:[0]})}
-    <div class="lsrc">${tx("r* は景気を冷やしも温めもしない実質金利の水準。実質政策金利がそれを上回れば引き締め、下回れば緩和になる。r* はニューヨーク連銀の推計（Holston・Laubach・Williams）で、四半期ごと、その時点で分かっていたデータだけを使う片側推計。実質政策金利は FF 金利から HLW の期待インフレを引いたもの（最新はいまの実効 FF 金利から）","r*: the real rate that neither cools nor heats the economy. A real policy rate above it is tight, below it easy. Quarterly, one-sided estimates. Real policy rate: the funds rate less HLW's expected inflation (latest: today's effective rate)")}　${tx("出典","Source")} ${tx("ニューヨーク連銀","New York Fed")}</div>`;
+    <div class="lsrc">${tx("軸は『金利の重力』第八章による。r* はニューヨーク連銀の LW モデル（Laubach・Williams、四半期、一期遅れ、片側推計）。名目中立金利は r* にインフレ目標の2%を足したもの（期待インフレではない）。10年と30年の中立金利は、基準期間プレミアム1.0と1.5を足して固定する。軸は動かさず、そこからの距離を読む。政策金利の線は四半期平均の FF 金利で、最後の点はいまの誘導目標の中央","Axis from 『金利の重力』 ch. 8: r* from the New York Fed's LW model (quarterly, one quarter behind, one-sided), plus the 2% target for the nominal neutral rate, plus fixed term premia of 1.0 (10Y) and 1.5 (30Y). Policy line: quarterly average funds rate, last point today's target midpoint")}　${tx("出典","Source")} ${tx("ニューヨーク連銀","New York Fed")}</div>`;
 }
 // カナリア: the corporate bond spread (OAS), the canary in the mine. Lenders get nervous before shareholders do: a
 // sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks; a spread
