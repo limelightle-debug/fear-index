@@ -1,4 +1,5 @@
-# 過去号: each time an issue goes out (data/paper.json pushed), keep it with the data it was read with
+# 過去号: each time an issue goes out (data/paper.json pushed), keep it with the data it was read with, and as a
+# picture (data/archive/img/<id>.jpg) that the page shows in place of the live issue
 name: archive
 on:
   push:
@@ -22,6 +23,13 @@ jobs:
         with: {repository: limelightle-debug/tqqq, path: tqqq, sparse-checkout: data}
       - name: archive the issue
         run: python3 fear-index/.github/scripts/archive.py .
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: keep the issue as a picture
+        run: |
+          pip install -q playwright pillow
+          python -m playwright install --with-deps chromium >/dev/null
+          python fear-index/scripts/snapshot.py .
       - name: commit
         working-directory: fear-index
         run: |
