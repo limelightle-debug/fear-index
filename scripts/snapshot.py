@@ -96,9 +96,13 @@ def main(ids):
             rel = f"data/archive/img/{iid}.jpg"
             (FI / rel).parent.mkdir(parents=True, exist_ok=True)
             img.save(FI / rel, "JPEG", quality=72, optimize=True, progressive=True)
+            # the thumbnail on the list: the top of the picture (the masthead), 440 wide
+            th = img.crop((0, 0, img.width, round(img.width * 0.585))).resize((440, round(440 * 0.585)), Image.LANCZOS)
+            trel = rel.replace(".jpg", ".t.jpg")
+            th.save(FI / trel, "JPEG", quality=72, optimize=True, progressive=True)
             for r in idx["issues"]:
                 if r["id"] == iid:
-                    r.update(img=rel.replace("data/archive/", ""), w=img.width, hgt=img.height)
+                    r.update(img=rel.replace("data/archive/", ""), w=img.width, hgt=img.height, thumb=trel.replace("data/archive/", ""))
             print(rel, img.size, round((FI / rel).stat().st_size / 1024), "KB")
         b.close()
     srv.shutdown()

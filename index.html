@@ -183,6 +183,15 @@ html.aimg .wrap>*:not(.top):not(.aimgv){display:none!important}
 .aflt button[aria-pressed="true"] i::after{content:"";position:absolute;left:3.5px;top:0.5px;width:4px;height:8px;border:solid #0b0d1a;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .aflt button.mor[aria-pressed="true"] i::after{border-color:#fff}
 .aflt button.mor[aria-pressed="true"]{border-color:#e3342b}.aflt button.eve[aria-pressed="true"]{border-color:#9db8ff}.aflt button.sun[aria-pressed="true"]{border-color:#ffd27a}
+.athumb{display:block;width:100%;height:auto;border-radius:10px;margin-top:8px;border:1px solid var(--line)}
+.aopen{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;padding:10px 0;border-radius:8px;background:var(--chip);color:var(--accent);font-size:14px;font-weight:700}.aopen i{font-style:normal;font-size:18px;line-height:1}
+.arow:active .aopen{background:rgba(46,230,255,.18)}.arow:active .athumb{opacity:.85}
+/* the picture of a past issue, opened over the page */
+.aview{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
+.aview .avbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:#111;border-bottom:1px solid var(--line);font-size:13.5px}
+.aview .avbar button{appearance:none;border:0;background:none;color:var(--accent);font:700 15px var(--f-body);padding:6px 0;cursor:pointer;white-space:nowrap}.aview .avbar span{color:var(--ink2);text-align:right}
+.aview .avsc{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}.aview .avsc img{display:block;width:100%;max-width:720px;height:auto;margin:0 auto}
+.aview .avld{position:absolute;left:0;right:0;top:40%;text-align:center;color:var(--muted);font-size:13px;pointer-events:none}
 .arow .ed.mor{background:#e3342b;color:#fff}.arow .ed.eve{background:#9db8ff}.arow .ed.sun{background:#ffd27a}
 .arow b{display:block;font-size:16.5px;font-weight:800;line-height:1.35;margin-top:6px}.arow small{display:block;font-size:13.5px;color:var(--ink2);margin-top:2px}
 .arow ul{margin:6px 0 0;padding:0;list-style:none;font-size:13px;color:var(--ink2)}.arow li{line-height:1.6}.arow li::before{content:"・"}
@@ -602,7 +611,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v207";
+const APP_VER="fi-v208";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -806,7 +815,7 @@ async function renderArch(){
   const on=store.get("arch.ed","mor,eve,sun").split(",").filter(k=>EDL[k]),L=(ARCHIDX.issues||[]).filter(r=>on.includes(r.ed));
   const chk=`<div class="aflt">${Object.entries(EDL).map(([k,l])=>`<button type="button" class="ed ${k}" data-aed="${k}" aria-pressed="${on.includes(k)}"><i></i>${l}</button>`).join("")}</div>`;
   el.innerHTML=`<div class="ph"><h2>過去号</h2><span class="asof">${L.length}号</span></div>`+chk+(L.length?L.map(r=>{const h=Array.isArray(r.head)?r.head:[r.head];
-    return `<a class="arow" href="?issue=${encodeURIComponent(r.id)}"><span class="at"><i class="ed ${esc(r.ed)}">${EDL[r.ed]||""}</i>${atLab(r.at)}</span><b>${esc(h[0]||"")}</b>${h[1]?`<small>${esc(h[1])}</small>`:""}${(r.points||[]).length?`<ul>${r.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}</a>`}).join(""):`<div class="soon">まだ過去号はありません</div>`);
+    return `<a class="arow" href="?issue=${encodeURIComponent(r.id)}" data-iss="${esc(r.id)}"><span class="at"><i class="ed ${esc(r.ed)}">${EDL[r.ed]||""}</i>${atLab(r.at)}</span>${r.thumb?`<img class="athumb" src="data/archive/${esc(r.thumb)}" alt="" loading="lazy" width="440" height="257">`:""}<b>${esc(h[0]||"")}</b>${h[1]?`<small>${esc(h[1])}</small>`:""}${(r.points||[]).length?`<ul>${r.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}<span class="aopen">紙面を開く<i>›</i></span></a>`}).join(""):`<div class="soon">まだ過去号はありません</div>`);
 }
 // a past issue: a bar back to the list in place of the tabs
 if(AIMG){const im=document.createElement("img");im.className="aimgv";im.src="data/archive/"+AIMG.img;im.width=AIMG.w;im.height=AIMG.hgt;im.alt="過去号";document.querySelector(".top").after(im)}
@@ -2244,6 +2253,17 @@ async function load(){
   if(!Object.keys(DATA).length)$("empty").textContent="データを読み込めませんでした";
   renderPaper();
 }
+// a past issue's picture opens over the list at once (no page load); the picture starts loading as the finger touches the row
+const issImg=id=>{const r=ARCHIDX&&(ARCHIDX.issues||[]).find(x=>x.id===id);return r&&r.img?r:null};
+document.addEventListener("pointerdown",e=>{const a=e.target.closest("a[data-iss]"),r=a&&issImg(a.dataset.iss);if(r)(new Image()).src="data/archive/"+r.img},{passive:true});
+document.addEventListener("click",e=>{const a=e.target.closest("a[data-iss]"),r=a&&issImg(a.dataset.iss);if(!r)return;e.preventDefault();
+  const v=document.createElement("div");v.className="aview";
+  v.innerHTML=`<div class="avbar"><button type="button" data-avclose>← 過去号一覧</button><span>${atLab(r.at)}　${EDL[r.ed]||""}</span></div><div class="avsc"><div class="avld">読み込み中…</div><img src="data/archive/${esc(r.img)}" width="${r.w}" height="${r.hgt}" alt="過去号"></div>`;
+  const im=v.querySelector("img");im.onload=()=>{const l=v.querySelector(".avld");l&&l.remove()};
+  document.body.appendChild(v);document.body.style.overflow="hidden";try{history.pushState({av:1},"")}catch(x){}});
+const avClose=()=>{const v=document.querySelector(".aview");if(v){v.remove();document.body.style.overflow=""}};
+document.addEventListener("click",e=>{if(e.target.closest("[data-avclose]")){if(history.state&&history.state.av)history.back();else avClose()}});
+window.addEventListener("popstate",avClose);
 document.addEventListener("click",e=>{const b=e.target.closest("[data-aed]");if(!b)return;const k=b.dataset.aed,cur=store.get("arch.ed","mor,eve,sun").split(",").filter(x=>EDL[x]);
   const nx=cur.includes(k)?cur.filter(x=>x!==k):cur.concat(k);if(!nx.length)return;store.set("arch.ed",nx.join(","));renderArch()});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rs]");if(b){store.set("rstar.rp",b.dataset.rs);renderRates()}});
