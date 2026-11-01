@@ -174,6 +174,14 @@ html.aimg .wrap>*:not(.top):not(.aimgv){display:none!important}
 .arow{display:block;padding:12px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}.arow:first-of-type{border-top:0}
 .arow .at{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
 .arow .ed{font-style:normal;font-size:12px;font-weight:900;letter-spacing:.12em;padding:2px 6px 2px 8px;border-radius:5px;color:#0b0d1a}
+.aflt{display:flex;gap:8px;margin:2px 0 6px;flex-wrap:wrap}
+.aflt button{appearance:none;display:inline-flex;align-items:center;gap:7px;font:700 13px/1 var(--f-body);letter-spacing:.08em;color:var(--ink2);background:transparent;border:1px solid var(--line);border-radius:7px;padding:8px 12px 8px 10px;cursor:pointer}
+.aflt button i{width:14px;height:14px;border-radius:3px;border:1.5px solid currentColor;display:inline-block;position:relative}
+.aflt button[aria-pressed="true"]{color:var(--ink);border-color:currentColor}
+.aflt button.mor[aria-pressed="true"] i{background:#e3342b;border-color:#e3342b}.aflt button.eve[aria-pressed="true"] i{background:#9db8ff;border-color:#9db8ff}.aflt button.sun[aria-pressed="true"] i{background:#ffd27a;border-color:#ffd27a}
+.aflt button[aria-pressed="true"] i::after{content:"";position:absolute;left:3.5px;top:0.5px;width:4px;height:8px;border:solid #0b0d1a;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.aflt button.mor[aria-pressed="true"] i::after{border-color:#fff}
+.aflt button.mor[aria-pressed="true"]{border-color:#e3342b}.aflt button.eve[aria-pressed="true"]{border-color:#9db8ff}.aflt button.sun[aria-pressed="true"]{border-color:#ffd27a}
 .arow .ed.mor{background:#e3342b;color:#fff}.arow .ed.eve{background:#9db8ff}.arow .ed.sun{background:#ffd27a}
 .arow b{display:block;font-size:16.5px;font-weight:800;line-height:1.35;margin-top:6px}.arow small{display:block;font-size:13.5px;color:var(--ink2);margin-top:2px}
 .arow ul{margin:6px 0 0;padding:0;list-style:none;font-size:13px;color:var(--ink2)}.arow li{line-height:1.6}.arow li::before{content:"・"}
@@ -589,7 +597,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v204";
+const APP_VER="fi-v205";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -789,8 +797,10 @@ async function renderArch(){
   const el=$("arch");
   if(!ARCHIDX){el.innerHTML=`<div class="soon">読み込み中…</div>`;
     try{const r=await fetch("data/archive/index.json?ts="+Date.now(),{cache:"no-store"});ARCHIDX=r.ok?await r.json():{issues:[]}}catch(e){ARCHIDX={issues:[]}}}
-  const L=ARCHIDX.issues||[];
-  el.innerHTML=`<div class="ph"><h2>過去号</h2><span class="asof">${L.length}号</span></div>`+(L.length?L.map(r=>{const h=Array.isArray(r.head)?r.head:[r.head];
+  // which editions to list (store "arch.ed", comma list; at least one stays on)
+  const on=store.get("arch.ed","mor,eve,sun").split(",").filter(k=>EDL[k]),L=(ARCHIDX.issues||[]).filter(r=>on.includes(r.ed));
+  const chk=`<div class="aflt">${Object.entries(EDL).map(([k,l])=>`<button type="button" class="ed ${k}" data-aed="${k}" aria-pressed="${on.includes(k)}"><i></i>${l}</button>`).join("")}</div>`;
+  el.innerHTML=`<div class="ph"><h2>過去号</h2><span class="asof">${L.length}号</span></div>`+chk+(L.length?L.map(r=>{const h=Array.isArray(r.head)?r.head:[r.head];
     return `<a class="arow" href="?issue=${encodeURIComponent(r.id)}"><span class="at"><i class="ed ${esc(r.ed)}">${EDL[r.ed]||""}</i>${atLab(r.at)}</span><b>${esc(h[0]||"")}</b>${h[1]?`<small>${esc(h[1])}</small>`:""}${(r.points||[]).length?`<ul>${r.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}</a>`}).join(""):`<div class="soon">まだ過去号はありません</div>`);
 }
 // a past issue: a bar back to the list in place of the tabs
@@ -2229,6 +2239,8 @@ async function load(){
   if(!Object.keys(DATA).length)$("empty").textContent="データを読み込めませんでした";
   renderPaper();
 }
+document.addEventListener("click",e=>{const b=e.target.closest("[data-aed]");if(!b)return;const k=b.dataset.aed,cur=store.get("arch.ed","mor,eve,sun").split(",").filter(x=>EDL[x]);
+  const nx=cur.includes(k)?cur.filter(x=>x!==k):cur.concat(k);if(!nx.length)return;store.set("arch.ed",nx.join(","));renderArch()});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-rs]");if(b){store.set("rstar.rp",b.dataset.rs);renderRates()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-ip]");if(b){store.set("infl.rp",b.dataset.ip);renderInfl()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-infl]");if(!b)return;
