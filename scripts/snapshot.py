@@ -18,7 +18,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
 FI = ROOT / "fear-index"
-W, DPR, SLICE = 390, 1.25, 2400
+W, DPR, SLICE = 390, 2, 2400
 HIDE = """
 .top,#guide,.foot,.rpseg,.rtog button[aria-pressed="false"],details>summary.more{display:none!important}
 .rtog button{pointer-events:none}
@@ -95,7 +95,7 @@ def main(ids):
             ctx.close()
             rel = f"data/archive/img/{iid}.jpg"
             (FI / rel).parent.mkdir(parents=True, exist_ok=True)
-            img.save(FI / rel, "JPEG", quality=55, optimize=True, progressive=True)
+            img.save(FI / rel, "JPEG", quality=72, optimize=True, progressive=True)
             for r in idx["issues"]:
                 if r["id"] == iid:
                     r.update(img=rel.replace("data/archive/", ""), w=img.width, hgt=img.height)
