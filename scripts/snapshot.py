@@ -18,7 +18,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
 FI = ROOT / "fear-index"
-W, DPR, SLICE = 390, 2, 2400
+W, DPR, SLICE = 390, 1.25, 2400
 HIDE = """
 .top,#guide,.foot,.rpseg,.rtog button[aria-pressed="false"],details>summary.more{display:none!important}
 .rtog button{pointer-events:none}
@@ -68,12 +68,12 @@ def shoot(page, url):
     page.evaluate("document.querySelectorAll('#intv details:not(.past)').forEach(d=>d.open=true)")
     page.wait_for_timeout(500)
     H = page.evaluate("Math.ceil(document.documentElement.scrollHeight)")
-    img = Image.new("RGB", (W * DPR, H * DPR))
+    img = Image.new("RGB", (round(W * DPR), round(H * DPR)))
     y = 0
     while y < H:
         h = min(SLICE, H - y)
         png = page.screenshot(clip={"x": 0, "y": y, "width": W, "height": h}, full_page=True)
-        img.paste(Image.open(BytesIO(png)).convert("RGB"), (0, y * DPR))
+        img.paste(Image.open(BytesIO(png)).convert("RGB"), (0, round(y * DPR)))
         y += h
     return img
 
@@ -95,7 +95,7 @@ def main(ids):
             ctx.close()
             rel = f"data/archive/img/{iid}.jpg"
             (FI / rel).parent.mkdir(parents=True, exist_ok=True)
-            img.save(FI / rel, "JPEG", quality=72, optimize=True, progressive=True)
+            img.save(FI / rel, "JPEG", quality=55, optimize=True, progressive=True)
             for r in idx["issues"]:
                 if r["id"] == iid:
                     r.update(img=rel.replace("data/archive/", ""), w=img.width, hgt=img.height)
