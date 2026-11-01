@@ -22,15 +22,18 @@ if(ISSUE){document.documentElement.classList.add("archive");
     window.Date=class extends RD{constructor(...a){super(...(a.length?a:[T]))}static now(){return T}};
     const of=window.fetch.bind(window),F=ARCH.files;
     const hasTail=v=>v&&typeof v==="object"&&(v.__tail?true:Object.values(v).some(hasTail));
-    const merge=(s,c)=>{
-      if(Array.isArray(s))return s.map((x,i)=>merge(x,Array.isArray(c)?c[i]:undefined));
+    // the older rows: data/archive/series/<file> ({path: every row ever seen}), else the current file
+    const older=(rows,s)=>(Array.isArray(rows)?rows.filter(r=>Array.isArray(r)&&typeof r[0]===typeof s.__from&&r[0]<s.__from):[]).concat(s.__tail);
+    const merge=(s,c,S,p)=>{
+      if(Array.isArray(s))return s.map((x,i)=>merge(x,Array.isArray(c)?c[i]:undefined,S,p+"/"+i));
       if(s&&typeof s==="object"){
-        if(s.__tail)return (Array.isArray(c)?c.filter(r=>Array.isArray(r)&&typeof r[0]===typeof s.__from&&r[0]<s.__from):[]).concat(s.__tail);
-        const o={};for(const k in s)o[k]=merge(s[k],c&&c[k]);return o}
+        if(s.__tail)return older(S&&S[p]?S[p]:c,s);
+        const o={};for(const k in s)o[k]=merge(s[k],c&&c[k],S,p+"/"+k);return o}
       return s};
+    const getj=u=>of(u+"?ts="+RD.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
     window.fetch=async(u,o)=>{
       const p=new URL(String(u&&u.url||u),location.href).pathname.replace(/^\/+/,"");
-      if(F[p]){let v=F[p];if(hasTail(v)){let c=null;try{const r=await of(String(u).split("?")[0]+"?ts="+RD.now(),{cache:"no-store"});if(r.ok)c=await r.json()}catch(e){}v=merge(v,c)}
+      if(F[p]){let v=F[p];if(hasTail(v)){const S=await getj("data/archive/series/"+p.replace(/\//g,"__")),c=S?null:await getj(String(u).split("?")[0]);v=merge(v,c,S,"")}
         return new Response(JSON.stringify(v),{status:200,headers:{"Content-Type":"application/json"}})}
       // a data file the issue did not have: not today's
       if(/\/data\/[^/]+\.json$/.test("/"+p)&&!/archive\/|vix_notes/.test(p))return new Response("null",{status:404});
