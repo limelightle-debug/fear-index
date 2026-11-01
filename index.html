@@ -557,9 +557,9 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
   <div class="top">
     <div class="seg" id="tabs" role="group" aria-label="表示">
       <button type="button" data-tab="paper">恐怖新聞</button>
+      <button type="button" data-tab="arch">過去号</button>
       <button type="button" data-tab="apps">アプリ</button>
       <button type="button" data-tab="books">書籍</button>
-      <button type="button" data-tab="arch">過去号</button>
     </div>
     <div class="abar" id="abar"></div>
   </div>
@@ -613,7 +613,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v209";
+const APP_VER="fi-v210";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -798,7 +798,7 @@ function renderBooks(){
     <div class="bmap">${BOOKS.filter(x=>!x[5]).map(bookRow).join("")}</div>`;
   $("books-en").innerHTML=`<div class="ph"><h2>${tx("英語版","English edition")}</h2><span class="asof">${tx("English edition","")}</span></div><div class="bmap solo">${BOOKS.filter(x=>x[5]).map(bookRow).join("")}</div>`;
 }
-const TABL={paper:["恐怖新聞","Fear Paper"],apps:["アプリ","Apps"],books:["書籍","Books"],arch:["過去号","Back issues"]};
+const TABL={paper:["恐怖新聞","Fear Paper"],arch:["過去号","Back issues"],apps:["アプリ","Apps"],books:["書籍","Books"]};
 function renderTabs(){
   document.querySelectorAll("#tabs button").forEach(b=>{b.textContent=TABL[b.dataset.tab][EN()?1:0];b.setAttribute("aria-pressed",b.dataset.tab===state.tab)});
   document.title=tx("恐怖新聞","The Fear Paper");
