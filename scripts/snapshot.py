@@ -18,7 +18,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
 FI = ROOT / "fear-index"
-W, DPR, SLICE = 390, 2, 2400
+W, DPR, SLICE = 440, 2, 2400  # Ryo's iPhone: 440pt wide
 HIDE = """
 .top,#guide,.foot,.rpseg,.rtog button[aria-pressed="false"],details>summary.more{display:none!important}
 .rtog button{pointer-events:none}
