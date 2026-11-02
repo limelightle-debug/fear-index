@@ -613,7 +613,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v210";
+const APP_VER="fi-v211";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -922,10 +922,10 @@ function renderIdxEve(el,st,asof){
     +(st&&st.sources&&st.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div></div>`:"");
 }
 // the director's special interview: data/interview.json {items: [{date, pub, title: [head, sub], lead, qa: [[q, a]]}]},
-// the newest first; on the paper's first page for 7 days from pub, the first 3 answers open and the rest behind a tap
+// the newest first; in the Sunday edition only (gone from the next weekday issue on), within 7 days from pub, the first 3 answers open and the rest behind a tap
 let INTV=null;
 function renderIntv(){
-  const el=$("intv"),it=INTV&&INTV.items||[],now=Date.now(),cur=it.find(x=>+new Date(x.pub)<=now&&now<+new Date(x.pub)+7*864e5);
+  const el=$("intv"),it=INTV&&INTV.items||[],now=Date.now(),cur=SUN()&&it.find(x=>+new Date(x.pub)<=now&&now<+new Date(x.pub)+7*864e5);
   if(!cur){el.hidden=true;return}
   const md=s=>{const [y,m,d]=s.split("-");return`${y}年${+m}月${+d}日`};
   const QA=q=>q.map(([a,b,f])=>`<div class="qa"><p class="q"><span>聞き手</span>${esc(a)}</p><p class="a"><span>所長</span>${esc(b)}</p>${f&&f.img?`<figure class="ifig"><img src="${esc(f.img)}" alt="${esc(f.cap||"")}" loading="lazy">${f.cap?`<figcaption>${esc(f.cap)}</figcaption>`:""}</figure>`:""}</div>`).join("");
