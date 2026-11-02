@@ -175,6 +175,10 @@ html.aimg .wrap>*:not(.top):not(.aimgv){display:none!important}
 .arow{display:block;padding:12px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}.arow:first-of-type{border-top:0}
 .arow .at{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
 .arow .ed{font-style:normal;font-size:12px;font-weight:900;letter-spacing:.12em;padding:2px 6px 2px 8px;border-radius:5px;color:#0b0d1a}
+.xpl{margin:10px 0 4px;border:1px solid var(--line);border-radius:10px;padding:0 12px}
+.xpl summary{list-style:none;cursor:pointer;padding:10px 0;font-size:13.5px;font-weight:700;color:var(--accent)}.xpl summary::-webkit-details-marker{display:none}
+.xpl summary::after{content:"＋";float:right;color:var(--muted)}.xpl[open] summary::after{content:"－"}
+.xpl p{margin:0 0 10px;font-size:13.5px;line-height:1.75;color:var(--ink2)}.xpl p b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:2px}
 .aflt{display:flex;gap:8px;margin:2px 0 6px;flex-wrap:wrap}
 .aflt button{appearance:none;display:inline-flex;align-items:center;gap:7px;font:700 13px/1 var(--f-body);letter-spacing:.08em;color:var(--ink2);background:transparent;border:1px solid var(--line);border-radius:7px;padding:8px 12px 8px 10px;cursor:pointer}
 .aflt button i{width:14px;height:14px;border-radius:3px;border:1.5px solid currentColor;display:inline-block;position:relative}
@@ -613,7 +617,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v212";
+const APP_VER="fi-v213";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -2140,7 +2144,8 @@ function liqCharts(){
       +`<div class="lsrc" style="margin-top:2px">${tx("点線は2019年9月に短期金利が跳ねたときの準備預金 1.4兆ドル","Dashed: reserves of $1.4T when short rates spiked in September 2019")}</div>`}
   if(Y&&Y.spread&&Y.spread.length>20){
     h+=`<div class="rcap"><span>${tx("SOFR − IORB（bp）","SOFR − IORB (bp)")}</span>${rpSeg("sf")}</div>`+tsChart([{c:"#ff8a7a",p:rCut(Y.spread,"sf").map(q=>[dms(q[0]),q[2]*100]),w:1.2}],W,{H:180,dec:0,zero:true})
-      +`<div class="lsrc" style="margin-top:2px">${tx("0 を上回ると、銀行が準備預金に付く金利より高く資金を取り合っている。IORB は政策金利の上限−0.10","Above 0, banks pay more for cash than reserves earn. IORB: top of the target range less 0.10")}</div>`}
+      +`<div class="lsrc" style="margin-top:2px">${tx("0 を上回ると、銀行が準備預金に付く金利より高く資金を取り合っている。IORB は政策金利の上限−0.10","Above 0, banks pay more for cash than reserves earn. IORB: top of the target range less 0.10")}</div>`
+      +`<details class="xpl"><summary>SOFR − IORB とは（詳しく）</summary><p><b>SOFR とは</b>米国債を担保にして、翌日まで現金を貸し借りする取引（レポ）の金利だ。1日に2兆ドルを超える取引の実際の金利から、ニューヨーク連銀が毎朝、前の営業日の分を出す。ドルの短期金利の正本と言っていい。</p><p><b>IORB とは</b>FRB が銀行の準備預金に付ける金利だ。政策金利の幅の上限から0.10を引いた水準に置かれている。銀行は準備預金を FRB に置いておくだけで、この金利を危険なしに受け取れる。</p><p><b>なぜ差を見るのか</b>準備預金を持つ銀行は、IORB より高い金利でなければレポに現金を出さない。準備預金がたっぷりあるあいだは、現金が余っているので SOFR は IORB より下に沈む。この1年の大半がそうだった。準備預金が足りなくなると、国債を抱えるディーラーが現金を求めて金利を競り上げ、SOFR が IORB を上回る。0より上は、銀行が FRB に置いておくより高い金利を払ってでも、現金を取り合っているということだ。</p><p><b>緩衝材と本体</b>FRB が量的引き締めでドルを吸うとき、まず減るのは MMF などが FRB に置くリバースレポ、つまり緩衝材だ。緩衝材が尽きると、準備預金という本体が直接削られる。SOFR と IORB の差は、その本体がどこまで細ったかを、最も早く、最も正直に映す。</p><p><b>2019年9月</b>準備預金が約1.4兆ドルまで減ったところで、レポ金利が一気に跳ねた。9月17日の SOFR は5.25%で、当時の準備預金の金利（2.10%）を3ポイント以上も上回った。どこが下限かは、跳ねるまで誰にも分からなかった。FRB は急いで資金を供給し、短期国債の買い入れを始めた。</p><p><b>月末の跳ねは割り引く</b>月末、四半期末、年末は、銀行が決算の見栄えのためにレポの貸し出しを絞り、国債の決済や納税も重なるので、SOFR は一時的に跳ねやすい。チャートの11月から12月、年末の突き出しの多くはこれだ。見るべきは、そうした日ではない普通の日に0を上回り続けるかどうかだ。</p><p><b>天井の目安</b>FRB は政策金利の幅の上限で、国債を担保に現金を貸す常設の窓口（スタンディング・レポ・ファシリティ）を開いている。理屈の上では、SOFR が上限を大きく超える前に、銀行はこの窓口から借りる。IORB は上限より0.10低いので、差が10bp前後まで張るのは、窓口が使われ始める水準だ。</p><p><b>いまの読み方</b>この1年、差はほぼ0の下にあった。10月下旬から、月末でもない日に0を上回り始めている。緩衝材のリバースレポはすでに尽きている。差がプラスに居座り、じわじわ広がるなら、準備預金は下限に近づいている。株にとっては配管の詰まりという向かい風になる。同時に、FRB が綱を緩めに動く合図にもなる。2019年はそうなった。</p></details>`}
   if(M&&M.hist){const yy=yoyOf(M.hist);h+=M.hist.length>=12?`<div class="rcap"><span>${tx("M2 総額と前年比","M2, level and change on a year")}</span></div>`
     +legend([[tx("総額（兆ドル・左）","Level ($tn, left)"),"#b59cff"],[tx("前年比（%・右）","Year on year (%, right)"),"#5fd08e"]])+m2Chart(M.hist,yy,W):""}
   return h;
