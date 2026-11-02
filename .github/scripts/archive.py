@@ -57,13 +57,17 @@ def keep_series(d, name, found):
 
 
 def edition(p):
-    """The edition the app shows for this paper.json, and when it went out."""
+    """The edition the app shows for this paper.json, and when it went out: the newest of the morning (revised)
+    article, the evening edition (preAt) and the Sunday edition (sunAt), as the page reads it (a sunAt or preAt
+    left over from an earlier edition does not count)."""
+    def T(v):
+        return datetime.datetime.fromisoformat(v) if v else None
     w = p.get("revisedAt") or p.get("writtenAt")
-    if p.get("sunAt"):
-        return "sun", p["sunAt"]
-    if p.get("preAt") and (not w or p["preAt"] > w):
-        return "eve", p["preAt"]
-    return "mor", w
+    c = [(T(v), ed, v) for ed, v in (("mor", w), ("eve", p.get("preAt")), ("sun", p.get("sunAt"))) if v]
+    if not c:
+        return "mor", None
+    _, ed, at = max(c, key=lambda x: x[0])
+    return ed, at
 
 
 def main(ROOT, NOW=None):
