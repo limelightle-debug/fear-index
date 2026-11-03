@@ -634,7 +634,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v220";
+const APP_VER="fi-v221";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -655,7 +655,7 @@ const APPS=[
   ["tqqq","TQQQ","TQQQ の価格、高値からの下落、年次の成績",`${BASE}/tqqq/`,"icons/app-tqqq.png"],
   ["mind","Mind","毎朝の局面と、今大切な言葉、陥りやすいバイアス",`${BASE}/mind/`,"icons/app-mind.png"],
   ["ndx","Nasdaq 100","構成銘柄のヒートマップ、騰落率、組入比率",`${BASE}/ndx-heatmap/`,"icons/app-ndx.png"],
-  ["money","Money","金利・量・ものさし。自然利子率Now と、軸からの距離",`${BASE}/fear-index/money/`,"money/icons/icon-192.png"]];
+  ["money","Money","金利・量・ものさし。自然利子率Now と、軸からの距離",`${BASE}/money/`,"icons/app-money.png"]];
 // the books in the order of the institute's book map, each linking to its Amazon page
 // [title, Amazon, cover, layer in the tree, the title's box on the tree image in % (left, top, width, height)]
 const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vix.jpg","樹",[34,36,32,7],"",[50.04,39.14,4.4]],["Listen to VIX","https://amzn.asia/d/07rtXhVo","icons/book-listen-vix.jpg","",null,"en"],["金利の重力","https://amzn.asia/d/04cgLpEq","icons/book-kinri.jpg","地",[40.5,60,19.5,6.5],"",[50.17,62.92,3.35]],
