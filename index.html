@@ -617,7 +617,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v216";
+const APP_VER="fi-v217";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1117,7 +1117,10 @@ function renderMriTop(){
   el.hidden=false;
   const Y=Math.floor(day/1e4),Mo=Math.floor(day/100)%100,Dd=day%100;
   const hm=at?(EN()?fmtJ(at)+" Japan time":"日本時間 "+fmtJ(at)):"";
-  el.innerHTML=live?`<div class="ph"><h2>${tx("MRI リアルタイム","MRI, realtime")}</h2><span class="asof">${hm}</span></div>`
+  // overnight, Cboe refreshes its delayed option quotes only now and then (about hourly in the evening, then often not
+  // until 3:00 ET), so the realtime MRI can sit unchanged for hours: say so when the numbers are older than 20 minutes
+  const stale=live&&!snap&&at&&Date.now()-at>20*6e4;
+  el.innerHTML=live?`<div class="ph"><h2>${tx("MRI リアルタイム","MRI, realtime")}</h2><span class="asof">${hm}</span></div>${stale?`<div class="rxn" style="margin:-2px 0 6px">${tx("夜間は Cboe のオプション価格の更新がまばらで、次の更新を待っている。米東部の朝3時（日本時間17時、夏時間は16時）からは数分おきに動く。","Overnight Cboe refreshes its option quotes only now and then; waiting for the next one (every few minutes from 3:00 ET).")}</div>`:""}`
     :`<div class="ph"><h2>${tx("MRI 確定値","MRI, confirmed")}</h2><span class="asof">${dayLab(Mo,Dd,wdOf(Y,Mo,Dd))} ${CLOSE()}</span></div>`;
   el.innerHTML+=`
     <div class="head mhd">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div>
