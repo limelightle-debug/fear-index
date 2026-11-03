@@ -4,9 +4,9 @@
  "title": "米中間選挙",
  "head": [
   "開票はじまる",
-  "議会の構図を決める当確はまだ出ていない"
+  "両院の多数派を決める当確はまだ確認できない"
  ],
- "body": "投票は東部の州から順に締め切られ、開票が始まった。日本時間8時半の時点で、AP通信が当確を出した議席は確認できていない。上下両院の多数派はまだ決まっていない。3日の米株はS&P500が0.36%高、ナスダック100が0.68%高、ダウ平均が0.38%安で、開票を前に大きな動きはなかった。",
+ "body": "インディアナ州とケンタッキー州の一部で最初の投票が締め切られ、開票が始まった。日本時間8時45分の時点で、AP通信の当確は確認できておらず、議席数は前の回のままとした。上下両院の多数派はまだ決まっていない。3日の米株はS&P500が0.36%高、ナスダック総合が0.83%高、ダウ平均が0.38%安で引けた。",
  "house": {
   "D": 0,
   "I": 0,
@@ -33,27 +33,27 @@
   ],
   [
    "上院",
-   "メーン：開票待ち、当確出ず"
+   "ミシガン：開票待ち、当確出ず"
   ],
   [
    "上院",
-   "アイオワ：開票待ち、当確出ず"
+   "メーン：開票待ち、当確出ず"
   ],
   [
    "議会",
    "下院・上院の多数派：AP通信の判定待ち"
   ]
  ],
- "asof": "2026-11-04T08:40:00+09:00",
+ "asof": "2026-11-04T08:42:00+09:00",
  "source": "AP通信",
  "sources": [
   [
-   "ABC News（AP通信の集計）",
-   "https://www.abc.net.au/news/2026-11-04/us-midterm-election-results-2026/107235570"
+   "TheStreet",
+   "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-nov-03-2026"
   ],
   [
-   "PBS NewsHour",
-   "https://www.pbs.org/newshour/politics/watch-how-does-the-associated-press-call-2026-midterm-election-winners-4-things-to-know"
+   "Al Jazeera（AP通信の集計）",
+   "https://www.aljazeera.com/us-midterm-elections-2026/results/"
   ]
  ]
 }
