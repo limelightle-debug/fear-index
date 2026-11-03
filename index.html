@@ -634,7 +634,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v223";
+const APP_VER="fi-v224";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -771,11 +771,10 @@ const MAP=[
   ["影","観測","黒鳥の影を追う",[["mri","相場の天井を捉える","第三章"]]],
   ["心","心理","黒鳥と踊れ",[["mind","今大切な格言と、陥りやすいバイアス","第四・五章"]]],
   ["技","判定と実行","黒鳥と翔べ",[["vix","VIX イベント。底を捉える","第九章"],["tqqq","弾を選ぶ","第十一章"]]],
-  ["体","設計と運用","黒鳥に備えろ",[["ndx","ポートフォリオの主軸を選ぶ。環境認識","第十四章"]]],
-  ["地","環境","金利の重力",[["money","金利・量・ものさしで、いまどこにいるかを測る","『金利の重力』"]]]];
+  ["体","設計と運用","黒鳥に備えろ",[["ndx","ポートフォリオの主軸を選ぶ。環境認識","第十四章"],["money","金利・量・ものさしで、いまどこにいるかを測る","『金利の重力』"]]]];
 // the same in English, by position: [role, title, [what it does, chapter] per app]
 const MAP_EN=[["Watch","Track the black swan's shadow",[["Catch the market's top","Ch. 3"]]],["Mind","Dance with the black swan",[["Today's words and the biases to watch","Ch. 4-5"]]],
-  ["Judge and act","Fly with the black swan",[["VIX events. Catch the bottom","Ch. 9"],["Choose your ammunition","Ch. 11"]]],["Design and run","Prepare for the black swan",[["Choose the core of the portfolio. Read the environment","Ch. 14"]]],["Ground","The gravity of interest rates",[["Rates, quantity and yardsticks: where we stand","“The Gravity of Interest Rates”"]]]];
+  ["Judge and act","Fly with the black swan",[["VIX events. Catch the bottom","Ch. 9"],["Choose your ammunition","Ch. 11"]]],["Design and run","Prepare for the black swan",[["Choose the core of the portfolio. Read the environment","Ch. 14"],["Rates, quantity and yardsticks: where we stand","“The Gravity of Interest Rates”"]]]];
 function renderApps(){
   const A=Object.fromEntries(APPS.map(a=>[a[0],a]));
   const card=([k,role,ch],en)=>{if(EN()&&en)[role,ch]=en;const[,n,,url,ic]=A[k];return`<a class="node" href="${url}"><img src="${ic}" alt="" width="44" height="44"><div><b>${n}${ch?`<i class="ch">${ch}</i>`:""}</b><span>${role}</span></div><em>›</em></a>`};
