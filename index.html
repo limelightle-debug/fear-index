@@ -617,7 +617,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v215";
+const APP_VER="fi-v216";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -640,7 +640,7 @@ const APPS=[
   ["ndx","Nasdaq 100","構成銘柄のヒートマップ、騰落率、組入比率",`${BASE}/ndx-heatmap/`,"icons/app-ndx.png"]];
 // the books in the order of the institute's book map, each linking to its Amazon page
 // [title, Amazon, cover, layer in the tree, the title's box on the tree image in % (left, top, width, height)]
-const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vix.jpg","樹",[34,36,32,7],"",[50.04,39.14,4.4]],["Listen to VIX","https://amzn.asia/d/07rtXhVo","icons/book-vix-en.jpg","",null,"en"],["金利の重力","https://amzn.asia/d/04cgLpEq","icons/book-kinri.jpg","地",[40.5,60,19.5,6.5],"",[50.17,62.92,3.35]],
+const BOOKS=[["VIXの声を聴け","https://amzn.asia/d/0hrhh1Ny","icons/book-vix.jpg","樹",[34,36,32,7],"",[50.04,39.14,4.4]],["Listen to VIX","https://amzn.asia/d/07rtXhVo","icons/book-listen-vix.jpg","",null,"en"],["金利の重力","https://amzn.asia/d/04cgLpEq","icons/book-kinri.jpg","地",[40.5,60,19.5,6.5],"",[50.17,62.92,3.35]],
   ["帳簿と物差し","https://amzn.asia/d/03aL6HY1","icons/book-chobo.jpg","根",[25.5,73,21,6.5],"",[35.71,75.72,3.12]],["失敗の魔術師","https://amzn.asia/d/0hWKU73R","icons/book-shippai.jpg","根",[56,73,21,6.5],"",[66.38,75.72,3.12]],
   ["兵法に学べ","https://amzn.asia/d/02BQOi5d","icons/book-heiho.jpg","根",[25.5,81.5,18,6.5],"",[34.42,84.15,3.1]],["相場のアノマリーを斬る","https://amzn.asia/d/0boQWl0D","icons/book-anomaly.jpg","根",[49,81.5,36,6.5],"",[66.96,84.26,3.12]]];
 const store={get:(k,d)=>{try{return localStorage.getItem("fi."+k)??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem("fi."+k,v)}catch(e){}}};
