@@ -634,7 +634,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v222";
+const APP_VER="fi-v223";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -2120,7 +2120,8 @@ function renderJobs(){
   const man=v=>en?`${v>=0?"+":"−"}${Math.round(Math.abs(v))}K`:`${v>=0?"+":"−"}${(Math.abs(v)/10).toFixed(1)}万人`;
   const cl=CL&&CL.length?CL[CL.length-1]:null,clp=CL&&CL.length>1?CL[CL.length-2]:null,ccl=CL?[...CL].reverse().find(q=>q[2]):null;
   const kk=v=>en?`${Math.round(v/1e3)}K`:`${(v/1e4).toFixed(1)}万件`;
-  const h1=en?`Payrolls ${man(lp[1])}, unemployment ${ur[1].toFixed(1)}%`:`雇用者 ${man(lp[1])}　失業率${ur[1].toFixed(1)}%`;
+  const cpL=lastOf(B.civpart||[]);
+  const h1=en?`Payrolls ${man(lp[1])}, unemployment ${ur[1].toFixed(1)}%${cpL?`, participation ${cpL[1].toFixed(1)}%`:""}`:`雇用者 ${man(lp[1])}　失業率${ur[1].toFixed(1)}%${cpL?`　参加率${cpL[1].toFixed(1)}%`:""}`;
   let VU=null;
   const cut=String(new Date().getUTCFullYear()-2)+"-"+String(new Date().getUTCMonth()+1).padStart(2,"0");
   const W=pw(el);
