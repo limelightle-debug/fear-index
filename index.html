@@ -200,7 +200,7 @@ html.aimg .wrap>*:not(.top):not(.aimgv){display:none!important}
 .arow b{display:block;font-size:16.5px;font-weight:800;line-height:1.35;margin-top:6px}.arow small{display:block;font-size:13.5px;color:var(--ink2);margin-top:2px}
 .arow ul{margin:6px 0 0;padding:0;list-style:none;font-size:13px;color:var(--ink2)}.arow li{line-height:1.6}.arow li::before{content:"・"}
 /* the Sunday edition: only the points, the week and the week ahead */
-body.sun #t-paper>section:not(#issue):not(#intv):not(#sunwk):not(#sunwe):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
+body.sun #t-paper>section:not(#issue):not(#gogai):not(#intv):not(#sunwk):not(#sunwe):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
 /* the evening edition: the points, the realtime MRI, the futures, the news, rates and commodities, and only the releases of the night (paper.json eveRel) */
 body.evening #t-paper>section:not(#issue):not(#intv):not(#mritop):not(#idx):not(#news):not(#rates):not(#cmdty):not(.evrel),body.evening #t-paper>.sec{display:none!important}
 .wkr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
@@ -210,6 +210,22 @@ body.evening #t-paper>section:not(#issue):not(#intv):not(#mritop):not(#idx):not(
 .cal{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
 .cal td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:baseline}
 /* the director's special interview (data/interview.json): only when there is one, for a week from its publication */
+/* 号外: an extra edition over the paper while a big event is counted (data/election.json), its own red frame */
+.gogai{border:1.5px solid #e3342b;background:linear-gradient(180deg,rgba(227,52,43,.10),rgba(227,52,43,0) 140px),var(--panel)}
+.gogai .gtop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.gogai .gtag{font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;font-weight:800;font-size:22px;letter-spacing:.3em;color:#fff;background:#e3342b;padding:4px 6px 4px 12px;border-radius:4px;line-height:1}
+.gogai .gtop .asof{text-align:right;line-height:1.35}
+.gogai .gbody{font-size:14px;line-height:1.75;margin:0 0 10px}
+.gogai .seat{margin:14px 0 4px}.gogai .seat .sh{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.gogai .seat .sh b{font-size:15px;color:var(--ink)}
+.gogai .sn{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;font-family:var(--f-tick);font-variant-numeric:tabular-nums}
+.gogai .sn .d{color:#5b9bff}.gogai .sn .r{color:#ff5c5c}.gogai .sn span b{font-size:30px;font-weight:800;line-height:1}.gogai .sn span small{font-family:var(--f-body);font-size:11.5px;margin:0 4px;color:var(--ink2)}
+.gogai .bar{position:relative;display:flex;height:22px;border-radius:5px;overflow:hidden;background:#2a2c38}
+.gogai .bar i{display:block;height:100%}.gogai .bar .D{background:#3b7dff}.gogai .bar .I{background:#8fb6ff}.gogai .bar .U{background:#3a3d4c;flex:1}.gogai .bar .R{background:#ff4747}
+.gogai .bar em{position:absolute;top:-4px;bottom:-4px;width:2px;background:#fff;left:50%;transform:translateX(-1px)}
+.gogai .need{text-align:center;font-size:11.5px;color:var(--muted);margin-top:4px}
+.gogai .gkey{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--ink2);margin-top:10px}.gogai .gkey i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.gogai .races{margin-top:12px}
 .intv .kick{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;color:#ffd27a;border:1px solid rgba(255,210,122,.55);background:rgba(255,210,122,.1);border-radius:999px;padding:1px 9px;margin-bottom:8px}
 .intv .ilead{font-size:13.5px;line-height:1.7;color:var(--ink2);margin:0 0 6px}
 .intv .qa{border-top:1px solid var(--line);padding:10px 0 2px}
@@ -569,6 +585,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
   </div>
 
   <div id="t-paper">
+    <section class="panel gogai" id="gogai" hidden></section>
     <section class="panel issue" id="issue"></section>
     <section class="panel intv" id="intv" hidden></section>
     <section class="panel" id="sunwk" hidden></section>
@@ -617,7 +634,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v217";
+const APP_VER="fi-v218";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -927,6 +944,31 @@ function renderIdxEve(el,st,asof){
   el.innerHTML=`<div class="ph"><h2>${tx("株価指数先物","Index futures")}</h2><span class="asof">${preLab()}</span></div><div class="head">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div><div style="height:8px"></div>${fc?`<div class="ccm"><p>${esc(fc)}</p></div>`:""}<div class="tiles">${F.map(tile).join("")}</div>
     <div class="rxn">${tx("前日の清算値からの騰落。半導体は先物がないため、半導体ETF（SOXX）の寄り前の値。","Change from the previous settlement. Semiconductors: no future trades, so the SOXX ETF's pre-market quote.")}</div><div class="ndxw" id="ndxw"></div>`
     +(st&&st.sources&&st.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div></div>`:"");
+}
+// 号外: data/election.json {active, head: [h1, h2], body, house/senate: {D, R, I, total, need}, races: [[tag, text]], asof, source,
+// sources}. Seats are the totals as AP counts them (seats not up included); called races only, the rest undecided.
+// Shown over the paper while active and for 36 hours from asof.
+let ELEC=null;
+function renderGogai(){
+  const el=$("gogai"),E=ELEC;
+  if(!E||!E.active||!E.asof||Date.now()-new Date(E.asof)>36*36e5||Date.now()<new Date(E.asof)-36e5){el.hidden=true;return}
+  const at=new Date(E.asof),n=v=>+v||0;
+  const seat=(name,C)=>{if(!C)return"";const tot=C.total,D=n(C.D),I=n(C.I),R=n(C.R),U=Math.max(0,tot-D-I-R),pc=v=>(v/tot*100).toFixed(3)+"%";
+    const nR=C.needR||C.need,lead=D+I>=C.need?tx("民主党が過半数","Democrats hold a majority"):R>=nR?tx("共和党が多数派","Republicans in control"):tx(`残り${U}`,`${U} undecided`);
+    return `<div class="seat"><div class="sh"><b>${name}</b><span>${tx(`過半数 ${C.need}　${lead}`,`majority ${C.need} · ${lead}`)}</span></div>
+      <div class="sn"><span class="d"><b>${D+I}</b><small>${tx("民主党","Dem")}${I?tx(`（無所属${I}を含む）`,` (incl. ${I} ind.)`):""}</small></span><span class="r"><small>${tx("共和党","Rep")}</small><b>${R}</b></span></div>
+      <div class="bar"><i class="D" style="width:${pc(D)}"></i><i class="I" style="width:${pc(I)}"></i><i class="U"></i><i class="R" style="width:${pc(R)}"></i><em></em></div>
+      <div class="need">${C.needR&&C.needR!==C.need?tx(`中央の線が半数。民主党は${C.need}、共和党は${C.needR}で多数派（同数なら副大統領の1票）。灰色は未確定`,`The line marks half. Democrats need ${C.need}, Republicans ${C.needR} (the Vice President breaks ties). Grey: not yet called`):tx(`中央の線が過半数（${C.need}）。灰色は未確定`,`The line marks a majority (${C.need}). Grey: not yet called`)}</div></div>`};
+  const R=Array.isArray(E.races)?E.races:[];
+  el.hidden=false;
+  el.innerHTML=`<div class="gtop"><span class="gtag">号外</span><span class="asof">${esc(E.title||tx("米中間選挙","US midterms"))}<br>${tx(`日本時間 ${fmtJ(at)} 時点`,`as of ${fmtJ(at)} Japan time`)}</span></div>
+    ${Array.isArray(E.head)&&E.head.length?`<div class="head">${esc(E.head[0])}${E.head[1]?`<span class="h2b">${esc(E.head[1])}</span>`:""}</div><div style="height:8px"></div>`:""}
+    ${E.body?`<p class="gbody">${esc(E.body)}</p>`:""}
+    ${seat(tx("下院","House"),E.house)}${seat(tx("上院","Senate"),E.senate)}
+    <div class="gkey"><span><i style="background:#3b7dff"></i>${tx("民主党","Democrats")}</span><span><i style="background:#8fb6ff"></i>${tx("無所属（民主党と会派）","Independents (caucus with Dems)")}</span><span><i style="background:#ff4747"></i>${tx("共和党","Republicans")}</span><span><i style="background:#3a3d4c"></i>${tx("未確定","Not called")}</span></div>
+    ${R.length?`<div class="nws races">${R.map(([t,x])=>`<b>${esc(t)}</b><p>${esc(x)}</p>`).join("")}</div>`:""}
+    <div class="rxn" style="margin-top:10px">${tx(`議席数と当確は${esc(E.source||"AP通信")}の判定による。改選のない議席を含む。リードしているだけの選挙区は数えていない。`,`Seats and calls as ${esc(E.source||"AP")} reports them, seats not up included; races only leading are not counted.`)}</div>
+    ${Array.isArray(E.sources)&&E.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${E.sources.map(([a,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(a)}</a>`).join(" / ")}</div></div>`:""}`;
 }
 // the director's special interview: data/interview.json {items: [{date, pub, title: [head, sub], lead, qa: [[q, a]]}]},
 // the newest first; in the Sunday edition only (gone from the next weekday issue on), within 7 days from pub, the first 3 answers open and the rest behind a tap
@@ -2298,9 +2340,10 @@ async function loadPaper(){
     fetch("../mri-app/data/futures.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FUT=j).catch(()=>FUT=null),
     fetch("../mri-app/data/weekly.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WK=j).catch(()=>WK=null),
     fetch("../mri-app/data/weekend.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WE=j).catch(()=>WE=null),
-    fetch("data/interview.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>INTV=j).catch(()=>INTV=null)]);
+    fetch("data/interview.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>INTV=j).catch(()=>INTV=null),
+    fetch("data/election.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>ELEC=j).catch(()=>ELEC=null)]);
   applyPre();
-  renderIdx();renderIntv();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
+  renderIdx();renderGogai();renderIntv();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
