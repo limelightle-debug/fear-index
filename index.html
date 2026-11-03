@@ -617,7 +617,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v213";
+const APP_VER="fi-v214";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1455,7 +1455,7 @@ function curveChart(c,W){
 // the period of the rates history charts (spread, real yield, OAS): one switch for all three, kept per viewer
 const RP=[["1Y","1年",1],["3Y","3年",3],["5Y","5年",5]];  // label shown: 1年 / 1Y
 // each chart keeps its own period (sp: spread, rl: real yield, hy: high yield OAS)
-const RPK={};["sp","rl","hy","hg","fa","sf"].forEach(c=>{const v=store.get("rp."+c,"5Y");RPK[c]=RP.some(r=>r[0]===v)?v:"5Y"});
+const RPK={};["sp","rl","hy","hg","fa","sf","mm"].forEach(c=>{const v=store.get("rp."+c,"5Y");RPK[c]=RP.some(r=>r[0]===v)?v:"5Y"});
 const rpSeg=c=>`<div class="seg rpseg">${RP.map(([k,l])=>`<button type="button" data-rp="${c}:${k}" aria-pressed="${k===RPK[c]}">${EN()?k:l}</button>`).join("")}</div>`;
 const rCut=(S,c)=>{if(!S||!S.length)return S;const y=RP.find(r=>r[0]===RPK[c])[2],L=S[S.length-1][0],from=String(+L.slice(0,4)-y)+L.slice(4);return S.filter(q=>q[0]>=from)};
 // ticks along the bottom: years, or for a year or less the quarters (1月 shown as the year)
@@ -2115,6 +2115,32 @@ function renderJobs(){
 // dollar liquidity (weekly and monthly, so after the daily pages): the Fed's balance sheet and reserves (H.4.1),
 // the overnight reverse repo (NY Fed, daily) and M2 (H.6), from the MRI app's data/liquidity.json
 let LQ=null;
+// the "詳しく" boxes under a chart: [[heading, text], ...]
+const xpl=(t,P)=>`<details class="xpl"><summary>${t}（詳しく）</summary>${P.map(([a,b])=>`<p><b>${a}</b>${b}</p>`).join("")}</details>`;
+// money market funds (OFR Money Market Fund Monitor, SEC N-MFP, month-end): data/mmf.json hist [["YYYY-MM", total, treasury, repo]] ($B)
+let MMF=null;
+function mmfChart(A,W){
+  // the total (line, $T, left) and its change from the month before (bars, 億ドル, right)
+  const H=220,ML=34,MR=52,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB;
+  const L=A.map(q=>[dms(q[0]),q[1]/1000]),B=A.slice(1).map((q,i)=>[dms(q[0]),q[1]-A[i][1]]);
+  const t0=L[0][0],t1=L[L.length-1][0],n=L.length,pad=(t1-t0)/Math.max(1,n-1)/2,x=t=>ML+(t-t0+pad)/(t1-t0+2*pad)*PW;
+  const nice=(lo,hi,k)=>{const sp=hi-lo||1,st=[.1,.2,.25,.5,1,2,2.5,5,10,20,25,50,100,200,250,500,1000].find(q=>sp/q<=k)||1000;return[Math.floor(lo/st)*st,Math.ceil(hi/st)*st,st]};
+  const lv=L.map(q=>q[1]),[a0,a1,as]=nice(Math.min(...lv),Math.max(...lv),4);
+  const bv=B.map(q=>q[1]).concat(0),[b0,b1,bs]=nice(Math.min(...bv),Math.max(...bv),4);
+  const yl=v=>MT+(a1-v)/(a1-a0)*PH,yr=v=>MT+(b1-v)/(b1-b0)*PH,oku=v=>(v<-1e-9?"−":v>1e-9?"+":"")+Math.abs(v*10).toLocaleString("en-US",{maximumFractionDigits:0});
+  let g="";
+  for(let v=a0;v<=a1+1e-9;v+=as)g+=`<line x1="${ML}" x2="${ML+PW}" y1="${yl(v)}" y2="${yl(v)}" stroke="#fff" stroke-opacity=".06"/><text x="${ML-5}" y="${yl(v)+3}" text-anchor="end" style="fill:#6ec3ff">${v.toFixed(as<1?1:0)}</text>`;
+  for(let v=b0;v<=b1+1e-9;v+=bs)g+=`<text x="${ML+PW+5}" y="${yr(v)+3}" style="fill:#c9c9d6">${oku(v)}</text>`;
+  if(b0<0)g+=`<line x1="${ML}" x2="${ML+PW}" y1="${yr(0)}" y2="${yr(0)}" stroke="#fff" stroke-opacity=".3"/>`;
+  for(let yy=new Date(t0).getUTCFullYear()+1;Date.UTC(yy,0,1)<=t1;yy++){const xx=x(Date.UTC(yy,0,1));g+=`<line x1="${xx}" x2="${xx}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".08"/><text x="${xx}" y="${H-5}" text-anchor="middle">${yy}</text>`}
+  const bw=Math.max(1.5,PW/(n+1)*.62);let p="";
+  B.forEach(([t,v])=>{p+=`<rect x="${(x(t)-bw/2).toFixed(1)}" y="${Math.min(yr(v),yr(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(.5,Math.abs(yr(v)-yr(0))).toFixed(1)}" fill="${v>=0?"#5fd08e":"#ff6b6b"}" opacity=".6"/>`});
+  p+=`<path d="${L.map(([t,v],i)=>`${i?"L":"M"}${x(t).toFixed(1)},${yl(v).toFixed(1)}`).join("")}" fill="none" stroke="#6ec3ff" stroke-width="2" stroke-linejoin="round"/>`;
+  const e=L[n-1],eb=B[B.length-1];
+  p+=`<circle cx="${x(e[0])}" cy="${yl(e[1])}" r="3" fill="#6ec3ff"/><text x="${x(e[0])-6}" y="${yl(e[1])-7}" text-anchor="end" style="fill:#6ec3ff;font-weight:700">${e[1].toFixed(2)}兆ドル</text>`;
+  if(eb)p+=`<text x="${x(eb[0])-6}" y="${Math.max(yr(eb[1]),yr(0))+13}" text-anchor="end" style="fill:${eb[1]>=0?"#5fd08e":"#ff6b6b"};font-weight:700">${oku(eb[1])}億ドル</text>`;
+  return `<div class="rchart"><svg viewBox="0 0 ${W} ${H}" height="${H}">${g}${p}</svg></div>`;
+}
 function liqCharts(){
   // 『金利の重力』 第十七章 の見取り図: the balance sheet makes reserves (the body); the reverse repo is the buffer
   // outside it, drained first; once it is gone, dollars come straight out of reserves, whose floor no one knows
@@ -2141,7 +2167,22 @@ function liqCharts(){
   if(F&&F.hist&&R&&R.hist){const s0=F.hist[0][0],wk=new Map();R.hist.forEach(q=>{if(q[0]>=s0){const k=q[0].slice(0,8)+String(Math.min(28,Math.ceil(+q[0].slice(8)/7)*7)).padStart(2,"0");wk.set(k,q)}});
     h+=`<div class="rcap"><span>${tx(`準備預金とリバースレポ（兆ドル、${s0.slice(0,4)}年から）`,`Reserves and reverse repo ($T, since ${s0.slice(0,4)})`)}</span></div>${legend([[tx("準備預金","Reserves"),"#7fd6a4"],[tx("リバースレポ","Reverse repo"),"#ffb547"]])}`
       +tsChart([{c:"#7fd6a4",p:F.hist.map(q=>[dms(q[0]),q[2]/1e6]),w:1.8},{c:"#ffb547",p:[...wk.values()].map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:220,dec:1,zero:true,ref:[1.4]})
-      +`<div class="lsrc" style="margin-top:2px">${tx("点線は2019年9月に短期金利が跳ねたときの準備預金 1.4兆ドル","Dashed: reserves of $1.4T when short rates spiked in September 2019")}</div>`}
+      +`<div class="lsrc" style="margin-top:2px">${tx("点線は2019年9月に短期金利が跳ねたときの準備預金 1.4兆ドル","Dashed: reserves of $1.4T when short rates spiked in September 2019")}</div>`
+      +xpl("準備預金とリバースレポとは",[
+        ["準備預金（本体）","銀行が FRB に置いている当座預金だ。銀行どうしの決済はすべてここを通る。FRB が国債を買えば増え、量的引き締めで国債を手放せば減る。銀行にとっての手元の現金で、ドルの配管を流れる水の本体だ。"],
+        ["リバースレポ（緩衝材）","MMF などが、余った現金を一晩だけ FRB に預ける仕組みだ。FRB は国債を担保に差し出し、政策金利の幅の下限の金利を払う。2022年末には2.5兆ドルを超えた。行き場のない現金のたまり場で、配管の外側にある緩衝材だ。"],
+        ["どちらから減るか","量的引き締めや国債の大量発行でドルが吸われるとき、まず減るのはリバースレポだ。MMF は FRB に預けるより利回りの良い短期国債に乗り換える。その現金が財務省に渡り、緩衝材が細る。緩衝材が尽きると、吸われるドルは準備預金という本体から直接抜けていく。"],
+        ["下限は誰にも分からない","銀行が安心して決済できる準備預金の量には下限がある。だがその水準は事前には分からない。2019年9月は約1.4兆ドルで短期金利が跳ねた。点線がその水準だ。経済も銀行の規模も大きくなったので、今の下限はそれより上にあると考えられている。"],
+        ["読み方","オレンジの線（リバースレポ）が0近くに張りついたら、緩衝材は尽きている。そのあと緑の線（準備預金）が下がり続けるなら、本体が削られている。同時に SOFR が IORB を上回れば、下限が近い合図だ。"]])}
+  if(MMF&&MMF.hist&&MMF.hist.length>12){const P=rCut(MMF.hist,"mm"),L=MMF.hist[MMF.hist.length-1];
+    h+=`<div class="rcap"><span>${tx(`MMF の総資産と前月差（${+L[0].slice(5,7)}月末まで）`,`Money market funds, total and monthly change (to ${L[0]})`)}</span>${rpSeg("mm")}</div>`
+      +legend([[tx("総資産（兆ドル・左）","Total ($T, left)"),"#6ec3ff"],[tx("前月差（億ドル・右）","Change on the month (right)"),"#5fd08e"]])+mmfChart(P,W)
+      +`<div class="lsrc" style="margin-top:2px">${tx("米国の全 MMF の月末の運用資産（OFR、SEC の N-MFP 報告から）","All US money market funds, month-end holdings (OFR, from SEC Form N-MFP)")}</div>`
+      +xpl("MMF とは",[
+        ["MMF とは","短期国債やレポなど、満期の短い安全な資産だけで運用する投資信託だ。預金に近い感覚で使われ、企業や家計の待機資金が集まる。米国の MMF は8兆ドルを超え、ドルの短期資金の最大の担い手になった。"],
+        ["なぜ配管に関わるのか","MMF の現金の行き先は、主に3つある。短期国債、民間とのレポ、そして FRB のリバースレポだ。MMF がリバースレポから短期国債に乗り換えると、緩衝材が減り、その現金は財務省を通って市場に回る。リバースレポに現金を置いているのは大半が MMF なので、その増減は MMF の動きをそのまま映す。"],
+        ["増減の読み方","棒の緑は前月から増えた分、赤は減った分だ。金利が高いあいだは、預金から MMF にお金が移り、増え続ける。危機の月は2つの顔を見せる。2020年3月は株や社債から逃げた現金が流れ込んで急増した。逆に、利下げで利回りの魅力が薄れると、増え方は鈍る。4月の納税期には、税の支払いで一時的に減りやすい。"],
+        ["株との関係","MMF の残高は、株の外で待機している現金の量でもある。積み上がった現金は、相場が崩れたときの買い余力にも、怖くて動けない資金にもなる。総額が過去最高でも、増え方が止まり赤い棒が続くなら、待機資金が別の場所へ動き始めた合図だ。"]])}
   if(Y&&Y.spread&&Y.spread.length>20){
     h+=`<div class="rcap"><span>${tx("SOFR − IORB（bp）","SOFR − IORB (bp)")}</span>${rpSeg("sf")}</div>`+tsChart([{c:"#ff8a7a",p:rCut(Y.spread,"sf").map(q=>[dms(q[0]),q[2]*100]),w:1.2}],W,{H:180,dec:0,zero:true})
       +`<div class="lsrc" style="margin-top:2px">${tx("0 を上回ると、銀行が準備預金に付く金利より高く資金を取り合っている。IORB は政策金利の上限−0.10","Above 0, banks pay more for cash than reserves earn. IORB: top of the target range less 0.10")}</div>`
@@ -2226,6 +2267,7 @@ async function loadMarkets(){
     fetch(`../mri-app/data/rstar.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>RSTAR=j).catch(()=>RSTAR=null),
     fetch(`../mri-app/data/spx_daily.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>SPXD=j).catch(()=>SPXD=null),
     fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
+    fetch(`../mri-app/data/mmf.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MMF=j).catch(()=>MMF=null),
     fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null),
     fetch(`../mri-app/data/fedwatch.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FW=j).catch(()=>FW=null),
     fetch(`../ndx-heatmap/data/ndx.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>NDXD=j).catch(()=>NDXD=null)]);
@@ -2281,7 +2323,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-ip]");if(b
 document.addEventListener("click",e=>{const b=e.target.closest("[data-infl]");if(!b)return;
   const all=[...document.querySelectorAll("[data-infl]")].map(x=>x.dataset.infl),cur=all.filter(k=>document.querySelector(`[data-infl="${k}"]`).getAttribute("aria-pressed")==="true"),k=b.dataset.infl;
   const nx=cur.includes(k)?cur.filter(x=>x!==k):cur.concat(k);if(!nx.length)return;store.set("infl.on",nx.join(","));renderInfl()});
-document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);if(c==="fa"||c==="sf")renderLiq();else if(c==="hy")renderCanary();else renderRates()}});
+document.addEventListener("click",e=>{const r=e.target.closest("[data-rp]");if(r){const [c,k]=r.dataset.rp.split(":");RPK[c]=k;store.set("rp."+c,k);if(c==="fa"||c==="sf"||c==="mm")renderLiq();else if(c==="hy")renderCanary();else renderRates()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b){state.tab=b.dataset.tab;store.set("tab",state.tab);renderTabs();window.scrollTo(0,0)}});
 renderEd();renderTabs();renderApps();renderBooks();renderGuide();renderSecs();loadPaper();loadMarkets();loadTemp();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){renderEd();loadPaper();loadMarkets();loadTemp()}});
