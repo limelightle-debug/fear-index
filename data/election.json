@@ -10,7 +10,7 @@
  "house": {
   "D": 227,
   "I": 0,
-  "R": 142,
+  "R": 144,
   "total": 435,
   "need": 218
  },
@@ -48,8 +48,8 @@
    "メーン、オハイオ、アイオワ、ノースカロライナ：民主党が当確（AP）"
   ]
  ],
- "asof": "2026-11-04T16:32:00+09:00",
- "source": "NBCニュース（下院の多数派はAP通信も判定）",
+ "asof": "2026-11-04T16:39:00+09:00",
+ "source": "NBCニュース（各選挙区の当確判定）",
  "sources": [
   [
    "NBC News（議席の集計）",
@@ -67,5 +67,9 @@
    "Reuters（市場の反応）",
    "https://finance.yahoo.com/markets/stocks/articles/us-stock-futures-dip-investors-010842458.html"
   ]
- ]
+ ],
+ "uncalled": {
+  "house": 64,
+  "senate": 3
+ }
 }
