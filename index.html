@@ -634,7 +634,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v225";
+const APP_VER="fi-v226";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1474,7 +1474,7 @@ let CV=null;
 // real yield and OAS charts); blue the second line it is read against (3 months ago, 10Y-3M); grey dashed the third
 const RC={now:"#f2f2f7",m3:"#2ee6ff",m6:"#8a8aa6"};
 function curveChart(c,W){
-  const H=230,ML=28,MR=40,MT=10,MB=20,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors.filter(([k])=>["3M","2Y","5Y","10Y","30Y"].includes(k));  // 3M, 2Y, 5Y, 10Y, 30Y only (the same five in the Money app)
+  const H=230,ML=28,MR=40,MT=10,MB=20,PW=W-ML-MR,PH=H-MT-MB,T=c.tenors.filter(([k])=>["3M","2Y","10Y","30Y"].includes(k));  // 3M, 2Y, 10Y, 30Y only (the same four in the Money app; 5Y crowds the chart)
   const xs=v=>Math.sqrt(v),x0=xs(T[0][1]),x1=xs(T[T.length-1][1]),x=v=>ML+(xs(v)-x0)/(x1-x0)*PW;
   const all=[c.now,c.m3,c.m6].flatMap(q=>T.map(([k])=>q.y[k]).filter(v=>v!=null));
   const lo=Math.floor(Math.min(...all)*2)/2,hi=Math.ceil(Math.max(...all)*2)/2,y=v=>MT+(hi-v)/(hi-lo)*PH;
