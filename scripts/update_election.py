@@ -51,18 +51,17 @@ def once():
         print("smaller than before, kept", b); return "skip"
     now = datetime.datetime.now(JST).replace(second=0, microsecond=0)
     if all(d[c][k] == v for c in new for k, v in new[c].items()):
-        # unchanged: every 30 minutes note when NBC was last checked, so the page shows the count is alive
-        ck = d.get("checkedAt")
-        if ck and now - datetime.datetime.fromisoformat(ck) < datetime.timedelta(minutes=30):
+        # unchanged: the time on the page is the last check (every 10 minutes), so the reader sees the count is current
+        if now - datetime.datetime.fromisoformat(d["asof"]) < datetime.timedelta(minutes=10):
             print("no change", b); return "same"
-        d["checkedAt"] = now.isoformat()
+        d["asof"] = now.isoformat(); d.pop("checkedAt", None)
         json.dump(d, open(P, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-        print("no change, checked", b); return "new"
+        print("no change, time updated", b); return "new"
     for c in new:
         d[c].update(new[c]); d[c].pop("Dl", None); d[c].pop("Rl", None)
     d["source"] = "NBCニュース（各選挙区の当確判定）"
     d["uncalled"] = {"house": hu, "senate": 100 - sd - sr}
-    d["asof"] = d["checkedAt"] = now.isoformat()
+    d["asof"] = now.isoformat()
     json.dump(d, open(P, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print("updated", b); return "new"
 
