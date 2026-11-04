@@ -3,23 +3,21 @@
  "active": true,
  "title": "米中間選挙",
  "head": [
-  "下院、DDHQが民主党の奪還を判定",
-  "上院は接戦続く、ねじれ議会の公算"
+  "下院、民主党が多数派の見通し",
+  "上院も民主党に傾き、市場はAIと財政に身構える"
  ],
- "body": "Decision Desk HQは日本時間11時9分、民主党が下院の多数派を奪還すると判定した。AP通信は判定前。上院はAPがノースカロライナとジョージアで民主党、フロリダで共和党の当確を出し、確認できた当確と改選なしで民主党系36対共和党32。テキサスは民主党のタラリコ氏がリードする。S&P500先物は0.8%、ナスダック100先物は1.8%下げた。",
+ "body": "Decision Desk HQ（NewsNation）とCNBCは、民主党が下院の多数派を取る見通しを伝えた。AP通信の多数派の判定は確認できていない。AP通信の集計（日本時間11時19分）は下院が民主党76、共和党39、上院が民主党45、共和党35。上院はノースカロライナとジョージアで民主党が当確し、テキサス、オハイオ、メーン、アイオワ、アラスカが未定。ナスダック先物は1.8%安、日経平均は3%安、米10年債利回りは4.906%に低下、ドルは下げた（ロイター）。",
  "house": {
-  "D": 0,
+  "D": 76,
   "I": 0,
-  "R": 0,
+  "R": 39,
   "total": 435,
   "need": 218
  },
  "senate": {
-  "D": 34,
-  "I": 2,
-  "R": 32,
-  "Dl": 1,
-  "Rl": 0,
+  "D": 45,
+  "I": 0,
+  "R": 35,
   "total": 100,
   "need": 51,
   "needR": 50
@@ -27,42 +25,38 @@
  "races": [
   [
    "議会",
-   "下院多数派：DDHQが民主党の奪還を判定（日本時間11:09）。AP は判定前"
+   "下院：Decision Desk HQ と CNBC が民主党の多数派の見通し。AP は判定前"
   ],
   [
    "上院",
-   "ノースカロライナ：民主党のクーパー氏が当確（AP、日本時間10:23）"
+   "ノースカロライナ：民主党のクーパー氏が当確（AP）。共和党から議席を奪う"
   ],
   [
    "上院",
-   "ジョージア：民主党のオソフ氏が当確（AP）"
+   "ジョージア：民主党現職のオソフ氏が当確（AP）"
   ],
   [
    "上院",
-   "フロリダ特別選：共和党のムーディ氏が当確（AP）"
+   "テキサス、オハイオ、メーン、アイオワ、アラスカ：当確出ず"
   ],
   [
-   "上院",
-   "テキサス：民主党のタラリコ氏が56.4%対42.0%でリード（DDHQ集計）"
-  ],
-  [
-   "上院",
-   "ミシガン、メーン、オハイオ、アイオワ、ニューハンプシャー：当確出ず"
+   "市場",
+   "ナスダック先物1.8%安、S&P500先物0.8%安、日経平均3%安（ロイター）"
   ]
  ],
- "asof": "2026-11-04T12:04:00+09:00",
- "source": "AP通信",
+ "asof": "2026-11-04T12:05:42+09:00",
+ "source": "AP通信（日本時間11時19分の集計）",
  "sources": [
   [
-   "Clash Report（DDHQの判定）",
-   "https://clashreport.com/world/articles/democrats-will-win-control-of-the-us-house-decision-desk-hq-projects-3874hgr6fyw"
+   "AP通信の集計（APA）",
+   "https://en.apa.az/america/democrats-win-76-house-seats-republicans-39-updated-6-533849"
   ],
   [
-   "Decision Desk HQ（テキサス上院）",
-   "https://votes.decisiondeskhq.com/races/2026-11-03/texas-us-senate-general-election"
+   "CNBC",
+   "https://www.cnbc.com/2026/11/03/midterm-elections-2026-live-updates.html"
   ],
   [
-   "ロイター（Central Oregon Daily）",
+   "ロイター",
    "https://www.centraloregondaily.com/news/consumer/stocks-dollar-slide-after-some-early-wins-for-democrats-in-us-midterm-election/article_7384c3e8-361d-5e2e-a43a-c69dd7384842.html"
   ]
  ]
