@@ -123,8 +123,9 @@
     new MutationObserver(lab).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
     b.addEventListener("click",()=>{b.classList.add("spin");const sw=navigator.serviceWorker;
       Promise.race([sw?sw.getRegistration().then(r=>r&&r.update()).catch(()=>{}):Promise.resolve(),new Promise(r=>setTimeout(r,1500))]).then(()=>{going=false;reload()})});
-    const lang=document.getElementById("lang"),hero=document.getElementById("hero");
-    if(lang&&getComputedStyle(lang).position==="absolute"){
+    const lang=document.getElementById("lang"),hero=document.getElementById("hero"),slot=document.getElementById("refslot");
+    if(slot){b.style.width=b.style.height="38px";slot.appendChild(b)}                                     // the paper: right of 書籍
+    else if(lang&&getComputedStyle(lang).position==="absolute"){
       // MRI, Mind: JP / EN sits at the header's right edge; the button takes that edge and JP / EN moves left
       const cs=getComputedStyle(lang),r0=parseFloat(cs.right)||0;
       b.style.position="absolute";b.style.right=r0+"px";b.style.top=(parseFloat(cs.top)||0)+(lang.offsetHeight-32)/2+"px";
