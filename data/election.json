@@ -3,23 +3,21 @@
  "active": true,
  "title": "米中間選挙",
  "head": [
-  "下院、民主党の奪還を各社判定",
-  "上院は民主党がリード、多数派は未定"
+  "下院は民主党、上院も民主党が先行",
+  "上院多数派まで民主党系あと4議席"
  ],
- "body": "下院はDecision Desk HQに続きNBC、CBS、ABCも民主党の多数派獲得を判定した。AP通信の判定は確認できていない。上院はAP集計で民主党系45対共和党35、テキサス、オハイオ、ミシガンで民主党候補がリードし、合わせると48対35になる。S&P500先物は0.8%、ナスダック100先物は1.8%下げ、米10年債利回りは4.906%に低下、ドル指数は0.32%下げた。",
+ "body": "Decision Desk HQの集計で、当確は下院が民主党148対共和党92、上院が民主党系47対共和党38。下院はDDHQが民主党の多数派獲得を判定した。AP通信の判定は確認できていない。上院はAPがオハイオとサウスカロライナで民主党の勝利を判定し、残る15議席は未定。S&P500先物は1.2%、ナスダック先物は2%超下げ、米10年債利回りは4.906%に低下、ドル指数は0.37%下げた。",
  "house": {
-  "D": 92,
+  "D": 148,
   "I": 0,
-  "R": 50,
+  "R": 92,
   "total": 435,
   "need": 218
  },
  "senate": {
-  "D": 43,
+  "D": 45,
   "I": 2,
-  "R": 35,
-  "Dl": 3,
-  "Rl": 0,
+  "R": 38,
   "total": 100,
   "need": 51,
   "needR": 50
@@ -27,43 +25,43 @@
  "races": [
   [
    "議会",
-   "下院多数派：DDHQ、NBC、CBS、ABCが民主党の奪還を判定。AP の判定は未確認"
+   "下院多数派：DDHQが民主党の奪還を判定。CNN、NBC、CBSも民主党勝利を報道。AP の判定は未確認"
   ],
   [
    "上院",
-   "テキサス：民主党のタラリコ氏が当確（DDHQ、日本時間12:14）。開票約60%で57.4%対41.1%。AP は判定前"
+   "オハイオ：民主党のブラウン氏が当確（AP、日本時間13:11頃）。現職ハステッド氏を破る"
   ],
   [
    "上院",
-   "オハイオ：開票率44%、民主党のブラウン氏が52.9%対43.1%でリード（AP集計）"
+   "サウスカロライナ：民主党のアンドリュース氏が当確（AP、日本時間11:59頃）"
   ],
   [
    "上院",
-   "ミシガン：開票率12%、民主党のエルサイード氏が56%対42.3%でリード"
+   "テキサス：民主党のタラリコ氏が当確（DDHQ、日本時間12:14）。AP は判定前"
   ],
   [
    "上院",
-   "ノースカロライナ、ジョージア、ニューハンプシャー、バージニアで民主党が勝利（AP配信）"
+   "カンザス：民主党のハミルトン氏の勝利をNBCが伝える。AP の判定は未確認"
   ],
   [
    "上院",
-   "メーン：開票中、得票の数字は未確認。当確出ず"
+   "メーン、ミシガン、アイオワ、アラスカは当確出ず。最新の得票は未確認"
   ]
  ],
- "asof": "2026-11-04T12:30:00+09:00",
- "source": "AP通信",
+ "asof": "2026-11-04T13:25:00+09:00",
+ "source": "Decision Desk HQ",
  "sources": [
   [
-   "Yahoo/NJ.com（AP集計の議席数）",
-   "https://www.yahoo.com/news/politics/articles/election-results-2026-balance-power-015809470.html"
+   "KuCoin/Odaily（DDHQの議席数）",
+   "https://www.kucoin.com/news/flash/democrats-secure-148-house-seats-47-senate-seats-in-2026-u-s-midterm-elections"
   ],
   [
-   "Clash Report（テキサス、DDHQ判定）",
-   "https://clashreport.com/world/articles/democrat-james-talarico-defeats-ken-paxton-in-texas-senate-race-ddhq-projects-9t44bpzu99f"
+   "WCPO（オハイオ、AP判定）",
+   "https://www.wcpo.com/news/government/elections-local/ohio-democrat-sherrod-brown-projected-to-flip-pivotal-u-s-senate-seat"
   ],
   [
-   "Business Recorder（Reuters、市場）",
-   "https://www.brecorder.com/news/40447347/stocks-dollar-slide-after-some-early-wins-for-democrats-in-us-midterm-election"
+   "Aaj English TV（Reuters、市場）",
+   "https://english.aaj.tv/news/330479261/stocks-wilt-dollar-slides-as-early-midterm-results-point-to-blue-sweep"
   ]
  ]
 }
