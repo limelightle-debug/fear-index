@@ -1,21 +1,26 @@
-# 号外: the seat counts from NBC News every 5 minutes while the 号外 is on (scripts/update_election.py stops by itself)
+# 号外: the seat counts from NBC News every 5 minutes while the 号外 is on (scripts/update_election.py stops by itself,
+# exit 3). The scheduler often skips, so each run loops for about 5.5 hours and then hands over to a fresh run.
 name: election
 on:
   push:
     branches: [main]
-    paths: [scripts/update_election.py]
+    paths: [scripts/update_election.py, .github/workflows/election.yml]
   schedule:
     - cron: "11,41 * * * *"
   workflow_dispatch:
 concurrency: election
 permissions:
   contents: write
+  actions: write
 jobs:
   seats:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
-      - run: |
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           git config user.name github-actions; git config user.email github-actions@users.noreply.github.com
-          python3 scripts/update_election.py 7
+          rc=0; python3 scripts/update_election.py 66 || rc=$?
+          if [ "$rc" -ne 3 ]; then gh workflow run election.yml --ref main -R "$GITHUB_REPOSITORY" || true; fi

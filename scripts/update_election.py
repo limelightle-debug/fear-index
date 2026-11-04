@@ -70,7 +70,7 @@ if __name__ == "__main__":
         except Exception as e:
             print("error", e); r = "skip"
         if r == "off":
-            break
+            sys.exit(3)  # the 号外 is over: no hand-over
         if r == "new":
             sp.run('git add data/election.json && git commit -qm "Gogai: seats from NBC" && (git push -q origin main || (git pull -q --rebase && git push -q origin main))', shell=True)
         if i < loops - 1:
