@@ -3,10 +3,10 @@
  "active": true,
  "title": "米中間選挙",
  "head": [
-  "ノースカロライナ上院、民主党が当確",
-  "上院の構図に影響、多数派はまだ未定"
+  "下院、DDHQが民主党の奪還を判定",
+  "上院は接戦続く、ねじれ議会の公算"
  ],
- "body": "開票が進む。AP通信はノースカロライナ州の上院選で民主党のクーパー氏、ジョージア州の上院選で民主党現職のオソフ氏の当選確実を伝えた。知事選ではペンシルベニアのシャピロ氏、イリノイのプリツカー氏の当確が出た。日本時間11時27分の時点でAP通信の議席集計は読める頁で確かめられず、議席数は前の回のままとした。両院の多数派は決まっていない。ロイターは米株価指数先物とドルが下げたと伝えた。",
+ "body": "Decision Desk HQは日本時間11時9分、民主党が下院の多数派を奪還すると判定した。AP通信は判定前。上院はAPがノースカロライナとジョージアで民主党、フロリダで共和党の当確を出し、確認できた当確と改選なしで民主党系36対共和党32。テキサスは民主党のタラリコ氏がリードする。S&P500先物は0.8%、ナスダック100先物は1.8%下げた。",
  "house": {
   "D": 0,
   "I": 0,
@@ -15,14 +15,20 @@
   "need": 218
  },
  "senate": {
-  "D": 0,
-  "I": 0,
-  "R": 0,
+  "D": 34,
+  "I": 2,
+  "R": 32,
+  "Dl": 1,
+  "Rl": 0,
   "total": 100,
   "need": 51,
   "needR": 50
  },
  "races": [
+  [
+   "議会",
+   "下院多数派：DDHQが民主党の奪還を判定（日本時間11:09）。AP は判定前"
+  ],
   [
    "上院",
    "ノースカロライナ：民主党のクーパー氏が当確（AP、日本時間10:23）"
@@ -32,36 +38,32 @@
    "ジョージア：民主党のオソフ氏が当確（AP）"
   ],
   [
-   "知事",
-   "ペンシルベニア：民主党のシャピロ氏が当確（AP）"
-  ],
-  [
-   "知事",
-   "イリノイ：民主党のプリツカー氏が当確（AP）"
+   "上院",
+   "フロリダ特別選：共和党のムーディ氏が当確（AP）"
   ],
   [
    "上院",
-   "オハイオ、メーン、ミシガン、テキサス、アイオワ：当確出ず"
+   "テキサス：民主党のタラリコ氏が56.4%対42.0%でリード（DDHQ集計）"
   ],
   [
-   "議会",
-   "下院・上院の多数派：AP通信の判定待ち"
+   "上院",
+   "ミシガン、メーン、オハイオ、アイオワ、ニューハンプシャー：当確出ず"
   ]
  ],
- "asof": "2026-11-04T11:27:00+09:00",
+ "asof": "2026-11-04T12:04:00+09:00",
  "source": "AP通信",
  "sources": [
   [
-   "WBTV（AP通信の判定）",
-   "https://www.wbtv.com/2026/11/04/roy-cooper-wins-2026-us-senate-race-north-carolina-ap-projects/"
+   "Clash Report（DDHQの判定）",
+   "https://clashreport.com/world/articles/democrats-will-win-control-of-the-us-house-decision-desk-hq-projects-3874hgr6fyw"
   ],
   [
-   "CBS News",
-   "https://www.cbsnews.com/live-updates/house-election-results-2026/"
+   "Decision Desk HQ（テキサス上院）",
+   "https://votes.decisiondeskhq.com/races/2026-11-03/texas-us-senate-general-election"
   ],
   [
-   "WCTV（AP通信の判定）",
-   "https://www.wctv.tv/2026/11/04/ap-projects-jon-ossoff-winner-us-senate-seat-georgia/"
+   "ロイター（Central Oregon Daily）",
+   "https://www.centraloregondaily.com/news/consumer/stocks-dollar-slide-after-some-early-wins-for-democrats-in-us-midterm-election/article_7384c3e8-361d-5e2e-a43a-c69dd7384842.html"
   ]
  ]
 }
