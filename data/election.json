@@ -3,10 +3,10 @@
  "active": true,
  "title": "米中間選挙",
  "head": [
-  "下院、民主党が多数派の見通し",
-  "大統領と下院の多数派が分かれる構図に"
+  "上院、民主党が3州でリード",
+  "下院はDDHQが民主党の奪還を判定"
  ],
- "body": "Decision Desk HQは日本時間11時9分、民主党の下院多数派獲得を判定した。AP通信は多数派を判定していない。AP通信の集計（日本時間11時40分）は下院が民主党92、共和党50、上院が民主党45、共和党36。上院はテキサス、オハイオ、メーン、アイオワ、アラスカで当確が出ていない。ロイターによると、ナスダック100先物は1.8%安、S&P500先物は0.8%安、米10年債利回りは4.906%に下げ、ドルも下げた。",
+ "body": "上院はAP通信の当確と改選なしで民主党系36対共和党32。開票途中ではテキサス、オハイオ、ミシガンで民主党候補がリードし、当確とリードを合わせると39対32になる。下院はDecision Desk HQが日本時間11時9分に民主党の奪還を判定し、AP通信は判定前。両院とも確定していない。S&P500先物は0.8%、ナスダック100先物は1.8%下げた。",
  "house": {
   "D": 92,
   "I": 0,
@@ -15,53 +15,55 @@
   "need": 218
  },
  "senate": {
-  "D": 45,
-  "I": 0,
-  "R": 36,
+  "D": 34,
+  "I": 2,
+  "R": 32,
   "total": 100,
   "need": 51,
-  "needR": 50
+  "needR": 50,
+  "Dl": 3,
+  "Rl": 0
  },
  "races": [
   [
    "議会",
-   "下院の多数派：DDHQが民主党と判定（日本時間11:09）。AP は判定前"
+   "下院多数派：DDHQが民主党の奪還を判定（日本時間11:09）。AP は判定前"
   ],
   [
    "上院",
-   "ノースカロライナ：民主党のクーパー氏が当確（AP、日本時間10:23）"
+   "テキサス：民主党のタラリコ氏が56.4%対42.0%でリード（DDHQ、日本時間11:40）"
   ],
   [
    "上院",
-   "ジョージア：民主党現職のオソフ氏が当確（AP）"
+   "オハイオ：開票率44%、民主党のブラウン氏が52.9%対43.1%でリード（AP集計、10:59）"
   ],
   [
    "上院",
-   "バージニア：民主党現職のウォーナー氏が当確（AP）"
+   "ミシガン：開票率約4%、民主党のエルサイード氏が55%対43%でリード（11:10）"
   ],
   [
    "上院",
-   "ウェストバージニア：共和党現職のカピト氏が当確（DDHQ）"
+   "ノースカロライナ、ジョージアで民主党、フロリダで共和党が当確（AP）"
   ],
   [
    "上院",
-   "テキサス、オハイオ、メーン、アイオワ、アラスカ：当確出ず"
+   "メーン：開票中、得票の数字は未確認。当確出ず"
   ]
  ],
- "asof": "2026-11-04T12:09:00+09:00",
+ "asof": "2026-11-04T12:10:00+09:00",
  "source": "AP通信",
  "sources": [
   [
-   "AP通信の集計（APA）",
-   "https://en.apa.az/america/democrats-win-92-house-seats-republicans-50-updated-7-533849"
+   "Decision Desk HQ（テキサス上院）",
+   "https://votes.decisiondeskhq.com/races/2026-11-03/texas-us-senate-general-election"
   ],
   [
-   "Clash Report（DDHQの判定）",
-   "https://clashreport.com/world/articles/democrats-will-win-control-of-the-us-house-decision-desk-hq-projects-3874hgr6fyw"
+   "CryptoTicker（オハイオ、AP集計）",
+   "https://cryptoticker.io/en/ohio-election-results-2026-sherrod-brown-crypto/"
   ],
   [
-   "ロイター",
-   "https://www.centraloregondaily.com/news/consumer/stocks-dollar-slide-after-some-early-wins-for-democrats-in-us-midterm-election/article_7384c3e8-361d-5e2e-a43a-c69dd7384842.html"
+   "Deadline Detroit（ミシガン）",
+   "https://www.deadlinedetroit.com/articles/35294/abdul_el-sayed_leads_mike_rogers_in_early_returns"
   ]
  ]
 }
