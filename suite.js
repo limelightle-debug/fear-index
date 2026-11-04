@@ -93,5 +93,47 @@
     load();setInterval(()=>{if(!document.hidden)load()},5*60*1000);
     new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
   }
-  window.Suite={mount,foot,fest};
+
+  // Refresh: a ↻ button in every app (beside JP / EN, or on the header), and new versions picked up by themselves.
+  // A home-screen app comes back from the background as it was left, without reloading, so a newly published
+  // version used to show only after the app was closed. Now, on every return to the app, the page asks for its
+  // service worker again (sw.js; its CACHE name changes with every release) and reloads itself when it changed.
+  // The data already refreshes on its own; the button reloads the whole page, so it brings the newest app and data.
+  function refresh(){
+    if(/[?&](embed|shot)\b/.test(location.search)||window.top!==window)return;
+    const SW=new URL("sw.js",location.href).href,ver=t=>{const m=t&&t.match(/CACHE\s*=\s*"([^"]+)"/);return m?m[1]:null};
+    const getVer=()=>fetch(SW+"?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(ver).catch(()=>null);
+    let base=null,going=false;getVer().then(v=>base=v);
+    const reload=()=>{if(going)return;going=true;location.reload()};
+    const check=()=>{const sw=navigator.serviceWorker;if(sw)sw.getRegistration().then(r=>r&&r.update()).catch(()=>{});
+      getVer().then(v=>{if(v&&base&&v!==base&&sessionStorage.getItem("suiteReloadedFor")!==v){try{sessionStorage.setItem("suiteReloadedFor",v)}catch(e){}reload()}})};
+    if(navigator.serviceWorker){const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!document.hidden)reload()})}
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});
+    window.addEventListener("pageshow",e=>{if(e.persisted)check()});
+    setInterval(()=>{if(!document.hidden)check()},10*60*1000);
+    if(document.getElementById("refresh"))return;   // TQQQ has its own button
+    const st=document.createElement("style");st.textContent=`.suite-ref{appearance:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line,#25252b);background:var(--chip,#17171b);color:var(--ink,#f4f4f6);
+      font:600 17px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;flex:none;z-index:3;-webkit-tap-highlight-color:transparent}
+      .suite-ref:active{background:var(--panel,#0e0e11)}.suite-ref.spin span{animation:suitespin .8s linear infinite}.suite-ref span{display:block;line-height:1;transform-origin:50% 54%}
+      @keyframes suitespin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.suite-ref.spin span{animation:none}}
+      .suite-ref.onimg{position:absolute;top:10px;right:10px;background:#000a;border-color:#ffffff40;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}`;
+    document.head.appendChild(st);
+    const b=document.createElement("button");b.type="button";b.className="suite-ref";b.innerHTML="<span>↻</span>";
+    const lab=()=>b.setAttribute("aria-label",document.documentElement.lang==="en"?"Refresh":"更新");lab();
+    new MutationObserver(lab).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});
+    b.addEventListener("click",()=>{b.classList.add("spin");const sw=navigator.serviceWorker;
+      Promise.race([sw?sw.getRegistration().then(r=>r&&r.update()).catch(()=>{}):Promise.resolve(),new Promise(r=>setTimeout(r,1500))]).then(()=>{going=false;reload()})});
+    const lang=document.getElementById("lang"),hero=document.getElementById("hero");
+    if(lang&&getComputedStyle(lang).position==="absolute"){
+      // MRI, Mind: JP / EN sits at the header's right edge; the button takes that edge and JP / EN moves left
+      const cs=getComputedStyle(lang),r0=parseFloat(cs.right)||0;
+      b.style.position="absolute";b.style.right=r0+"px";b.style.top=(parseFloat(cs.top)||0)+(lang.offsetHeight-32)/2+"px";
+      lang.style.right=(r0+40)+"px";lang.parentNode.insertBefore(b,lang.nextSibling);
+      const br=lang.parentNode.querySelector(".brand");if(br)br.style.paddingRight=(parseFloat(getComputedStyle(br).paddingRight)||0)+40+"px";
+    }else if(lang){b.style.marginLeft="8px";lang.parentNode.insertBefore(b,lang.nextSibling)}   // Nasdaq 100
+    else if(hero){b.classList.add("onimg");hero.appendChild(b)}                                        // the paper's masthead
+    else{const br=document.querySelector("header .brand");if(br){b.style.marginLeft="auto";br.appendChild(b)}}  // Money
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",refresh);else setTimeout(refresh,0);
+  window.Suite={mount,foot,fest,refresh};
 })();
