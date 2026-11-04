@@ -3,10 +3,10 @@
  "active": true,
  "title": "米中間選挙",
  "head": [
-  "下院は民主党、上院も民主党が先行",
-  "上院多数派まで民主党系あと4議席"
+  "上院、AP通信が民主党の多数派を判定",
+  "議会の上下両院が民主党主導に移る構図"
  ],
- "body": "Decision Desk HQの集計で、当確は下院が民主党148対共和党92、上院が民主党系47対共和党38。下院はDDHQが民主党の多数派獲得を判定した。AP通信の判定は確認できていない。上院はAPがオハイオとサウスカロライナで民主党の勝利を判定し、残る15議席は未定。S&P500先物は1.2%、ナスダック先物は2%超下げ、米10年債利回りは4.906%に低下、ドル指数は0.37%下げた。",
+ "body": "AP通信は米東部時間3日深夜、上院で民主党の多数派獲得を判定した。DDHQも上院と下院の両方で民主党の多数派を判定している。下院はAPの判定がまだ出ていない。確認できた最新の集計はDDHQの下院民主党148対共和党92、上院民主党系47対共和党38で、上院判定より前の数字。メーンでは共和党のコリンズ氏が敗北を認めた。S&P500先物とドルは民主党の伸長を受けて下げた。",
  "house": {
   "D": 148,
   "I": 0,
@@ -25,43 +25,43 @@
  "races": [
   [
    "議会",
-   "下院多数派：DDHQが民主党の奪還を判定。CNN、NBC、CBSも民主党勝利を報道。AP の判定は未確認"
+   "上院多数派：AP通信が民主党の獲得を判定（米東部3日深夜）。DDHQも判定"
+  ],
+  [
+   "議会",
+   "下院多数派：DDHQ、ABC、CNN、NBCが民主党の奪還を判定。APは判定前"
   ],
   [
    "上院",
-   "オハイオ：民主党のブラウン氏が当確（AP、日本時間13:11頃）。現職ハステッド氏を破る"
+   "メーン：共和党のコリンズ氏が民主党のジャクソン氏に敗北を認める（日本時間14:15までに）"
   ],
   [
    "上院",
-   "サウスカロライナ：民主党のアンドリュース氏が当確（AP、日本時間11:59頃）"
+   "オハイオ、ノースカロライナ、アイオワ：民主党が当確（AP）。共和党の議席を奪う"
   ],
   [
    "上院",
-   "テキサス：民主党のタラリコ氏が当確（DDHQ、日本時間12:14）。AP は判定前"
+   "テキサス：民主党のタラリコ氏が当確（DDHQ）。カンザスは民主党ハミルトン氏の勝利をNBCが伝える"
   ],
   [
    "上院",
-   "カンザス：民主党のハミルトン氏の勝利をNBCが伝える。AP の判定は未確認"
-  ],
-  [
-   "上院",
-   "メーン、ミシガン、アイオワ、アラスカは当確出ず。最新の得票は未確認"
+   "ミシガン、アラスカ：当確出ず。アラスカは順位選択投票の集計が11月18日"
   ]
  ],
- "asof": "2026-11-04T13:25:00+09:00",
+ "asof": "2026-11-04T14:25:00+09:00",
  "source": "Decision Desk HQ",
  "sources": [
   [
+   "TIME（AP の上院判定）",
+   "https://time.com/article/2026/11/04/democrats-win-control-of-senate-in-blue-wave-election/"
+  ],
+  [
+   "Alternet（メーン）",
+   "https://www.alternet.org/susan-collins-2678022046/"
+  ],
+  [
    "KuCoin/Odaily（DDHQの議席数）",
    "https://www.kucoin.com/news/flash/democrats-secure-148-house-seats-47-senate-seats-in-2026-u-s-midterm-elections"
-  ],
-  [
-   "WCPO（オハイオ、AP判定）",
-   "https://www.wcpo.com/news/government/elections-local/ohio-democrat-sherrod-brown-projected-to-flip-pivotal-u-s-senate-seat"
-  ],
-  [
-   "Aaj English TV（Reuters、市場）",
-   "https://english.aaj.tv/news/330479261/stocks-wilt-dollar-slides-as-early-midterm-results-point-to-blue-sweep"
   ]
  ]
 }
