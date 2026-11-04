@@ -641,7 +641,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v234";
+const APP_VER="fi-v235";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1631,7 +1631,7 @@ function rstarBlock(){
     <div class="rcap"><span>${tx("名目中立金利と政策金利（%）","Neutral rate and policy rate (%)")}</span><div class="seg rpseg">${SP.map(([k,lb])=>`<button type="button" data-rs="${k}" aria-pressed="${k===sp[0]}">${EN()?k:lb}</button>`).join("")}</div></div>
     <div class="rkey rleg"><span><i style="border-color:#ffb547"></i>${tx("名目中立金利","Neutral rate")}</span><span><i style="border-color:#2ee6ff"></i>${tx("政策金利","Policy rate")}</span><span><i style="border-color:#b59cff"></i>r*</span></div>
     ${tsChart(S,RW,{H:230,unit:"%",ref:[0]})}
-    <div class="lsrc">${tx("軸は『金利の重力』第八章による。r* はニューヨーク連銀の LW モデル（Laubach・Williams、四半期、一期遅れ、片側推計）。名目中立金利は r* にインフレ目標の2%を足したもの（期待インフレではない）。10年と30年の中立金利は、基準期間プレミアム1.0と1.5を足して固定する。軸は動かさず、そこからの距離を読む。政策金利の線は四半期平均の FF 金利で、最後の点はいまの誘導目標の中央","Axis from 『金利の重力』 ch. 8: r* from the New York Fed's LW model (quarterly, one quarter behind, one-sided), plus the 2% target for the nominal neutral rate, plus fixed term premia of 1.0 (10Y) and 1.5 (30Y). Policy line: quarterly average funds rate, last point today's target midpoint")}　${tx("出典","Source")} ${tx("ニューヨーク連銀","New York Fed")}</div>`+xpl("中立金利とは",[["中立金利とは", "景気を温めも冷やしもしない金利の水準だ。直接は観測できないので、モデルで推計する。"], ["組み立て", "『金利の重力』第八章の軸だ。ニューヨーク連銀の LW モデル（Laubach・Williams）が推計する実質の中立金利 r* に、FRB のインフレ目標2%を足したものが名目の中立金利になる。10年中立はそこに1.0、30年中立は1.5を足す。長く貸すほど求められる上乗せ（期間プレミアム）の標準的な幅だ。"], ["軸は動かさない", "期待インフレや別のモデルで軸を揺らすと、物差しそのものが動いて距離が読めなくなる。軸は固定し、実際の金利がそこからどれだけ離れているかだけを読む。"], ["読み方", "政策金利が名目中立より上なら引き締めの側、下なら緩和の側だ。差が0.125以内なら中立とみなす。10年と30年の金利が中立より上にあれば長期金利は景気に重く、下にあれば軽い。"], ["更新", "r* は四半期ごとに、一期遅れで更新される。動きはゆっくりなので、日々の読みは実際の金利の側の動きになる。"]]);
+    <div class="lsrc">${tx("軸は『金利の重力』第八章による。r* はニューヨーク連銀の LW モデル（Laubach・Williams、四半期、一期遅れ、片側推計）。名目中立金利は r* にインフレ目標の2%を足したもの（期待インフレではない）。10年中立金利は1%のリスクプレミアム（実質金利に0.5%、インフレ期待に0.5%）を乗せ、30年中立金利は1.5を足して固定する。軸は動かさず、そこからの距離を読む。政策金利の線は四半期平均の FF 金利で、最後の点はいまの誘導目標の中央","Axis from 『金利の重力』 ch. 8: r* from the New York Fed's LW model (quarterly, one quarter behind, one-sided), plus the 2% target for the nominal neutral rate, plus a 1% risk premium for 10Y (0.5 on the real rate, 0.5 on expected inflation) and 1.5 for 30Y. Policy line: quarterly average funds rate, last point today's target midpoint")}　${tx("出典","Source")} ${tx("ニューヨーク連銀","New York Fed")}</div>`+xpl("中立金利とは",[["中立金利とは", "景気を温めも冷やしもしない金利の水準だ。直接は観測できないので、モデルで推計する。"], ["組み立て", "『金利の重力』第八章の軸だ。ニューヨーク連銀の LW モデル（Laubach・Williams）が推計する実質の中立金利 r* に、FRB のインフレ目標2%を足したものが名目の中立金利になる。10年中立はそこに1%のリスクプレミアムを乗せる。内訳は実質金利に0.5%、インフレ期待に0.5%だ。30年中立は1.5を足す。長く貸すほど求められる上乗せの幅だ。"], ["軸は動かさない", "期待インフレや別のモデルで軸を揺らすと、物差しそのものが動いて距離が読めなくなる。軸は固定し、実際の金利がそこからどれだけ離れているかだけを読む。"], ["読み方", "政策金利が名目中立より上なら引き締めの側、下なら緩和の側だ。差が0.125以内なら中立とみなす。10年と30年の金利が中立より上にあれば長期金利は景気に重く、下にあれば軽い。"], ["更新", "r* は四半期ごとに、一期遅れで更新される。動きはゆっくりなので、日々の読みは実際の金利の側の動きになる。"]]);
 }
 // カナリア: the corporate bond spread (OAS), the canary in the mine. Lenders get nervous before shareholders do: a
 // sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks; a spread
