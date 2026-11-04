@@ -1,0 +1,21 @@
+# 号外: the seat counts from NBC News every 5 minutes while the 号外 is on (scripts/update_election.py stops by itself)
+name: election
+on:
+  push:
+    branches: [main]
+    paths: [scripts/update_election.py]
+  schedule:
+    - cron: "11,41 * * * *"
+  workflow_dispatch:
+concurrency: election
+permissions:
+  contents: write
+jobs:
+  seats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git config user.name github-actions; git config user.email github-actions@users.noreply.github.com
+          python3 scripts/update_election.py 7
