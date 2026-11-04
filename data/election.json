@@ -3,10 +3,10 @@
  "active": true,
  "title": "米中間選挙",
  "head": [
-  "上院、AP通信が民主党の多数派を判定",
+  "上院は民主党、下院も民主党が優勢",
   "議会の上下両院が民主党主導に移る構図"
  ],
- "body": "AP通信は米東部時間3日深夜、上院で民主党の多数派獲得を判定した。DDHQも上院と下院の両方で民主党の多数派を判定している。下院はAPの判定がまだ出ていない。確認できた最新の集計はDDHQの下院民主党148対共和党92、上院民主党系47対共和党38で、上院判定より前の数字。メーンでは共和党のコリンズ氏が敗北を認めた。S&P500先物とドルは民主党の伸長を受けて下げた。",
+ "body": "AP通信は上院で民主党の多数派獲得を判定した。下院はDDHQ、ABC、CNN、NBCが民主党の奪還を判定し、APの判定はまだ出ていない。確認できた最新の集計はDDHQの下院民主党148対共和党92、上院民主党系47対共和党38。リード数は未確認。ミシガン上院では民主党のエルサイード氏の勝利をThe Hillが伝えた。S&P500先物は1.2%安、10年債利回りは4.906%に低下し、ドルも下落した。",
  "house": {
   "D": 148,
   "I": 0,
@@ -33,7 +33,11 @@
   ],
   [
    "上院",
-   "メーン：共和党のコリンズ氏が民主党のジャクソン氏に敗北を認める（日本時間14:15までに）"
+   "ミシガン：民主党のエルサイード氏の勝利をThe Hillが報道。共和党のロジャーズ氏を破る"
+  ],
+  [
+   "上院",
+   "メーン：民主党のジャクソン氏が勝利。共和党のコリンズ氏が敗北を認める"
   ],
   [
    "上院",
@@ -41,27 +45,23 @@
   ],
   [
    "上院",
-   "テキサス：民主党のタラリコ氏が当確（DDHQ）。カンザスは民主党ハミルトン氏の勝利をNBCが伝える"
-  ],
-  [
-   "上院",
-   "ミシガン、アラスカ：当確出ず。アラスカは順位選択投票の集計が11月18日"
+   "テキサス：民主党のタラリコ氏が当確（DDHQ）。アラスカは順位選択投票の集計が11月18日"
   ]
  ],
- "asof": "2026-11-04T14:25:00+09:00",
+ "asof": "2026-11-04T15:24:00+09:00",
  "source": "Decision Desk HQ",
  "sources": [
   [
-   "TIME（AP の上院判定）",
-   "https://time.com/article/2026/11/04/democrats-win-control-of-senate-in-blue-wave-election/"
+   "Reuters（市場の反応）",
+   "https://lufkindailynews.com/news_reuters/business/stocks-wilt-dollar-slides-as-early-midterm-results-point-to-blue-sweep/article_c620819f-28e2-5619-821c-c23f962537ce.html"
   ],
   [
-   "Alternet（メーン）",
-   "https://www.alternet.org/susan-collins-2678022046/"
+   "Forbes（AP の上院判定）",
+   "https://www.forbes.com/sites/saradorn/2026/11/03/midterm-election-results-live-updates-democrats-win-senate-in-stunning-rout/"
   ],
   [
-   "KuCoin/Odaily（DDHQの議席数）",
-   "https://www.kucoin.com/news/flash/democrats-secure-148-house-seats-47-senate-seats-in-2026-u-s-midterm-elections"
+   "ChainCatcher（DDHQの議席数）",
+   "https://www.chaincatcher.com/en/article/2301595"
   ]
  ]
 }
