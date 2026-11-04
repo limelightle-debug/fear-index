@@ -3,10 +3,10 @@
  "active": true,
  "title": "米中間選挙",
  "head": [
-  "上院、民主党が3州でリード",
-  "下院はDDHQが民主党の奪還を判定"
+  "下院、民主党の奪還を各社判定",
+  "上院は民主党がリード、多数派は未定"
  ],
- "body": "上院はAP通信の当確と改選なしで民主党系36対共和党32。開票途中ではテキサス、オハイオ、ミシガンで民主党候補がリードし、当確とリードを合わせると39対32になる。下院はDecision Desk HQが日本時間11時9分に民主党の奪還を判定し、AP通信は判定前。両院とも確定していない。S&P500先物は0.8%、ナスダック100先物は1.8%下げた。",
+ "body": "下院はDecision Desk HQに続きNBC、CBS、ABCも民主党の多数派獲得を判定した。AP通信の判定は確認できていない。上院はAP集計で民主党系45対共和党35、テキサス、オハイオ、ミシガンで民主党候補がリードし、合わせると48対35になる。S&P500先物は0.8%、ナスダック100先物は1.8%下げ、米10年債利回りは4.906%に低下、ドル指数は0.32%下げた。",
  "house": {
   "D": 92,
   "I": 0,
@@ -15,55 +15,55 @@
   "need": 218
  },
  "senate": {
-  "D": 34,
+  "D": 43,
   "I": 2,
-  "R": 32,
+  "R": 35,
+  "Dl": 3,
+  "Rl": 0,
   "total": 100,
   "need": 51,
-  "needR": 50,
-  "Dl": 3,
-  "Rl": 0
+  "needR": 50
  },
  "races": [
   [
    "議会",
-   "下院多数派：DDHQが民主党の奪還を判定（日本時間11:09）。AP は判定前"
+   "下院多数派：DDHQ、NBC、CBS、ABCが民主党の奪還を判定。AP の判定は未確認"
   ],
   [
    "上院",
-   "テキサス：民主党のタラリコ氏が56.4%対42.0%でリード（DDHQ、日本時間11:40）"
+   "テキサス：民主党のタラリコ氏が当確（DDHQ、日本時間12:14）。開票約60%で57.4%対41.1%。AP は判定前"
   ],
   [
    "上院",
-   "オハイオ：開票率44%、民主党のブラウン氏が52.9%対43.1%でリード（AP集計、10:59）"
+   "オハイオ：開票率44%、民主党のブラウン氏が52.9%対43.1%でリード（AP集計）"
   ],
   [
    "上院",
-   "ミシガン：開票率約4%、民主党のエルサイード氏が55%対43%でリード（11:10）"
+   "ミシガン：開票率12%、民主党のエルサイード氏が56%対42.3%でリード"
   ],
   [
    "上院",
-   "ノースカロライナ、ジョージアで民主党、フロリダで共和党が当確（AP）"
+   "ノースカロライナ、ジョージア、ニューハンプシャー、バージニアで民主党が勝利（AP配信）"
   ],
   [
    "上院",
    "メーン：開票中、得票の数字は未確認。当確出ず"
   ]
  ],
- "asof": "2026-11-04T12:10:00+09:00",
+ "asof": "2026-11-04T12:30:00+09:00",
  "source": "AP通信",
  "sources": [
   [
-   "Decision Desk HQ（テキサス上院）",
-   "https://votes.decisiondeskhq.com/races/2026-11-03/texas-us-senate-general-election"
+   "Yahoo/NJ.com（AP集計の議席数）",
+   "https://www.yahoo.com/news/politics/articles/election-results-2026-balance-power-015809470.html"
   ],
   [
-   "CryptoTicker（オハイオ、AP集計）",
-   "https://cryptoticker.io/en/ohio-election-results-2026-sherrod-brown-crypto/"
+   "Clash Report（テキサス、DDHQ判定）",
+   "https://clashreport.com/world/articles/democrat-james-talarico-defeats-ken-paxton-in-texas-senate-race-ddhq-projects-9t44bpzu99f"
   ],
   [
-   "Deadline Detroit（ミシガン）",
-   "https://www.deadlinedetroit.com/articles/35294/abdul_el-sayed_leads_mike_rogers_in_early_returns"
+   "Business Recorder（Reuters、市場）",
+   "https://www.brecorder.com/news/40447347/stocks-dollar-slide-after-some-early-wins-for-democrats-in-us-midterm-election"
   ]
  ]
 }
