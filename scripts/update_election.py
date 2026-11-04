@@ -2,7 +2,7 @@
 
 Only house/senate D, I, R and asof change; the headline, story and races stay as the 号外 task wrote them.
 NBC counts the independents who caucus with the Democrats as Democratic seats, so the Senate I already in
-the file is taken out of NBC's Democratic total. Stops once the 号外 is off or more than 30 hours old.
+the file is taken out of NBC's Democratic total. Stops once the 号外 is off, more than 30 hours old, or the morning paper for untilPaper is out.
 """
 import datetime, json, re, sys, time, urllib.request
 
@@ -34,6 +34,9 @@ def bop():
 
 def once():
     d = json.load(open(P, encoding="utf-8"))
+    paper = json.load(open("data/paper.json", encoding="utf-8"))
+    if d.get("untilPaper") and paper.get("date", "") >= d["untilPaper"]:
+        return "off"
     if not d.get("active") or datetime.datetime.now(JST) - datetime.datetime.fromisoformat(d["asof"]) > datetime.timedelta(hours=30):
         return "off"
     b = bop()

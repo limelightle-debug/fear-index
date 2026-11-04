@@ -13,7 +13,7 @@ import json, os, sys, datetime
 
 
 # every data file the paper fetches, by its path from the site root (the page's fetch() resolves to the same path)
-FILES = ["fear-index/data/paper.json", "fear-index/data/oas.json", "fear-index/data/interview.json",
+FILES = ["fear-index/data/paper.json", "fear-index/data/oas.json", "fear-index/data/interview.json", "fear-index/data/election.json",
          "ndx-heatmap/data/ndx.json", "tqqq/data/tqqq.json"] + [
          f"mri-app/data/{f}.json" for f in ("indices markets curve oas hyg rstar spx_daily liquidity macro fedwatch "
                                             "futures weekly weekend mri vix vix_daily").split()]

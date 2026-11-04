@@ -641,7 +641,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v232";
+const APP_VER="fi-v233";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -959,7 +959,11 @@ function renderIdxEve(el,st,asof){
 let ELEC=null;
 function renderGogai(){
   const el=$("gogai"),E=ELEC;
-  if(!E||!E.active||!E.asof||Date.now()-new Date(E.asof)>36*36e5||Date.now()<new Date(E.asof)-36e5){el.hidden=true;return}
+  // a past issue that kept the 号外 (data/archive/<id>.json has election.json) shows it as it was kept;
+  // live, it shows for 36 hours from asof, and ends once the morning paper for E.untilPaper (a US trading date) is out
+  const kept=ISSUE&&ARCH&&ARCH.files&&ARCH.files["fear-index/data/election.json"];
+  if(!E||!E.active||!E.asof||(!kept&&(Date.now()-new Date(E.asof)>36*36e5||Date.now()<new Date(E.asof)-36e5))
+     ||(!kept&&E.untilPaper&&STORY&&STORY.date>=E.untilPaper)){el.hidden=true;return}
   const at=new Date(E.asof),n=v=>+v||0;
   // D, I, R: seats called; Dl, Rl: seats where the candidate leads in the count but no call yet (the flash count)
   const seat=(name,C)=>{if(!C)return"";const tot=C.total,D=n(C.D),I=n(C.I),R=n(C.R),Dl=n(C.Dl),Rl=n(C.Rl),U=Math.max(0,tot-D-I-R-Dl-Rl),pc=v=>(v/tot*100).toFixed(3)+"%";
