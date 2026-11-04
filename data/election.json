@@ -3,10 +3,10 @@
  "active": true,
  "title": "米中間選挙",
  "head": [
-  "開票はじまる、当確まだ",
-  "両院の多数派の行方は開票待ち"
+  "ジョージア上院、民主党が当確",
+  "両院の多数派はまだ開票待ち"
  ],
- "body": "ケンタッキー州やジョージア州、バージニア州などで投票が締め切られ、開票が進む。日本時間9時26分の時点で、AP通信の当確は読める頁で確認できず、議席数は前の回のままとした。上下両院の多数派はまだ決まっていない。3日の米株はS&P500が0.36%高、ナスダック総合が0.83%高、ダウ平均が0.38%安で引けた。",
+ "body": "東部の各州で投票が締め切られ、開票が進む。AP通信はジョージア州の上院選で民主党現職のオソフ氏の当選確実を伝えた。日本時間10時28分の時点で、AP通信の議席集計は読める頁で確かめられず、議席数は前の回のままとした。上下両院の多数派はまだ決まっていない。ロイターは米株価指数先物が小幅に下げたと伝えた。",
  "house": {
   "D": 0,
   "I": 0,
@@ -25,39 +25,43 @@
  "races": [
   [
    "上院",
-   "ジョージア：投票締め切り、当確出ず"
+   "ジョージア：民主党のオソフ氏が当確（AP）"
   ],
   [
    "上院",
-   "ニューハンプシャー：開票中、当確出ず"
+   "ノースカロライナ：開票中、当確出ず"
   ],
   [
    "上院",
-   "ケンタッキー：開票中、当確出ず"
+   "オハイオ：開票中、当確出ず"
   ],
   [
    "上院",
-   "ノースカロライナ：開票待ち、当確出ず"
+   "ニューハンプシャー、ケンタッキー：開票中、当確出ず"
   ],
   [
    "上院",
-   "ミシガン、メーン：開票待ち、当確出ず"
+   "ミシガン、メーン、テキサス：開票待ち、当確出ず"
   ],
   [
    "議会",
    "下院・上院の多数派：AP通信の判定待ち"
   ]
  ],
- "asof": "2026-11-04T09:26:00+09:00",
+ "asof": "2026-11-04T10:28:00+09:00",
  "source": "AP通信",
  "sources": [
   [
-   "ABC News（AP通信の集計）",
-   "https://www.abc.net.au/news/2026-11-04/us-midterm-election-results-2026/107235570"
+   "WCTV（AP通信の判定）",
+   "https://www.wctv.tv/2026/11/04/ap-projects-jon-ossoff-winner-us-senate-seat-georgia/"
   ],
   [
-   "TheStreet",
-   "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-nov-03-2026"
+   "ABC News",
+   "https://abcnews.com/Politics/live-updates/midterm-elections-live-updates/?id=137782085"
+  ],
+  [
+   "NewsNation",
+   "https://www.newsnationnow.com/politics/2026-midterm-elections/midterm-election-day-2026-live-results/amp/"
   ]
  ]
 }
