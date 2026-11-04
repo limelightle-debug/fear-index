@@ -81,7 +81,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 a{color:inherit}
 .num{font-family:var(--f-tick);font-stretch:82%;font-variant-numeric:tabular-nums}
 /* the masthead keeps one composition at every width: the shape it has on Ryo's iPhone (440pt wide: 408 x 232) */
-.tabrow{display:flex;align-items:center;gap:8px}.tabrow>.seg{flex:1 1 auto;min-width:0}#refslot{display:flex;flex:none}#refslot:empty{display:none}
+.tabrow{display:flex;align-items:center;gap:8px;margin-top:10px}.tabrow>.seg{flex:1 1 auto;min-width:0;margin-top:0}#refslot{display:flex;flex:none}#refslot:empty{display:none}
 .mhero{position:relative;overflow:hidden;margin-top:12px;aspect-ratio:408/232;height:auto;border-radius:16px;background:#000;border:1px solid var(--line)}
 .mhero .hbg{position:absolute;top:50%;right:-6%;height:118%;width:auto;transform:translateY(-50%);-webkit-mask-image:linear-gradient(to right,transparent 0,#000 14%);mask-image:linear-gradient(to right,transparent 0,#000 14%)}
 .mhero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.92) 0,rgba(0,0,0,.55) 48%,rgba(0,0,0,0) 75%),linear-gradient(0deg,rgba(0,0,0,.55),rgba(0,0,0,0) 45%)}
@@ -641,7 +641,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v231";
+const APP_VER="fi-v232";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
