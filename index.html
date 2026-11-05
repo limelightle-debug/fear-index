@@ -200,8 +200,8 @@ html.aimg .wrap>*:not(.top):not(.aimgv){display:none!important}
 .arow .ed.mor{background:#e3342b;color:#fff}.arow .ed.eve{background:#9db8ff}.arow .ed.sun{background:#ffd27a}
 .arow b{display:block;font-size:16.5px;font-weight:800;line-height:1.35;margin-top:6px}.arow small{display:block;font-size:13.5px;color:var(--ink2);margin-top:2px}
 .arow ul{margin:6px 0 0;padding:0;list-style:none;font-size:13px;color:var(--ink2)}.arow li{line-height:1.6}.arow li::before{content:"・"}
-/* the Sunday edition: only the points, the week and the week ahead */
-body.sun #t-paper>section:not(#issue):not(#gogai):not(#intv):not(#sunwk):not(#sunwe):not(#sunnx),body.sun #t-paper>.sec{display:none!important}
+/* the Sunday edition: the points, the week and the week ahead, then the MRI over the year and 金利の重力 (both slow; weekdays leave them out) */
+body.sun #t-paper>section:not(#issue):not(#gogai):not(#intv):not(#sunwk):not(#sunwe):not(#sunnx):not(#mritrend):not(#grav),body.sun #t-paper>.sec{display:none!important}
 /* the evening edition: the points, the realtime MRI, the futures, the news, rates and commodities, and only the releases of the night (paper.json eveRel) */
 body.evening #t-paper>section:not(#issue):not(#gogai):not(#intv):not(#mritop):not(#idx):not(#news):not(#rates):not(#cmdty):not(.evrel),body.evening #t-paper>.sec{display:none!important}
 .wkr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
@@ -391,6 +391,8 @@ body.evening #t-paper>section:not(#issue):not(#gogai):not(#intv):not(#mritop):no
 .lq .c.up{color:#5fd08e}.lq .c.dn{color:#ff7b7b}
 .mtab{margin-top:10px}
 .mtab .lq{grid-template-columns:minmax(0,1fr) auto 64px}
+.mtab.gx .lq{grid-template-columns:minmax(0,1fr) auto auto;gap:10px}.mtab.gx .lq .v{font-size:13.5px;font-weight:600}.mtab.gx .lq .c{font-size:13px}
+.mtab .lq.sub .k{padding-left:12px;font-size:12.5px;color:var(--muted)}.mtab .lq.sub .v{font-size:13px}
 .lq .k{overflow:hidden;text-overflow:ellipsis}
 .lq .k small{white-space:normal;line-height:1.35}
 .mtab.lq4 .lq{grid-template-columns:minmax(0,1fr) auto 58px 58px;gap:6px}
@@ -605,6 +607,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="news" hidden></section>
     <section class="panel" id="rates" hidden></section>
+    <section class="panel" id="grav" hidden></section>
     <section class="panel" id="canary" hidden></section>
     <section class="panel" id="fedw" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
@@ -1189,12 +1192,12 @@ function renderMriTop(){
     <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>`+mriInds(r,p,live?hm:`${Mo}/${Dd} 終値`)+xpl("3つの指標のスコアとは",[["スコアとは", "VIX、SKEW、CAPE のそれぞれが、自分の過去10年の平均からどれだけ離れているかを、0〜100%にしたものだ。離れ方を、その離れ方の過去10年の散らばりで割り、正規分布の累積確率に直している。"], ["目盛りの意味", "50%が平均並みだ。84.13%で平均より1σ上、97.72%で2σ上、99.87%で3σ上になる。15.87%は1σ下だ。CAPE のスコアが84.13%を超えるとテクニカル・バブルの Level1 が点灯する。"], ["向き", "3つとも、高いほどリスクが高い向きにそろえてある。SKEW と CAPE はそのまま、VIX だけは逆さにしてある。VIX が低いほど、つまり誰も怖がっていないほど、VIX のスコアは高くなる。VIX と SKEW は対数で測っている。"], ["3つの窓", "VIX は感情（恐怖と油断）、SKEW は持ち高（機関のロングと保険）、CAPE は割高さを映す。3つが同時に高いとき、つまり誰も怖がらず、保険を積み、値が高いとき、風船は最も膨らんでいる。"], ["MRI とは", "3つのスコアの平均だ。80以上が SELL、8以下が BUY の線になる。平均と散らばりは、その月を含む過去120ヶ月で毎月測り直す。相場の水準や仕組みが変わっても、その時代の物差しで読める。"]]);
 }
 // the MRI over the past year (daily, confirmed closes), with the S&P 500's trend-corrected percentile below, as in the
-// MRI app's chart; the reading in the medium and long run is the day's article (paper.json "mriTrend", "mriTrendHead"),
-// otherwise one built from the data
+// MRI app's chart; the reading in the medium and long run is the Sunday article (paper.json "mriTrend", "mriTrendHead"),
+// otherwise one built from the data. Sunday edition only: a year does not move from one day to the next
 let TCI=null;
 function renderMriTrend(){
   const el=$("mritrend");
-  if(!TEMP||!TEMP.mri){el.hidden=true;return}
+  if(!SUN()||!TEMP||!TEMP.mri){el.hidden=true;return}
   const {mri}=TEMP,all=mri.daily.filter(r=>r[0]!==mri.liveDay&&r[7]!=null),last=all[all.length-1][0];
   const from=last-10000,B=all.filter(r=>r[0]>from);if(B.length<20){el.hidden=true;return}
   const n=B.length,W=pw(el),ML=2,MR=26,MT=6,MB=22,PH=Math.round(W*.6),PH2=Math.round(PH*.5),GAP=20,PW=W-ML-MR;
@@ -1594,44 +1597,89 @@ function ratesMore(){
     ${row(tx("実質金利","Real yield"),Z.real,tx("10年","10Y"))}${row(tx("インフレ期待","Breakeven"),Z.be,tx("10年","10Y"))}</div>
     ${RH&&RH.length>1?`<div class="rcap"><span>${tx("10年実質金利の推移","10Y real yield")}</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}`+xpl("実質金利とインフレ期待とは",[["分け方", "10年債の利回りは、実質金利とインフレ期待に分けられる。実質金利は物価連動国債（TIPS）の利回りで、物価の上がり分を除いた本当の金利だ。インフレ期待は普通の国債と物価連動国債の利回りの差で、市場が見込む今後10年の平均の物価上昇率になる。"], ["株との関係", "株の値段は、将来の利益を今の価値に割り戻したものだ。その割引率の芯が実質金利になる。実質金利が上がると、遠い将来の利益に値がついているハイテク株や、PER の高い株ほど重くなる。"], ["組み合わせで読む", "実質金利が上がり、インフレ期待が動かないなら、引き締めか成長への期待だ。実質金利が下がり、インフレ期待が動かないなら、市場は先行きの成長を下方修正している。利上げが効いてきた形か、国債への逃避だ。インフレ期待が上がるなら物価への不安で、2%を大きく超えて上がり続けるなら FRB への信認が揺らいでいる。"], ["推定値", "公式の値（米財務省）は1日遅れる。その間は、物価連動国債と国債の ETF の値動きから推し量った値を出し、推定値と書いている。公式の値が出れば置き換わる。"]]);
 }
-// 中立金利: the axis of 『金利の重力』 chapter 8. r* from the New York Fed's LW model (one-sided, quarterly; the MRI app's
-// data/rstar.json), plus the 2% inflation target (not expected inflation) for the nominal neutral rate, plus the
-// standard term premium (10-year +1.0, 30-year +1.5). The axis is held fixed; what is read is the distance from it:
-// the policy rate (the target range's midpoint), and the 10- and 30-year yields.
-let RSTAR=null;
+// 中立金利: the axis of 『金利の重力』 chapter 8, as the Money app builds it. 自然利子率Now: the New York Fed's LW r*
+// (one-sided, quarterly, one quarter late; the MRI app's data/rstar.json) carried over the unpublished quarters by GDP
+// and core PCE (money.json lwnow), plus the 2% inflation target for the nominal neutral rate. The 10-year axis adds the
+// standard term premium, 0.50 for growth uncertainty (on the real rate) and 0.50 for inflation uncertainty (on expected
+// inflation); the 30-year 0.75 each. The market's own term premiums (real rate − r*, expected inflation − 2) can be
+// negative; how far each stands from the standard shows the scenario the market prices. Numbers only: the reading is
+// the article's (paper.json rates), the waterfalls are in Money.
+let RSTAR=null,MO=null;
+const RPS={10:.5,30:.75};
+const SCN=(dg,di)=>dg>.1&&di>.1?"インフレと成長の両方を織り込んでいる":dg>.1&&di<-.1?"成長は織り込み、インフレは織り込んでいない":dg<-.1&&di>.1?"成長は織り込まず、インフレを織り込んでいる":dg<-.1&&di<-.1?"景気後退を織り込んでいる":dg>.1?"成長を織り込んでいる":dg<-.1?"成長の鈍化を織り込んでいる":di>.1?"インフレを織り込んでいる":di<-.1?"インフレの鈍化を織り込んでいる":"軸のとおりで、特別なシナリオは織り込んでいない";
+function axisNow(){
+  const R=RSTAR&&RSTAR.hist||[],lw=R.filter(r=>r[2]!=null),L=lw[lw.length-1];if(!L)return null;
+  const LN=MO&&MO.lwnow,ok=!!(LN&&LN.path&&LN.path.length&&LN.base&&LN.base[0]===L[0]),p=ok?LN.path[LN.path.length-1]:null,rs=p?p[4]:L[2];
+  const c=CV&&CV.now,y=c&&c.y||{},inf=CV&&CV.infl||{},A=MO&&MO.real&&MO.real.all||[],ra=A[A.length-1],same=c&&inf.date===c.date;
+  const r10=same&&inf.real10!=null?inf.real10:ra?ra[5]:null,be10=same&&inf.be10!=null?inf.be10:ra?ra[2]-ra[5]:null;
+  const r30=ra&&c&&ra[6]!=null&&ra[0]===c.date.replace(/-/g,"")?ra[6]:null,n10=y["10Y"],n30=y["30Y"];
+  const tg=FW&&FW.target,pol=tg?(tg[0]+tg[1])/2:null,N=rs+2;
+  const t10=r10!=null&&be10!=null?{n:n10,ax:N+2*RPS[10],g:r10-rs,i:be10-2}:null,t30=r30!=null&&n30!=null?{n:n30,ax:N+2*RPS[30],g:r30-rs,i:n30-r30-2}:null;
+  [[t10,10],[t30,30]].forEach(([t,m])=>{if(t){t.dg=t.g-RPS[m];t.di=t.i-RPS[m];t.scn=SCN(t.dg,t.di)}});
+  return{R,L,lw:L[2],q:p?p[0]:L[0],now:ok,path:ok?LN.path:[],gdp:p&&p[1],src:p&&p[2],rs,N,pol,gp:pol!=null?pol-N:null,t10,t30,n10,n30,date:c&&c.date}}
 function rstarBlock(){
-  const R=RSTAR&&RSTAR.hist;if(!R||R.length<8)return"";
-  const RW=pw($("rates")),qt=k=>Date.UTC(+k.slice(0,4),(+k.slice(6)-1)*3+1,15),lw=R.filter(r=>r[2]!=null),last=lw[lw.length-1];if(!last)return"";
-  const rs=last[2],nn=rs+2,n10=nn+1,n30=nn+1.5,tg=FW&&FW.target,pol=tg?(tg[0]+tg[1])/2:null,y=CV&&CV.now&&CV.now.y||{};
-  const gp=pol!=null?pol-nn:null,g10=y["10Y"]!=null?y["10Y"]-n10:null,g30=y["30Y"]!=null?y["30Y"]-n30:null;
-  const sg=v=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(2)}`,side=v=>Math.abs(v)<0.125?[tx("中立","Neutral"),"#9aa0aa"]:v>0?[tx("中立の上","Above neutral"),"#ffb547"]:[tx("中立の下","Below neutral"),"#2ee6ff"];
+  const X=axisNow();if(!X||X.R.length<8)return"";const {R,L,rs,N,gp,t10,t30}=X;
+  const RW=pw($("rates")),qt=k=>Date.UTC(+k.slice(0,4),(+k.slice(6)-1)*3+1,15),qe=k=>Date.UTC(+k.slice(0,4),(+k.slice(6))*3,0);
+  const sg=v=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(2)}`,side=v=>Math.abs(v)<0.125?[tx("ほぼ中立","Near neutral"),"#9aa0aa"]:v>0?[tx("中立の上、引き締めの側","Above neutral, tight"),"#ffb547"]:[tx("中立の下、緩和の側","Below neutral, easy"),"#2ee6ff"];
   const SP=[["10Y","10年",10],["30Y","30年",30],["MAX","全期間",99]],sp=SP.find(r=>r[0]===store.get("rstar.rp","30Y"))||SP[1];
-  const from=sp[2]>50?"":String(+last[0].slice(0,4)-sp[2])+last[0].slice(4),Rc=R.filter(r=>r[0]>=from);
-  const pp=Rc.filter(r=>r[3]!=null).map(r=>[qt(r[0]),r[3]]);if(pol!=null)pp.push([Date.now(),pol]);
-  const S=[{c:"#ffb547",p:Rc.filter(r=>r[2]!=null).map(r=>[qt(r[0]),r[2]+2]),w:1.8},{c:"#2ee6ff",p:pp,w:1.5},{c:"#b59cff",p:Rc.filter(r=>r[2]!=null).map(r=>[qt(r[0]),r[2]]),w:1.1}];
+  const from=sp[2]>50?"":String(+L[0].slice(0,4)-sp[2])+L[0].slice(4),Rc=R.filter(r=>r[0]>=from);
+  const pp=Rc.filter(r=>r[3]!=null).map(r=>[qt(r[0]),r[3]]);if(X.pol!=null)pp.push([Date.now(),X.pol]);
+  const NP=X.now?[[qt(L[0]),L[2]+2]].concat(X.path.map(p=>[qt(p[0]),p[4]+2])):[];
+  const S=[{c:"#ffb547",p:Rc.filter(r=>r[2]!=null).map(r=>[qt(r[0]),r[2]+2]),w:1.8},{c:"#ffb547",p:NP,w:1.8,d:"4 3"},{c:"#2ee6ff",p:pp,w:1.5}];
   const qj=k=>tx(`${k.slice(0,4)}年${["1〜3","4〜6","7〜9","10〜12"][+k.slice(6)-1]}月期`,k);
-  // the reading: the three distances from the axis, and where r* itself has been heading
-  let rd="";
-  if(!EN()&&gp!=null){
-    const T=[Math.abs(gp)<0.125?"政策金利は名目中立金利とほぼ重なり、引き締めでも緩和でもない位置にある。":gp>0?"政策金利は名目中立金利を上に抜け、振り子は引き締めの側に振れている。":"政策金利は名目中立金利の下にあり、振り子は緩和の側に残っている。"];
-    if(g10!=null)T.push(g10>0.1?"10年金利も10年中立金利の上にあり、市場は中立以上の金利が続く景色を織り込んでいる。":g10<-0.1?"10年金利は10年中立金利の下にあり、市場は先の利下げか景気の減速を見ている。":"10年金利は10年中立金利とほぼ同じ高さにある。");
-    if(g10!=null&&g30!=null&&Math.abs(g30-g10)>=0.2)T.push(g30>g10?"30年の上乗せが10年より厚いのは、遠い先ほどインフレと成長の不確実性が値段に乗っているからだ。":"30年の乖離が10年より小さく、遠い先の不確実性への上乗せは控えめだ。");
-    const ya=lw.find(r=>r[0]===`${+last[0].slice(0,4)-1}${last[0].slice(4)}`);
-    if(ya&&Math.abs(rs-ya[2])>=0.15)T.push(rs>ya[2]?"軸の r* 自体もこの1年で切り上がった。AIへの設備投資と政府の借入が、資金の需要を押し上げている形だ。":"軸の r* 自体はこの1年で切り下がった。資金の需要が細り、中立の水準が下がっている。");
-    rd=T.join("")}
   const card=(pre,name,v)=>v==null?"":`<div><i class="pre">${pre}</i>${name}<b>${v.toFixed(2)}</b></div>`;
-  // the policy rate's midpoint keeps its third decimal (3.875), as the book writes it
-  const gap=(name,a,b,g,d=2)=>g==null?"":(()=>{const sd=side(g);return `<div class="lq"><span class="k">${name}</span><span class="v">${a.toFixed(d)}<small style="color:var(--muted)"> / ${b.toFixed(2)}</small></span><span class="c" style="color:${sd[1]}">${g>0?"+":g<0?"−":"±"}${Math.abs(g).toFixed(d)}</span></div>`})();
+  const cl=g=>g==null?"var(--muted)":Math.abs(g)<0.1?"#9aa0aa":g>0?"#ffb547":"#2ee6ff";
+  const row=(name,a,b,g,d=2,sub)=>a==null||b==null?"":`<div class="lq${sub?" sub":""}"><span class="k">${name}</span><span class="v">${a.toFixed(d)}<small style="color:var(--muted)"> / ${b.toFixed(2)}</small></span><span class="c" style="color:${cl(g)}">${sg(g)}</span></div>`;
+  const ten=(t,m,nm)=>t?row(nm,t.n,t.ax,t.n-t.ax)+row(tx("成長","Growth"),t.g,RPS[m],t.dg,2,1)+row(tx("インフレ","Inflation"),t.i,RPS[m],t.di,2,1):"";
   const sdp=gp!=null?side(gp):null;
-  return `<div class="rcap"><span>${tx("中立金利（軸）","Neutral rates (the axis)")}</span><span class="asof">${tx(`r* は${qj(last[0])}`,`r* through ${last[0]}`)}</span></div>
-    <div class="rsum rx2 c4">${card(tx("LW","LW"),"r*",rs)}${card(tx("r*+2%","r*+2%"),tx("名目中立","Neutral"),nn)}${card(tx("+1.0","+1.0"),tx("10年中立","10Y neutral"),n10)}${card(tx("+1.5","+1.5"),tx("30年中立","30Y neutral"),n30)}</div>
-    ${sdp?`<div class="rstate"><span class="pill" style="color:${sdp[1]};border-color:${sdp[1]}55;background:${sdp[1]}14"><i></i>${tx("政策金利は","Policy rate ")}${sdp[0]}</span></div>`:""}
-    <div class="mtab"><div class="lq hd"><span>${tx("乖離","Distance")}</span><span>${tx("実際 / 中立","Actual / neutral")}</span><span>${tx("差","Gap")}</span></div>${gap(tx("政策金利（誘導目標の中央）","Policy rate (midpoint)"),pol,nn,gp,3)}${gap(tx("10年金利","10Y yield"),y["10Y"],n10,g10)}${gap(tx("30年金利","30Y yield"),y["30Y"],n30,g30)}</div>
-    ${rd?`<div class="ccm" style="margin-top:10px"><p>${esc(rd)}</p></div>`:""}
+  const scn=t=>t?`<span class="pill" style="color:#e8e8ec;border-color:#ffffff33;background:#ffffff0d"><i></i>${t===t10?tx("10年","10Y"):tx("30年","30Y")}　${esc(t.scn)}</span>`:"";
+  return `<div class="rcap"><span>${tx("中立金利（軸）","Neutral rates (the axis)")}</span><span class="asof">${tx(`自然利子率Now は${qj(X.q)}`,`r* Now through ${X.q}`)}</span></div>
+    <div class="rsum rx2 c4">${card(X.now?tx("LW Now","LW Now"):"LW",tx("自然利子率","r*"),rs)}${card("+2%",tx("名目中立","Neutral"),N)}${card("+1.0",tx("10年の軸","10Y axis"),N+1)}${card("+1.5",tx("30年の軸","30Y axis"),N+1.5)}</div>
+    ${sdp?`<div class="rstate"><span class="pill" style="color:${sdp[1]};border-color:${sdp[1]}55;background:${sdp[1]}14"><i></i>${tx("政策は","Policy: ")}${sdp[0]}</span></div>`:""}
+    <div class="mtab"><div class="lq hd"><span>${tx("軸からの乖離","Distance from the axis")}</span><span>${tx("実際 / 軸","Actual / axis")}</span><span>${tx("差","Gap")}</span></div>${row(tx("政策金利","Policy rate"),X.pol,N,gp,3)}${ten(t10,10,tx("10年債","10Y"))}${ten(t30,30,tx("30年債","30Y"))}</div>
+    <div class="rkey rleg">${tx("成長とインフレは市場期間プレミアム（実際 / 標準期間プレミアム）","Growth and inflation: market term premium (actual / standard)")}</div>
+    ${EN()?"":`<div class="rstate" style="flex-wrap:wrap;gap:6px">${scn(t10)}${scn(t30)}</div>`}
     <div class="rcap"><span>${tx("名目中立金利と政策金利（%）","Neutral rate and policy rate (%)")}</span><div class="seg rpseg">${SP.map(([k,lb])=>`<button type="button" data-rs="${k}" aria-pressed="${k===sp[0]}">${EN()?k:lb}</button>`).join("")}</div></div>
-    <div class="rkey rleg"><span><i style="border-color:#ffb547"></i>${tx("名目中立金利","Neutral rate")}</span><span><i style="border-color:#2ee6ff"></i>${tx("政策金利","Policy rate")}</span><span><i style="border-color:#b59cff"></i>r*</span></div>
+    <div class="rkey rleg"><span><i style="border-color:#ffb547"></i>${tx("名目中立金利","Neutral rate")}</span>${X.now?`<span><i style="border-color:#ffb547;border-top-style:dashed"></i>${tx("Now（未公表の四半期）","Now (unpublished quarters)")}</span>`:""}<span><i style="border-color:#2ee6ff"></i>${tx("政策金利","Policy rate")}</span></div>
     ${tsChart(S,RW,{H:230,unit:"%",ref:[0]})}
-    <div class="lsrc">${tx("軸は『金利の重力』第八章による。r* はニューヨーク連銀の LW モデル（Laubach・Williams、四半期、一期遅れ、片側推計）。名目中立金利は r* にインフレ目標の2%を足したもの（期待インフレではない）。10年中立金利は1%のリスクプレミアム（実質金利に0.5%、インフレ期待に0.5%）を乗せ、30年中立金利は1.5を足して固定する。軸は動かさず、そこからの距離を読む。政策金利の線は四半期平均の FF 金利で、最後の点はいまの誘導目標の中央","Axis from 『金利の重力』 ch. 8: r* from the New York Fed's LW model (quarterly, one quarter behind, one-sided), plus the 2% target for the nominal neutral rate, plus a 1% risk premium for 10Y (0.5 on the real rate, 0.5 on expected inflation) and 1.5 for 30Y. Policy line: quarterly average funds rate, last point today's target midpoint")}　${tx("出典","Source")} ${tx("ニューヨーク連銀","New York Fed")}</div>`+xpl("中立金利とは",[["中立金利とは", "景気を温めも冷やしもしない金利の水準だ。直接は観測できないので、モデルで推計する。"], ["組み立て", "『金利の重力』第八章の軸だ。ニューヨーク連銀の LW モデル（Laubach・Williams）が推計する実質の中立金利 r* に、FRB のインフレ目標2%を足したものが名目の中立金利になる。10年中立はそこに1%のリスクプレミアムを乗せる。内訳は実質金利に0.5%、インフレ期待に0.5%だ。30年中立は1.5を足す。長く貸すほど求められる上乗せの幅だ。"], ["軸は動かさない", "期待インフレや別のモデルで軸を揺らすと、物差しそのものが動いて距離が読めなくなる。軸は固定し、実際の金利がそこからどれだけ離れているかだけを読む。"], ["読み方", "政策金利が名目中立より上なら引き締めの側、下なら緩和の側だ。差が0.125以内なら中立とみなす。10年と30年の金利が中立より上にあれば長期金利は景気に重く、下にあれば軽い。"], ["更新", "r* は四半期ごとに、一期遅れで更新される。動きはゆっくりなので、日々の読みは実際の金利の側の動きになる。"]]);
+    <div class="lsrc">${tx("軸は『金利の重力』第八章による。自然利子率はニューヨーク連銀の LW モデル（Laubach・Williams、四半期、一期遅れ、片側推計）。まだ出ていない四半期は、LW と同じ材料の実質GDP（GDPNow）とコア PCE で先に動かした値（自然利子率Now）で、公式が出たら置き換わる。名目中立は自然利子率にインフレ目標の2%を足したもの。標準期間プレミアムは10年が成長とインフレに0.50ずつ、30年が0.75ずつ。市場期間プレミアムは、成長が実質金利 − 自然利子率、インフレが期待インフレ − 2%で、マイナスにもなる。政策金利の線は四半期平均の FF 金利で、最後の点はいまの誘導目標の中央。分解のグラフは Money アプリ","Axis from 『金利の重力』 ch. 8: the New York Fed's LW r*, carried over unpublished quarters by GDPNow and core PCE (r* Now), plus the 2% target. Standard term premium 0.50 each for growth and inflation on 10Y, 0.75 each on 30Y")}　${tx("出典","Source")} ${tx("ニューヨーク連銀、米財務省","New York Fed, US Treasury")}</div>`;
+}
+// 金利の重力 (『金利の重力』 Part 3): where the real rate stands against its 10-year average, in standard deviations
+// (図3-6), what twelve months held after each band (図3-8), and whether the rate works as gravity now (図5-9: the curve
+// not inverted, the real rate rather than expected inflation moving, the real rate and stocks moving opposite ways).
+// Monthly data (money.json gravity, cape, real), the same as the Money app. The reading (paper.json grav) is written
+// on Sundays, or the morning the band or the verdict changes.
+const GB5=[["+1σより上",z=>z>1],["0〜+1σ",z=>z>0&&z<=1],["−1σ〜0",z=>z>=-1&&z<=0],["−2σ〜−1σ",z=>z>=-2&&z<-1],["−2σより下",z=>z<-2]];
+const gMean=a=>a.reduce((s,v)=>s+v,0)/a.length,gCorr=(a,b)=>{const ma=gMean(a),mb=gMean(b);let s=0,x=0,y=0;a.forEach((v,i)=>{s+=(v-ma)*(b[i]-mb);x+=(v-ma)**2;y+=(b[i]-mb)**2});return s/Math.sqrt(x*y)};
+function gravNow(){
+  const G=(MO&&MO.gravity||[]).filter(r=>r[5]!=null);if(!G.length||!CV||!CV.now)return null;
+  const L=G[G.length-1],W12=G.filter(r=>r[7]!=null),z=L[5];
+  const st=v=>v.length?{k:v.length,avg:gMean(v),win:v.filter(x=>x>0).length/v.length*100}:{k:0};
+  const bi=GB5.findIndex(b=>b[1](z)),B=Object.assign({n:GB5[bi][0]},st(W12.filter(r=>GB5[bi][1](r[5])).map(r=>r[7])));
+  const all=MO.real&&MO.real.all||[],ra=all[all.length-1],a12=ra&&all.filter(r=>r[0]<=String(+ra[0]-10000)).pop();
+  const y=CV.now.y,sl=y["10Y"]-y["3M"],dr=ra&&a12?ra[5]-a12[5]:null,db=ra&&a12?(ra[2]-a12[2])-dr:null;
+  const C0=MO.cape||[],rm=new Map((MO.real&&MO.real.monthly||[]).map(r=>[r[0],r[2]])),P=C0.filter(r=>rm.get(r[0])!=null&&r[0]>="2003").map(r=>[r[0],r[3],rm.get(r[0])]);
+  const RC=[];for(let i=5;i<P.length;i++){const w=P.slice(i-5,i+1);RC.push([P[i][0],gCorr(w.map(x=>x[1]),w.map(x=>x[2]))])}
+  const l3=RC.length>=3?gMean(RC.slice(-3).map(x=>x[1])):null;
+  return{L,z,B,bi,sl,dr,db,l3,lc:RC[RC.length-1],grav:l3!=null&&l3<0}}
+function renderGrav(){
+  const el=$("grav"),g=gravNow(),day=t=>t?new Date(+new Date(t)+9*36e5).toISOString().slice(0,10):"";
+  const today=STORY&&STORY.gravAt&&day(STORY.gravAt)===day(STORY.revisedAt||STORY.writtenAt);
+  if(!g||EN()||!(SUN()||today)){el.hidden=true;return}const {L,z,B,sl,dr,db,l3}=g;
+  const zc=Math.abs(z)>=3?"#FF3B5C":Math.abs(z)>=2?"#FF9800":Math.abs(z)>=1?"#4CAF50":"#e8e8ec";
+  const sg=v=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(2)}`,ym=k=>`${+k.slice(5)}月`;
+  const ok=(b,t,f)=>`<span class="c" style="color:${b?"#e8e8ec":"#ffb547"}">${b?t:f}</span>`;
+  const story=STORY&&STORY.grav&&(today||SUN()&&+new Date(STORY.gravAt||0)>+new Date(STORY.sunAt)-7*864e5)?STORY.grav:"";
+  el.hidden=false;
+  el.innerHTML=`<div class="ph"><h2>金利の重力</h2><span class="asof">${L[0].slice(0,4)}年${ym(L[0])}・月次</span></div>${headHTML("gravHead",[g.grav?"金利は重力として働いている":"金利はいま温度計",`重力 ${sg(z)}σ（${B.n}）`])}
+${story?`<div class="ccm"><p>${esc(story)}</p></div>`:""}
+    <div class="rsum rx2 c4"><div><i class="pre">σ</i>重力<b style="color:${zc}">${sg(z)}</b></div><div><i class="pre">10年</i>実質金利<b>${L[1].toFixed(2)}</b></div><div><i class="pre">10年平均</i>実質金利<b>${L[2].toFixed(2)}</b></div><div><i class="pre">${esc(B.n)}</i>勝率<b>${B.k?Math.round(B.win)+"%":"–"}</b></div></div>
+    <div class="mtab gx"><div class="lq hd"><span>その区分の12か月後</span><span>S&amp;P 500</span><span>上がった割合</span></div><div class="lq"><span class="k">${esc(B.n)}（${B.k}か月）</span><span class="v">平均 ${B.k?(B.avg>=0?"+":"−")+Math.abs(B.avg).toFixed(1)+"%":"–"}</span><span class="c">${B.k?Math.round(B.win)+"%":"–"}</span></div></div>
+    <div class="mtab gx"><div class="lq hd"><span>重力として働いているか</span><span>いま</span><span>判定</span></div>
+      <div class="lq"><span class="k">カーブ</span><span class="v">10年 − 3か月 ${sg(sl)}</span>${ok(sl>=0,"逆転なし","逆転")}</div>
+      ${dr!=null?`<div class="lq"><span class="k">1年の動き</span><span class="v">実質 ${sg(dr)}　期待インフレ ${sg(db)}</span>${ok(Math.abs(db)<=Math.abs(dr),"実質","期待インフレ")}</div>`:""}
+      ${l3!=null?`<div class="lq"><span class="k">実質金利と株価</span><span class="v">${l3<0?"逆向き":"同じ向き"}（相関 ${sg(l3)}）</span>${ok(l3<0,"重力","温度計")}</div>`:""}</div>
+        <div class="lsrc">重力は、10年実質金利と過去10年平均の差を、その差の標準偏差で割ったもの（『金利の重力』図3-6）。12か月後は S&amp;P 500 の騰落で、2003年以降の月次。6か月相関は実質金利と CAPE の補正ギャップで、直近3か月の平均。詳しいグラフは Money アプリ</div>`;
 }
 // カナリア: the corporate bond spread (OAS), the canary in the mine. Lenders get nervous before shareholders do: a
 // sudden widening of the high yield spread tends to come with, or a little before, a sharp fall in stocks; a spread
@@ -2019,7 +2067,7 @@ function tsChart(S,W,o={}){
   let p="";const ends=[];
   S.forEach((sr,k)=>{const P=sr.p;
     if(o.bars&&k===0){const bw=Math.max(1.5,PW/(P.length+(o.lastC?1:0))*.7);P.forEach(([t,v],i)=>{const lc=o.lastC&&i===P.length-1;p+=`<rect x="${(x(t)-bw/2).toFixed(1)}" y="${Math.min(y(v),y(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(.5,Math.abs(y(v)-y(0))).toFixed(1)}" fill="${lc?o.lastC:sr.c}" opacity="${lc?.95:v<0?.9:.75}"${lc?` stroke="${o.lastC}" stroke-dasharray="3 2" fill-opacity=".35"`:""}/>`})}
-    else p+=`<path d="${P.map(([t,v],i)=>`${i?"L":"M"}${x(t).toFixed(1)},${y(v).toFixed(1)}`).join("")}" fill="none" stroke="${sr.c}" stroke-width="${sr.w||1.6}" stroke-linejoin="round"/>`;
+    else p+=`<path d="${P.map(([t,v],i)=>`${i?"L":"M"}${x(t).toFixed(1)},${y(v).toFixed(1)}`).join("")}" fill="none" stroke="${sr.c}" stroke-width="${sr.w||1.6}"${sr.d?` stroke-dasharray="${sr.d}"`:""} stroke-linejoin="round"/>`;
     const L=P[P.length-1];ends.push({y:y(L[1]),t:f(L[1]),c:o.bars&&k===0&&o.lastC?o.lastC:sr.c})});
   ends.sort((a,b)=>a.y-b.y);for(let i=1;i<ends.length;i++)if(ends[i].y-ends[i-1].y<11)ends[i].y=ends[i-1].y+11;
   ends.forEach(e=>{p+=`<text x="${ML+PW+5}" y="${(e.y+3.5).toFixed(1)}" style="fill:${e.c};font-weight:700">${e.t}</text>`});
@@ -2330,6 +2378,7 @@ async function loadMarkets(){
       .then(([a,b])=>{OASD=[a,b].filter(j=>j&&j.date).sort((x,y)=>y.date.localeCompare(x.date))[0]||null}),
     fetch(`../mri-app/data/hyg.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>HYGD=j).catch(()=>HYGD=null),
     fetch(`../mri-app/data/rstar.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>RSTAR=j).catch(()=>RSTAR=null),
+    fetch(`../mri-app/data/money.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MO=j).catch(()=>MO=null),
     fetch(`../mri-app/data/spx_daily.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>SPXD=j).catch(()=>SPXD=null),
     fetch(`../mri-app/data/liquidity.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>LQ=j).catch(()=>LQ=null),
     fetch(`../mri-app/data/mmf.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MMF=j).catch(()=>MMF=null),
@@ -2342,7 +2391,7 @@ async function loadMarkets(){
 async function loadTemp(){
   const g=f=>fetch(`../mri-app/data/${f}?ts=${Date.now()}`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
   try{const [vix,daily,mri]=await Promise.all([g("vix.json"),g("vix_daily.json"),g("mri.json")]);TEMP={vix,daily,mri}}catch(e){TEMP=null}
-  renderKokoro();renderAnom();renderMriTop();renderMriTrend();renderNums();renderEye();renderCanary();renderSun();
+  renderKokoro();renderAnom();renderMriTop();renderMriTrend();renderNums();renderEye();renderCanary();renderGrav();renderSun();
 }
 // the evening edition carries the data it was written on, frozen before the US open (paper.json "pre": futures.json
 // with the pre-open MRI, markets.json, indices.json, fedwatch.json), so its numbers stay with its text all night
@@ -2363,7 +2412,7 @@ async function loadPaper(){
     fetch("data/interview.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>INTV=j).catch(()=>INTV=null),
     fetch("data/election.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>ELEC=j).catch(()=>ELEC=null)]);
   applyPre();
-  renderIdx();renderGogai();renderIntv();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderCanary();renderFedw();
+  renderIdx();renderGogai();renderIntv();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderGrav();renderCanary();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
