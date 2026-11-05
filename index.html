@@ -1100,9 +1100,11 @@ function renderMRIp(){
     ${view?`<div class="view"><b>見解</b><p>${esc(view)}</p></div>`:""}`;
 }
 // the MRI's headline from the numbers: a signal that came on (or reset) that day first, otherwise the move and
-// the band, then the score that moved most (paper.json "mriHead" overrides it, when written for that session)
-function mriHeadline(mri,r,p){
-  const m=r[7],lv=level(m),dm=(m-p[7])*100,day=r[0],S=signals(mri,day);
+// the band, then the score that moved most (paper.json "mriHead" overrides it, when written for that session).
+// Signals are judged on confirmed closes only: a realtime reading (live) never lights or resets one, and the
+// mri.json of later sessions must not leak into an earlier snapshot (the evening edition's pre-open reading)
+function mriHeadline(mri,r,p,live){
+  const m=r[7],lv=level(m),dm=(m-p[7])*100,day=r[0],S=live?[]:signals(mri,day);
   const on=S.find(x=>x.since===day),off=S.find(x=>x.reset===day);
   const C=[["VIX",r[4]-p[4]],["SKEW",r[5]-p[5]],["CAPE",r[6]-p[6]]].sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0],cv=Math.abs(C[1]*100).toFixed(1);
   const same=level(p[7])===lv,a=Math.abs(dm);
@@ -1167,7 +1169,7 @@ function renderMriTop(){
   // the comment comes with the day's article (paper.json "mri"), only for the same session; the evening edition's
   // realtime reading is "mriLive" (and "mriLiveHead")
   let cm,mh,auto;
-  try{auto=mriHeadline(mri,r,p)}catch(e){auto=[`MRI ${(m*100).toFixed(2)}`,""]}
+  try{auto=mriHeadline(mri,r,p,live)}catch(e){auto=[`MRI ${(m*100).toFixed(2)}`,""]}
   // the realtime reading moves every few minutes, so its headline and comment are built from the numbers on screen
   // (a written comment would go stale within the hour)
   const at=snap?new Date(snap.at):live&&mri.live&&mri.live.vix&&mri.live.vix.at?new Date(mri.live.vix.at):(live?new Date(mri.updatedAt):null);
