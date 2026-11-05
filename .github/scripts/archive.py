@@ -3,7 +3,8 @@
 
 Each issue (morning, evening or Sunday edition) is kept as data/archive/<id>.json together with a copy of every
 data file the paper reads, as it was when the issue went out, so that a past issue opens with its own numbers.
-Long histories (more than 200 dated rows) keep only their last 30 rows; the page takes the older rows from the
+Issues are kept for half a year (KEEP_DAYS): an older issue's snapshot, picture and thumbnail are removed and it
+leaves the list. Long histories (more than 200 dated rows) keep only their last 30 rows; the page takes the older rows from the
 series store data/archive/series/, which keeps every row ever seen (a data file that keeps only a window of years
 drops its oldest rows; the store does not). data/archive/index.json lists the issues, newest first.
 
@@ -37,6 +38,24 @@ def tail(v, path="", found=None):
             return {"__tail": v[-KEEP:], "__from": v[-KEEP][0]}
         return [tail(x, f"{path}/{i}", found) for i, x in enumerate(v)]
     return v
+
+
+KEEP_DAYS = 183
+
+
+def prune(d, idx, now):
+    """Drop the issues that went out more than KEEP_DAYS ago: their snapshot, picture and thumbnail, and their row."""
+    cut = now - datetime.timedelta(days=KEEP_DAYS)
+    keep = []
+    for r in idx["issues"]:
+        if datetime.datetime.fromisoformat(r["at"]) >= cut:
+            keep.append(r)
+            continue
+        for rel in (r["id"] + ".json", r.get("img"), r.get("thumb")):
+            if rel and os.path.exists(os.path.join(d, rel)):
+                os.remove(os.path.join(d, rel))
+        print(f"removed {r['id']} (older than {KEEP_DAYS} days)")
+    idx["issues"] = keep
 
 
 def keep_series(d, name, found):
@@ -102,6 +121,7 @@ def main(ROOT, NOW=None):
     ip = os.path.join(d, "index.json")
     idx = json.load(open(ip, encoding="utf-8")) if os.path.exists(ip) else {"issues": []}
     idx["issues"] = sorted([r for r in idx["issues"] if r["id"] != iid] + [row], key=lambda r: r["at"], reverse=True)
+    prune(d, idx, datetime.datetime.fromisoformat(NOW) if NOW else datetime.datetime.now(datetime.timezone.utc))
     with open(ip, "w", encoding="utf-8") as fh:
         json.dump(idx, fh, ensure_ascii=False, separators=(",", ":"))
     print(f"archived {iid} ({os.path.getsize(os.path.join(d, iid + '.json')) // 1024} KB)")

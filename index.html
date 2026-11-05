@@ -173,6 +173,7 @@ h1{margin:0;font-size:21px;font-weight:800;letter-spacing:.04em;line-height:1.15
 html.aimg .wrap>*:not(.top):not(.aimgv){display:none!important}
 .aimgv{display:block;width:calc(100% + 32px);max-width:none;height:auto;margin:10px -16px 0}
 .abar a{color:var(--accent);text-decoration:none;font-weight:700;white-space:nowrap}.abar span{color:var(--ink2)}
+.anote{margin:-4px 0 10px;font-size:12.5px;line-height:1.7;color:var(--muted)}
 .arow{display:block;padding:12px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}.arow:first-of-type{border-top:0}
 .arow .at{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
 .arow .ed{font-style:normal;font-size:12px;font-weight:900;letter-spacing:.12em;padding:2px 6px 2px 8px;border-radius:5px;color:#0b0d1a}
@@ -848,12 +849,12 @@ async function renderArch(){
   // which editions to list (store "arch.ed", comma list; at least one stays on)
   const on=store.get("arch.ed","mor,eve,sun").split(",").filter(k=>EDL[k]),L=(ARCHIDX.issues||[]).filter(r=>on.includes(r.ed));
   const chk=`<div class="aflt">${Object.entries(EDL).map(([k,l])=>`<button type="button" class="ed ${k}" data-aed="${k}" aria-pressed="${on.includes(k)}"><i></i>${l}</button>`).join("")}</div>`;
-  el.innerHTML=`<div class="ph"><h2>過去号</h2><span class="asof">${L.length}号</span></div>`+chk+(L.length?L.map(r=>{const h=Array.isArray(r.head)?r.head:[r.head];
+  el.innerHTML=`<div class="ph"><h2>過去号</h2><span class="asof">${L.length}号</span></div><p class="anote">過去号は、出てから半年のあいだ保管する。半年を過ぎた号は、古いものから順に消える。</p>`+chk+(L.length?L.map(r=>{const h=Array.isArray(r.head)?r.head:[r.head];
     return `<a class="arow" href="?issue=${encodeURIComponent(r.id)}" data-iss="${esc(r.id)}"><span class="at"><i class="ed ${esc(r.ed)}">${EDL[r.ed]||""}</i>${atLab(r.at)}</span>${r.thumb?`<img class="athumb" src="data/archive/${esc(r.thumb)}" alt="" loading="lazy" width="440" height="257">`:""}<b>${esc(h[0]||"")}</b>${h[1]?`<small>${esc(h[1])}</small>`:""}${(r.points||[]).length?`<ul>${r.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}<span class="aopen">紙面を開く<i>›</i></span></a>`}).join(""):`<div class="soon">まだ過去号はありません</div>`);
 }
 // a past issue: a bar back to the list in place of the tabs
 if(AIMG){const im=document.createElement("img");im.className="aimgv";im.src="data/archive/"+AIMG.img;im.width=AIMG.w;im.height=AIMG.hgt;im.alt="過去号";document.querySelector(".top").after(im)}
-if(ISSUE)$("abar").innerHTML=ARCH?`<a href="./?tab=arch">← 過去号一覧</a><span>過去号　${atLab(ARCH.at)}　${EDL[ARCH.ed]||""}</span>`:`<a href="./?tab=arch">← 過去号一覧</a><span>この号は見つかりませんでした</span>`;
+if(ISSUE)$("abar").innerHTML=ARCH?`<a href="./?tab=arch">← 過去号一覧</a><span>過去号　${atLab(ARCH.at)}　${EDL[ARCH.ed]||""}</span>`:`<a href="./?tab=arch">← 過去号一覧</a><span>この号は見つかりませんでした（保管は半年）</span>`;
 function renderEd(){
   const d=new Date();
   if($("hed").innerHTML)return;  // the issue's own date, once the paper is in
