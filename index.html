@@ -641,7 +641,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v237";
+const APP_VER="fi-v238";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1397,7 +1397,7 @@ function mriInds(r,p,asof){
   </div>`};
   const d=(i)=>p&&p[i]!=null&&r[i]!=null?r[i]-p[i]:null;
   if(r[4]==null||r[5]==null||r[6]==null)return"";
-  return `<div class="inds"><div class="indh">インジケーター<span>${esc(asof||"")}</span></div>`
+  return `<div class="inds"><div class="indh">3つの窓<span>${esc(asof||"")}</span></div>`
     +row("skew","SKEW",r[2],d(2),r[5],d(5))+row("vix","VIX",r[1],d(1),r[4],d(4))+row("cape","CAPE",r[3],d(3),r[6],d(6))+`</div>`;
 }
 function renderTemp(){
