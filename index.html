@@ -10,24 +10,25 @@ if(EMBED){document.documentElement.classList.add("embed");
   document.addEventListener("click",e=>{const a=e.target.closest("a[href]");if(a&&!a.target)a.target="_top"},true)}
 </script>
 <script>
-// 過去号 (?issue=<id>): the issue as it went out. data/archive/<id>.json holds every data file the paper read then; the
+// 過去号 (?issue=<id>): the issue as it went out, kept in the fear-archive repository (served beside the paper at
+// ../fear-archive/, half a year of issues). <id>.json holds every data file the paper read then; the
 // page's fetch() is answered from it (long histories keep their last rows there, the older rows come from the current
 // file), and the clock stands at the issue's time, so the edition, the dates and the panels read as they did
 const ISSUE=EMBED?"":(location.search.match(/[?&]issue=([\w-]+)/)||[])[1]||"";
-let ARCH=null,AIMG=null;
-// a past issue kept as a picture (data/archive/img/<id>.jpg, taken by scripts/snapshot.py right after it went out) is
+let ARCH=null,AIMG=null;const ARCD="../fear-archive/";
+// a past issue kept as a picture (img/<id>.jpg, taken by fear-archive scripts/snapshot.py right after it went out) is
 // shown as that picture, with nothing to tap; ?shot=1 is the live issue the picture is taken from
-if(ISSUE&&!/[?&]shot=1/.test(location.search)){try{const x=new XMLHttpRequest();x.open("GET","data/archive/index.json?ts="+Date.now(),false);x.send();
+if(ISSUE&&!/[?&]shot=1/.test(location.search)){try{const x=new XMLHttpRequest();x.open("GET",ARCD+"index.json?ts="+Date.now(),false);x.send();
   if(x.status===200)AIMG=(JSON.parse(x.responseText).issues||[]).find(r=>r.id===ISSUE&&r.img)||null}catch(e){}
   if(AIMG)document.documentElement.classList.add("aimg")}
 if(ISSUE){document.documentElement.classList.add("archive");
-  try{const x=new XMLHttpRequest();x.open("GET","data/archive/"+ISSUE+".json?ts="+Date.now(),false);x.send();if(x.status===200)ARCH=JSON.parse(x.responseText)}catch(e){}
+  try{const x=new XMLHttpRequest();x.open("GET",ARCD+ISSUE+".json?ts="+Date.now(),false);x.send();if(x.status===200)ARCH=JSON.parse(x.responseText)}catch(e){}
   if(ARCH&&ARCH.files){
     const T=+new Date(ARCH.at),RD=Date;
     window.Date=class extends RD{constructor(...a){super(...(a.length?a:[T]))}static now(){return T}};
     const of=window.fetch.bind(window),F=ARCH.files;
     const hasTail=v=>v&&typeof v==="object"&&(v.__tail?true:Object.values(v).some(hasTail));
-    // the older rows: data/archive/series/<file> ({path: every row ever seen}), else the current file
+    // the older rows: series/<file> ({path: every row ever seen}), else the current file
     const older=(rows,s)=>(Array.isArray(rows)?rows.filter(r=>Array.isArray(r)&&typeof r[0]===typeof s.__from&&r[0]<s.__from):[]).concat(s.__tail);
     const merge=(s,c,S,p)=>{
       if(Array.isArray(s))return s.map((x,i)=>merge(x,Array.isArray(c)?c[i]:undefined,S,p+"/"+i));
@@ -38,7 +39,7 @@ if(ISSUE){document.documentElement.classList.add("archive");
     const getj=u=>of(u+"?ts="+RD.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
     window.fetch=async(u,o)=>{
       const p=new URL(String(u&&u.url||u),location.href).pathname.replace(/^\/+/,"");
-      if(F[p]){let v=F[p];if(hasTail(v)){const S=await getj("data/archive/series/"+p.replace(/\//g,"__")),c=S?null:await getj(String(u).split("?")[0]);v=merge(v,c,S,"")}
+      if(F[p]){let v=F[p];if(hasTail(v)){const S=await getj(ARCD+"series/"+p.replace(/\//g,"__")),c=S?null:await getj(String(u).split("?")[0]);v=merge(v,c,S,"")}
         return new Response(JSON.stringify(v),{status:200,headers:{"Content-Type":"application/json"}})}
       // a data file the issue did not have: not today's
       if(/\/data\/[^/]+\.json$/.test("/"+p)&&!/archive\/|vix_notes/.test(p))return new Response("null",{status:404});
@@ -838,22 +839,22 @@ function renderTabs(){
   ["paper","apps","books","arch"].forEach(k=>$("t-"+k).hidden=state.tab!==k);
   if(state.tab==="arch")renderArch();
 }
-// 過去号: data/archive/index.json (written by .github/workflows/archive.yml each time an issue goes out), newest first
+// 過去号: index.json in fear-archive (its workflow keeps each issue as it goes out), newest first
 const EDL={mor:"朝刊",eve:"夜刊",sun:"日曜版"};
 const atLab=at=>{const j=new Date(new Date(at).getTime()+9*36e5);return `${j.getUTCFullYear()}年${j.getUTCMonth()+1}月${j.getUTCDate()}日（${WD(j.getUTCDay())}）${j.getUTCHours()}:${String(j.getUTCMinutes()).padStart(2,"0")}`};
 let ARCHIDX=null;
 async function renderArch(){
   const el=$("arch");
   if(!ARCHIDX){el.innerHTML=`<div class="soon">読み込み中…</div>`;
-    try{const r=await fetch("data/archive/index.json?ts="+Date.now(),{cache:"no-store"});ARCHIDX=r.ok?await r.json():{issues:[]}}catch(e){ARCHIDX={issues:[]}}}
+    try{const r=await fetch(ARCD+"index.json?ts="+Date.now(),{cache:"no-store"});ARCHIDX=r.ok?await r.json():{issues:[]}}catch(e){ARCHIDX={issues:[]}}}
   // which editions to list (store "arch.ed", comma list; at least one stays on)
   const on=store.get("arch.ed","mor,eve,sun").split(",").filter(k=>EDL[k]),L=(ARCHIDX.issues||[]).filter(r=>on.includes(r.ed));
   const chk=`<div class="aflt">${Object.entries(EDL).map(([k,l])=>`<button type="button" class="ed ${k}" data-aed="${k}" aria-pressed="${on.includes(k)}"><i></i>${l}</button>`).join("")}</div>`;
   el.innerHTML=`<div class="ph"><h2>過去号</h2><span class="asof">${L.length}号</span></div><p class="anote">過去号は、出てから半年のあいだ保管する。半年を過ぎた号は、古いものから順に消える。</p>`+chk+(L.length?L.map(r=>{const h=Array.isArray(r.head)?r.head:[r.head];
-    return `<a class="arow" href="?issue=${encodeURIComponent(r.id)}" data-iss="${esc(r.id)}"><span class="at"><i class="ed ${esc(r.ed)}">${EDL[r.ed]||""}</i>${atLab(r.at)}</span>${r.thumb?`<img class="athumb" src="data/archive/${esc(r.thumb)}" alt="" loading="lazy" width="440" height="257">`:""}<b>${esc(h[0]||"")}</b>${h[1]?`<small>${esc(h[1])}</small>`:""}${(r.points||[]).length?`<ul>${r.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}<span class="aopen">紙面を開く<i>›</i></span></a>`}).join(""):`<div class="soon">まだ過去号はありません</div>`);
+    return `<a class="arow" href="?issue=${encodeURIComponent(r.id)}" data-iss="${esc(r.id)}"><span class="at"><i class="ed ${esc(r.ed)}">${EDL[r.ed]||""}</i>${atLab(r.at)}</span>${r.thumb?`<img class="athumb" src="${ARCD}${esc(r.thumb)}" alt="" loading="lazy" width="440" height="257">`:""}<b>${esc(h[0]||"")}</b>${h[1]?`<small>${esc(h[1])}</small>`:""}${(r.points||[]).length?`<ul>${r.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}<span class="aopen">紙面を開く<i>›</i></span></a>`}).join(""):`<div class="soon">まだ過去号はありません</div>`);
 }
 // a past issue: a bar back to the list in place of the tabs
-if(AIMG){const im=document.createElement("img");im.className="aimgv";im.src="data/archive/"+AIMG.img;im.width=AIMG.w;im.height=AIMG.hgt;im.alt="過去号";document.querySelector(".top").after(im)}
+if(AIMG){const im=document.createElement("img");im.className="aimgv";im.src=ARCD+AIMG.img;im.width=AIMG.w;im.height=AIMG.hgt;im.alt="過去号";document.querySelector(".top").after(im)}
 if(ISSUE)$("abar").innerHTML=ARCH?`<a href="./?tab=arch">← 過去号一覧</a><span>過去号　${atLab(ARCH.at)}　${EDL[ARCH.ed]||""}</span>`:`<a href="./?tab=arch">← 過去号一覧</a><span>この号は見つかりませんでした（保管は半年）</span>`;
 function renderEd(){
   const d=new Date();
@@ -963,7 +964,7 @@ function renderIdxEve(el,st,asof){
 let ELEC=null;
 function renderGogai(){
   const el=$("gogai"),E=ELEC;
-  // a past issue that kept the 号外 (data/archive/<id>.json has election.json) shows it as it was kept;
+  // a past issue that kept the 号外 (its <id>.json has election.json) shows it as it was kept;
   // live, it shows for 36 hours from asof, and ends once the morning paper for E.untilPaper (a US trading date) is out
   const kept=ISSUE&&ARCH&&ARCH.files&&ARCH.files["fear-index/data/election.json"];
   if(!E||!E.active||!E.asof||(!kept&&(Date.now()-new Date(E.asof)>36*36e5||Date.now()<new Date(E.asof)-36e5))
@@ -2425,10 +2426,10 @@ async function load(){
 }
 // a past issue's picture opens over the list at once (no page load); the picture starts loading as the finger touches the row
 const issImg=id=>{const r=ARCHIDX&&(ARCHIDX.issues||[]).find(x=>x.id===id);return r&&r.img?r:null};
-document.addEventListener("pointerdown",e=>{const a=e.target.closest("a[data-iss]"),r=a&&issImg(a.dataset.iss);if(r)(new Image()).src="data/archive/"+r.img},{passive:true});
+document.addEventListener("pointerdown",e=>{const a=e.target.closest("a[data-iss]"),r=a&&issImg(a.dataset.iss);if(r)(new Image()).src=ARCD+r.img},{passive:true});
 document.addEventListener("click",e=>{const a=e.target.closest("a[data-iss]"),r=a&&issImg(a.dataset.iss);if(!r)return;e.preventDefault();
   const v=document.createElement("div");v.className="aview";
-  v.innerHTML=`<div class="avbar"><button type="button" data-avclose>← 過去号一覧</button><span>${atLab(r.at)}　${EDL[r.ed]||""}</span></div><div class="avsc"><div class="avld">読み込み中…</div><img src="data/archive/${esc(r.img)}" width="${r.w}" height="${r.hgt}" alt="過去号"></div>`;
+  v.innerHTML=`<div class="avbar"><button type="button" data-avclose>← 過去号一覧</button><span>${atLab(r.at)}　${EDL[r.ed]||""}</span></div><div class="avsc"><div class="avld">読み込み中…</div><img src="${ARCD}${esc(r.img)}" width="${r.w}" height="${r.hgt}" alt="過去号"></div>`;
   const im=v.querySelector("img");im.onload=()=>{const l=v.querySelector(".avld");l&&l.remove()};
   document.body.appendChild(v);document.body.style.overflow="hidden";try{history.pushState({av:1},"")}catch(x){}});
 const avClose=()=>{const v=document.querySelector(".aview");if(v){v.remove();document.body.style.overflow=""}};
