@@ -848,9 +848,10 @@ async function renderArch(){
   if(!ARCHIDX){el.innerHTML=`<div class="soon">読み込み中…</div>`;
     try{const r=await fetch(ARCD+"index.json?ts="+Date.now(),{cache:"no-store"});ARCHIDX=r.ok?await r.json():{issues:[]}}catch(e){ARCHIDX={issues:[]}}}
   // which editions to list (store "arch.ed", comma list; at least one stays on)
-  const on=store.get("arch.ed","mor,eve,sun").split(",").filter(k=>EDL[k]),L=(ARCHIDX.issues||[]).filter(r=>on.includes(r.ed));
+  // the paper lists the last month; fear-archive keeps half a year
+  const on=store.get("arch.ed","mor,eve,sun").split(",").filter(k=>EDL[k]),M1=Date.now()-31*864e5,L=(ARCHIDX.issues||[]).filter(r=>on.includes(r.ed)&&+new Date(r.at)>=M1);
   const chk=`<div class="aflt">${Object.entries(EDL).map(([k,l])=>`<button type="button" class="ed ${k}" data-aed="${k}" aria-pressed="${on.includes(k)}"><i></i>${l}</button>`).join("")}</div>`;
-  el.innerHTML=`<div class="ph"><h2>過去号</h2><span class="asof">${L.length}号</span></div><p class="anote">過去号は、出てから半年のあいだ保管する。半年を過ぎた号は、古いものから順に消える。</p>`+chk+(L.length?L.map(r=>{const h=Array.isArray(r.head)?r.head:[r.head];
+  el.innerHTML=`<div class="ph"><h2>過去号</h2><span class="asof">${L.length}号</span></div><p class="anote">新聞では直近1か月の過去号を読める。それより古い号は一覧から外れる（保管は半年で、半年を過ぎた号は消える）。</p>`+chk+(L.length?L.map(r=>{const h=Array.isArray(r.head)?r.head:[r.head];
     return `<a class="arow" href="?issue=${encodeURIComponent(r.id)}" data-iss="${esc(r.id)}"><span class="at"><i class="ed ${esc(r.ed)}">${EDL[r.ed]||""}</i>${atLab(r.at)}</span>${r.thumb?`<img class="athumb" src="${ARCD}${esc(r.thumb)}" alt="" loading="lazy" width="440" height="257">`:""}<b>${esc(h[0]||"")}</b>${h[1]?`<small>${esc(h[1])}</small>`:""}${(r.points||[]).length?`<ul>${r.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}<span class="aopen">紙面を開く<i>›</i></span></a>`}).join(""):`<div class="soon">まだ過去号はありません</div>`);
 }
 // a past issue: a bar back to the list in place of the tabs
