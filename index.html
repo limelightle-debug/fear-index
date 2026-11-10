@@ -1531,16 +1531,18 @@ const rTicks=S=>{const out=[],short=S.length&&(+S[S.length-1][0].slice(0,4)*12+ 
   S.forEach((q,i)=>{if(!i)return;const p=S[i-1][0];
     if(short){const m=+q[0].slice(4,6);if(m!==+p.slice(4,6)&&m%3===1)out.push([i,m===1?q[0].slice(0,4):EN()?MON[m-1]:m+"月"])}
     else if(q[0].slice(0,4)!==p.slice(0,4))out.push([i,q[0].slice(0,4)])});return out};
-function spreadChart(S,W){
+// pre (evening edition): {s2,s3} from the pre-open yields, drawn as one more point past the last close, dashed
+// from it and ringed, with the end labels taken from it so they match the spreads above the chart
+function spreadChart(S,W,pre){
   S=rCut(S,"sp");
-  const H=200,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length,vs=S.flatMap(q=>[q[1],q[2]]).filter(v=>v!=null);
+  const H=200,ML=28,MR=40,MT=8,MB=18,PW=W-ML-MR,PH=H-MT-MB,n=S.length+(pre?1:0),vs=S.flatMap(q=>[q[1],q[2]]).concat(pre?[pre.s2,pre.s3]:[]).filter(v=>v!=null);
   const lo=Math.min(-.5,Math.floor(Math.min(...vs)*2)/2),hi=Math.max(.5,Math.ceil(Math.max(...vs)*2)/2);
   const x=i=>ML+i/(n-1)*PW,y=v=>MT+(hi-v)/(hi-lo)*PH,z=y(0);
   const pts=j=>S.map((q,i)=>q[j]==null?null:[x(i),y(q[j])]).filter(Boolean);
   const d=p=>p.map((q,i)=>`${i?"L":"M"}${q[0].toFixed(1)},${q[1].toFixed(1)}`).join("");
   const p1=pts(1),p2=pts(2),area=`${d(p1)}L${p1[p1.length-1][0]},${z}L${p1[0][0]},${z}Z`;
   const yrs=rTicks(S).map(([i,l])=>[i,l]);yrs.unshift([0,""]);
-  const L=S[n-1],lab=(v,col,dy)=>`<text x="${ML+PW+6}" y="${y(v)+3.5+dy}" style="fill:${col};font-weight:700">${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}</text>`;
+  const L=pre?[null,pre.s2,pre.s3]:S[n-1],lab=(v,col,dy)=>`<text x="${ML+PW+6}" y="${y(v)+3.5+dy}" style="fill:${col};font-weight:700">${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}</text>`;
   return `<svg viewBox="0 0 ${W} ${H}" height="${H}"><defs>
       <linearGradient id="spf" x1="0" y1="${MT}" x2="0" y2="${MT+PH}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2ee6ff" stop-opacity=".35"/><stop offset="${((z-MT)/PH).toFixed(3)}" stop-color="#2ee6ff" stop-opacity=".02"/><stop offset="${((z-MT)/PH).toFixed(3)}" stop-color="#ff5a5a" stop-opacity=".05"/><stop offset="1" stop-color="#ff5a5a" stop-opacity=".45"/></linearGradient></defs>
     ${yrs.slice(1).map(([i,yy])=>`<line x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${MT+PH}" stroke="#ffffff" stroke-opacity=".06"/><text x="${x(i)}" y="${H-5}" text-anchor="middle">${yy}</text>`).join("")}
@@ -1549,6 +1551,7 @@ function spreadChart(S,W){
     <text x="${ML-6}" y="${y(hi)+8}" text-anchor="end">+${hi.toFixed(1)}</text><text x="${ML-6}" y="${y(lo)}" text-anchor="end">${lo.toFixed(1)}</text>
     <path d="${d(p2)}" fill="none" stroke="${RC.m3}" stroke-width=".9" stroke-opacity=".45" stroke-dasharray="3 2"/>
     <path d="${d(p1)}" fill="none" stroke="${RC.now}" stroke-width="2.2"/>
+    ${pre?(()=>{const e1=p1[p1.length-1],e2=p2[p2.length-1],X=x(n-1);return `${e2&&pre.s3!=null?`<path d="M${e2[0].toFixed(1)},${e2[1].toFixed(1)}L${X.toFixed(1)},${y(pre.s3).toFixed(1)}" stroke="${RC.m3}" stroke-width=".9" stroke-opacity=".6" stroke-dasharray="2 2"/>`:""}<path d="M${e1[0].toFixed(1)},${e1[1].toFixed(1)}L${X.toFixed(1)},${y(pre.s2).toFixed(1)}" stroke="${RC.now}" stroke-width="1.6" stroke-dasharray="2 2"/><circle cx="${X.toFixed(1)}" cy="${y(pre.s2).toFixed(1)}" r="3.2" fill="var(--panel)" stroke="${RC.now}" stroke-width="1.6"/>`})():""}
     ${lab(L[1],RC.now,L[1]>=L[2]?-5:5)}${L[2]!=null?lab(L[2],RC.m3,L[2]>L[1]?-5:5):""}</svg>`;
 }
 // under the charts: the 10-year real yield and breakeven inflation, and the corporate bond spreads (OAS)
@@ -1821,7 +1824,7 @@ function renderRates(){
     <div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
     ${b.pre?`<div class="rcap"><span>${tx("長短金利差（寄り前）","Spreads (pre-open)")}</span></div>`:""}<div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp main">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span>${s2>=0?`<span class="sp main inv">${tx("逆イールドまで","To inversion")}<b>${tx(`あと${Math.round(s2*100)}bp`,`${Math.round(s2*100)}bp`)}</b>${mn3?`<em>${tx(`3ヶ月前は${Math.round(mn3*100)}bp`,`${Math.round(mn3*100)}bp 3M ago`)}</em>`:""}</span>`:""}<span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(gap)}</b><em class="path" style="color:${pathOf(gap)[1]}">${pathOf(gap)[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
-    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span style="opacity:.6"><i style="border-color:${RC.m3};border-top-style:dashed"></i>${tx("10年−3ヶ月（参考）","10Y−3M (ref.)")}</span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}${rstarBlock()}`;
+    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span style="opacity:.6"><i style="border-color:${RC.m3};border-top-style:dashed"></i>${tx("10年−3ヶ月（参考）","10Y−3M (ref.)")}</span>${b.pre?`<span><b style="display:inline-block;width:7px;height:7px;border:1.6px solid ${RC.now};border-radius:50%;margin-right:4px;vertical-align:middle"></b>${tx("寄り前","Pre-open")}</span>`:""}</div><div class="rchart">${spreadChart(S,W,b.pre?{s2,s3}:null)}</div>${ratesMore()}${rstarBlock()}`;
 }
 function renderNews(){
   const el=$("news"),day=IDX&&IDX.indices&&IDX.indices.length?(String((IDX.indices.find(x=>x.k==="SPX")||IDX.indices[0]).time).match(/^\d{4}-\d\d-\d\d/)||[""])[0]:"";
