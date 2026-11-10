@@ -1787,10 +1787,14 @@ function renderCanary(){
 }
 // 2年−3ヶ月: where the market expects the policy rate over the next two years vs today (3M ≈ the policy rate)
 function pathOf(v){return v>.15?[tx("利上げ寄り","Leaning to hikes"),"#ff8a7a"]:v<-.15?[tx("利下げ織り込み","Cuts priced"),"#7fd6a4"]:[tx("据え置き","On hold"),"#9aa3c7"]}
+// the yields the spreads are read from: the pre-open quotes in the evening edition (so the spreads match the
+// pre-open yields and the headline above them), the Treasury's par yields otherwise
+function spreadBase(){const n=CV.now.y,fm=EVE()&&FUT&&FUT.markets;
+  return fm&&fm.us3m&&fm.us2y&&fm.us10y?{pre:true,"3M":fm.us3m.price,"2Y":fm.us2y.price,"10Y":fm.us10y.price}:{pre:false,"3M":n["3M"],"2Y":n["2Y"],"10Y":n["10Y"]}}
 function renderRates(){
   const el=$("rates");
   if(!CV||!CV.now||!CV.m3){el.hidden=true;return}
-  const n=CV.now.y,S=CV.spread,last=S[S.length-1],s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"];
+  const n=CV.now.y,S=CV.spread,last=S[S.length-1],b=spreadBase(),s2=b["10Y"]-b["2Y"],s3=b["10Y"]-b["3M"],gap=b["2Y"]-b["3M"];
   // state: by 10Y−2Y, the market's own spread (3M only shadows the policy rate): inverted now, or months since the last
   // inversion ended (the year after it ends is the one to watch)
   let lastNeg=-1;for(let i=S.length-1;i>=0;i--)if(S[i][1]<0){lastNeg=i;break}
@@ -1805,7 +1809,7 @@ function renderRates(){
   const [Y,M,D]=CV.date.split("-").map(Number);
   el.hidden=false;
   const W=pw(el);
-  const d10=CV.prev&&CV.prev.y["10Y"]!=null?n["10Y"]-CV.prev.y["10Y"]:0,a10=Math.abs(d10),pth=pathOf(n["2Y"]-n["3M"])[0];
+  const d10=CV.prev&&CV.prev.y["10Y"]!=null?n["10Y"]-CV.prev.y["10Y"]:0,a10=Math.abs(d10),pth=pathOf(gap)[0];
   let rh=EN()?[`US 10Y ${a10<.01?"flat at":d10>0?(a10>=.1?"jumps to":"up to"):(a10>=.1?"drops to":"down to")} ${n["10Y"].toFixed(2)}%`,`${st[0]}, rate path: ${pth}`]
     :[`米10年債 ${n["10Y"].toFixed(2)}%${a10<.01?"で横ばい":`に${a10>=.1?"大幅":""}${d10>0?"上昇":"低下"}`}`,`${st[0]}、2年−3ヶ月は${pth}`];
   // the evening edition: the headline from the pre-open 10-year yield (paper.json "ratesEveHead" overrides it)
@@ -1815,7 +1819,7 @@ function renderRates(){
   el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>${headHTML(fq?"ratesEveHead":"ratesHead",rh)}${note("rates",autoRates())}
     ${EVE()&&FUT.markets&&FUT.markets.us10y?`<div class="rcap"><span>${tx("寄り前の利回り","Pre-open yields")}</span><span class="asof">${preLab()}</span></div><div class="rsum rx2">${[[tx("3ヶ月","3M"),"us3m"],[tx("2年","2Y"),"us2y"],[tx("10年","10Y"),"us10y"],[tx("30年","30Y"),"us30y"]].filter(([,k])=>FUT.markets[k]).map(([l,k])=>{const q=FUT.markets[k],dv=q.chg;return `<div>${l}<b>${q.price.toFixed(3)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(3)}</small>`}</div>`}).join("")}</div><div class="rcap"><span>${tx("前日の米国債（財務省）","Last session (Treasury)")}</span></div>`:""}
     <div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>
-    <div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp main">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span>${s2>=0?`<span class="sp main inv">${tx("逆イールドまで","To inversion")}<b>${tx(`あと${Math.round(s2*100)}bp`,`${Math.round(s2*100)}bp`)}</b>${mn3?`<em>${tx(`3ヶ月前は${Math.round(mn3*100)}bp`,`${Math.round(mn3*100)}bp 3M ago`)}</em>`:""}</span>`:""}<span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(n["2Y"]-n["3M"])}</b><em class="path" style="color:${pathOf(n["2Y"]-n["3M"])[1]}">${pathOf(n["2Y"]-n["3M"])[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
+    ${b.pre?`<div class="rcap"><span>${tx("長短金利差（寄り前）","Spreads (pre-open)")}</span></div>`:""}<div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp main">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span>${s2>=0?`<span class="sp main inv">${tx("逆イールドまで","To inversion")}<b>${tx(`あと${Math.round(s2*100)}bp`,`${Math.round(s2*100)}bp`)}</b>${mn3?`<em>${tx(`3ヶ月前は${Math.round(mn3*100)}bp`,`${Math.round(mn3*100)}bp 3M ago`)}</em>`:""}</span>`:""}<span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(gap)}</b><em class="path" style="color:${pathOf(gap)[1]}">${pathOf(gap)[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
     <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span style="opacity:.6"><i style="border-color:${RC.m3};border-top-style:dashed"></i>${tx("10年−3ヶ月（参考）","10Y−3M (ref.)")}</span></div><div class="rchart">${spreadChart(S,W)}</div>${ratesMore()}${rstarBlock()}`;
 }
@@ -1981,7 +1985,7 @@ const sgn1=(v,d=1,u="")=>`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(d)}${u}
 function autoRates(){
   // the reading, not the numbers on the panel: how the two ends moved against each other, what the curve's shape
   // says about the policy path, and what three months of yields leave on stocks
-  if(!CV||!CV.now||EN())return"";const n=CV.now.y,p=CV.prev&&CV.prev.y,s2=n["10Y"]-n["2Y"],s3=n["10Y"]-n["3M"],gap=n["2Y"]-n["3M"],d10=p?n["10Y"]-p["10Y"]:0,d2=p?n["2Y"]-p["2Y"]:0;
+  if(!CV||!CV.now||EN())return"";const n=CV.now.y,p=CV.prev&&CV.prev.y,b=spreadBase(),s2=b["10Y"]-b["2Y"],s3=b["10Y"]-b["3M"],gap=b["2Y"]-b["3M"],d10=p?n["10Y"]-p["10Y"]:0,d2=p?n["2Y"]-p["2Y"]:0;
   const m3=CV.m3&&CV.m3.y["10Y"],t=[];
   if(d2<=-.03&&d10<=-.03)t.push(d2<d10?"短い金利のほうが大きく下がり、市場は目先の引き締めを少し割り引いた。":"長い金利のほうが大きく下がり、債券は先の成長への不安を買った。");
   else if(d2>=.03&&d10>=.03)t.push(d2>d10?"短い金利が先に上がり、目先の引き締めを織り込み直す動きが長い金利を引き上げた。":"長い金利が先に上がり、物価と財政への警戒が曲線の先を押し上げた。");
