@@ -197,7 +197,7 @@ html.aimg .wrap>*:not(.top):not(.aimgv){display:none!important}
 .aview{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column}
 .aview .avbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:#111;border-bottom:1px solid var(--line);font-size:13.5px}
 .aview .avbar button{appearance:none;border:0;background:none;color:var(--accent);font:700 15px var(--f-body);padding:6px 0;cursor:pointer;white-space:nowrap}.aview .avbar span{color:var(--ink2);text-align:right}
-.aview .avsc{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}.aview .avsc img{display:block;width:100%;max-width:720px;height:auto;margin:0 auto}
+.aview .avsc{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}.aview .avsc img{display:block;width:100%;max-width:720px;height:auto;margin:0 auto}.aview .avsc>div{max-width:720px;margin:0 auto}.aimgv>img{display:block;width:100%;height:auto}
 .aview .avld{position:absolute;left:0;right:0;top:40%;text-align:center;color:var(--muted);font-size:13px;pointer-events:none}
 .arow .ed.mor{background:#e3342b;color:#fff}.arow .ed.eve{background:#9db8ff}.arow .ed.sun{background:#ffd27a}
 .arow b{display:block;font-size:16.5px;font-weight:800;line-height:1.35;margin-top:6px}.arow small{display:block;font-size:13.5px;color:var(--ink2);margin-top:2px}
@@ -856,12 +856,12 @@ async function renderArch(){
 // a past issue: a bar back to the list in place of the tabs
 // pictures taken while a kept 号外 skipped its expiry: the band [y0, y1) (picture pixels) of the ended 号外 is left out
 const ACUT={"2026-11-05-mor":[506,3053],"2026-11-05-eve":[506,3053],"2026-11-06-mor":[506,3053],"2026-11-06-eve":[506,3053],"2026-11-07-mor":[506,3053],"2026-11-08-sun":[506,3053],"2026-11-09-eve":[506,3053],"2026-11-10-mor":[506,3053],"2026-11-10-eve":[506,3053],"2026-11-11-mor":[506,3053],"2026-11-11-eve":[506,3053],"2026-11-12-mor":[506,3053],"2026-11-12-eve":[506,3053],"2026-11-13-mor":[506,3053]};
-if(AIMG){const src=ARCD+AIMG.img,c=ACUT[AIMG.id];let im;
-  if(c){im=document.createElement("div");im.className="aimgv";
-    const pc=(y0,y1)=>`<div style="aspect-ratio:${AIMG.w}/${y1-y0};overflow:hidden"><img src="${src}" alt="過去号" width="${AIMG.w}" height="${AIMG.hgt}" style="display:block;width:100%;height:auto;margin-top:${(-y0/AIMG.w*100).toFixed(4)}%"></div>`;
-    im.innerHTML=pc(0,c[0])+pc(c[1],AIMG.hgt)}
-  else{im=document.createElement("img");im.className="aimgv";im.src=src;im.width=AIMG.w;im.height=AIMG.hgt;im.alt="過去号"}
-  document.querySelector(".top").after(im)}
+// the picture of an issue row r (index.json) as HTML: the whole picture, or the two pieces either side of its ACUT band
+const aimgHTML=r=>{const src=ARCD+r.img,c=ACUT[r.id];
+  if(!c)return`<img src="${src}" width="${r.w}" height="${r.hgt}" alt="過去号">`;
+  const pc=(y0,y1)=>`<div style="aspect-ratio:${r.w}/${y1-y0};overflow:hidden"><img src="${src}" alt="過去号" width="${r.w}" height="${r.hgt}" style="display:block;width:100%;max-width:none;height:auto;margin:${(-y0/r.w*100).toFixed(4)}% 0 0"></div>`;
+  return pc(0,c[0])+pc(c[1],r.hgt)};
+if(AIMG){const im=document.createElement("div");im.className="aimgv";im.innerHTML=aimgHTML(AIMG);document.querySelector(".top").after(im)}
 if(ISSUE)$("abar").innerHTML=ARCH?`<a href="./?tab=arch">← 過去号一覧</a><span>過去号　${atLab(ARCH.at)}　${EDL[ARCH.ed]||""}</span>`:`<a href="./?tab=arch">← 過去号一覧</a><span>この号は見つかりませんでした（保管は半年）</span>`;
 function renderEd(){
   const d=new Date();
@@ -2441,7 +2441,7 @@ const issImg=id=>{const r=ARCHIDX&&(ARCHIDX.issues||[]).find(x=>x.id===id);retur
 document.addEventListener("pointerdown",e=>{const a=e.target.closest("a[data-iss]"),r=a&&issImg(a.dataset.iss);if(r)(new Image()).src=ARCD+r.img},{passive:true});
 document.addEventListener("click",e=>{const a=e.target.closest("a[data-iss]"),r=a&&issImg(a.dataset.iss);if(!r)return;e.preventDefault();
   const v=document.createElement("div");v.className="aview";
-  v.innerHTML=`<div class="avbar"><button type="button" data-avclose>← 過去号一覧</button><span>${atLab(r.at)}　${EDL[r.ed]||""}</span></div><div class="avsc"><div class="avld">読み込み中…</div><img src="${ARCD}${esc(r.img)}" width="${r.w}" height="${r.hgt}" alt="過去号"></div>`;
+  v.innerHTML=`<div class="avbar"><button type="button" data-avclose>← 過去号一覧</button><span>${atLab(r.at)}　${EDL[r.ed]||""}</span></div><div class="avsc"><div class="avld">読み込み中…</div>${aimgHTML(r)}</div>`;
   const im=v.querySelector("img");im.onload=()=>{const l=v.querySelector(".avld");l&&l.remove()};
   document.body.appendChild(v);document.body.style.overflow="hidden";try{history.pushState({av:1},"")}catch(x){}});
 const avClose=()=>{const v=document.querySelector(".aview");if(v){v.remove();document.body.style.overflow=""}};
