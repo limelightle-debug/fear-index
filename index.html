@@ -964,11 +964,10 @@ function renderIdxEve(el,st,asof){
 let ELEC=null;
 function renderGogai(){
   const el=$("gogai"),E=ELEC;
-  // a past issue that kept the 号外 (its <id>.json has election.json) shows it as it was kept;
-  // live, it shows for 36 hours from asof, and ends once the morning paper for E.untilPaper (a US trading date) is out
-  const kept=ISSUE&&ARCH&&ARCH.files&&ARCH.files["fear-index/data/election.json"];
-  if(!E||!E.active||!E.asof||(!kept&&(Date.now()-new Date(E.asof)>36*36e5||Date.now()<new Date(E.asof)-36e5))
-     ||(!kept&&E.untilPaper&&STORY&&STORY.date>=E.untilPaper)){el.hidden=true;return}
+  // it shows for 36 hours from asof, and ends once the morning paper for E.untilPaper (a US trading date) is out;
+  // a past issue keeps election.json with every issue, so the same rules decide it there too (the clock stands at the issue's time)
+  if(!E||!E.active||!E.asof||Date.now()-new Date(E.asof)>36*36e5||Date.now()<new Date(E.asof)-36e5
+     ||(E.untilPaper&&STORY&&STORY.date>=E.untilPaper)){el.hidden=true;return}
   const at=new Date(E.asof),n=v=>+v||0;
   // D, I, R: seats called; Dl, Rl: seats where the candidate leads in the count but no call yet (the flash count)
   const seat=(name,C)=>{if(!C)return"";const tot=C.total,D=n(C.D),I=n(C.I),R=n(C.R),Dl=n(C.Dl),Rl=n(C.Rl),U=Math.max(0,tot-D-I-R-Dl-Rl),pc=v=>(v/tot*100).toFixed(3)+"%";
