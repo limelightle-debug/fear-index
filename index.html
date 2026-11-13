@@ -854,7 +854,14 @@ async function renderArch(){
     return `<a class="arow" href="?issue=${encodeURIComponent(r.id)}" data-iss="${esc(r.id)}"><span class="at"><i class="ed ${esc(r.ed)}">${EDL[r.ed]||""}</i>${atLab(r.at)}</span>${r.thumb?`<img class="athumb" src="${ARCD}${esc(r.thumb)}" alt="" loading="lazy" width="440" height="257">`:""}<b>${esc(h[0]||"")}</b>${h[1]?`<small>${esc(h[1])}</small>`:""}${(r.points||[]).length?`<ul>${r.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}<span class="aopen">紙面を開く<i>›</i></span></a>`}).join(""):`<div class="soon">まだ過去号はありません</div>`);
 }
 // a past issue: a bar back to the list in place of the tabs
-if(AIMG){const im=document.createElement("img");im.className="aimgv";im.src=ARCD+AIMG.img;im.width=AIMG.w;im.height=AIMG.hgt;im.alt="過去号";document.querySelector(".top").after(im)}
+// pictures taken while a kept 号外 skipped its expiry: the band [y0, y1) (picture pixels) of the ended 号外 is left out
+const ACUT={"2026-11-05-mor":[506,3053],"2026-11-05-eve":[506,3053],"2026-11-06-mor":[506,3053],"2026-11-06-eve":[506,3053],"2026-11-07-mor":[506,3053],"2026-11-08-sun":[506,3053],"2026-11-09-eve":[506,3053],"2026-11-10-mor":[506,3053],"2026-11-10-eve":[506,3053],"2026-11-11-mor":[506,3053],"2026-11-11-eve":[506,3053],"2026-11-12-mor":[506,3053],"2026-11-12-eve":[506,3053],"2026-11-13-mor":[506,3053]};
+if(AIMG){const src=ARCD+AIMG.img,c=ACUT[AIMG.id];let im;
+  if(c){im=document.createElement("div");im.className="aimgv";
+    const pc=(y0,y1)=>`<div style="aspect-ratio:${AIMG.w}/${y1-y0};overflow:hidden"><img src="${src}" alt="過去号" width="${AIMG.w}" height="${AIMG.hgt}" style="display:block;width:100%;height:auto;margin-top:${(-y0/AIMG.w*100).toFixed(4)}%"></div>`;
+    im.innerHTML=pc(0,c[0])+pc(c[1],AIMG.hgt)}
+  else{im=document.createElement("img");im.className="aimgv";im.src=src;im.width=AIMG.w;im.height=AIMG.hgt;im.alt="過去号"}
+  document.querySelector(".top").after(im)}
 if(ISSUE)$("abar").innerHTML=ARCH?`<a href="./?tab=arch">← 過去号一覧</a><span>過去号　${atLab(ARCH.at)}　${EDL[ARCH.ed]||""}</span>`:`<a href="./?tab=arch">← 過去号一覧</a><span>この号は見つかりませんでした（保管は半年）</span>`;
 function renderEd(){
   const d=new Date();
