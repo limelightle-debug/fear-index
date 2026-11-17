@@ -231,6 +231,21 @@ body.evening #t-paper>section:not(#issue):not(#gogai):not(#intv):not(#mritop):no
 .gogai .need{text-align:center;font-size:11.5px;color:var(--muted);margin-top:4px}
 .gogai .gkey{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--ink2);margin-top:10px}.gogai .gkey i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 .gogai .races{margin-top:12px}
+/* 特報: a special report at the top of a morning paper (data/special.json), in the 号外's red frame */
+.tokuho .tsub{font-size:12px;font-weight:700;letter-spacing:.06em;color:#ff8f8f;margin:0 0 6px}
+.tokuho .tlead{font-size:14.5px;line-height:1.75;margin:4px 0 10px;text-align:justify;text-justify:inter-character;line-break:strict}
+.tokuho .tsec{border-top:1px solid var(--line);padding:10px 0 2px}
+.tokuho .tsec h3{font-size:14px;font-weight:800;margin:0 0 6px;color:var(--ink)}
+.tokuho .tsec p{margin:0 0 6px;font-size:14px;line-height:1.7;text-indent:1em;text-align:justify;text-justify:inter-character;line-break:strict}
+.tokuho table{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0 8px}
+.tokuho th{font-size:11.5px;font-weight:600;color:var(--muted);text-align:right;padding:4px 4px;border-bottom:1px solid var(--line)}
+.tokuho th:first-child,.tokuho td:first-child{text-align:left}
+.tokuho td{padding:5px 4px;border-top:1px solid var(--line);text-align:right;font-family:var(--f-tick);font-stretch:85%;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tokuho td:first-child{font-family:var(--f-body);font-stretch:normal;white-space:normal;color:var(--ink2)}
+.tokuho tr.em td{font-weight:800;color:var(--ink)}
+.tokuho .tw{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:baseline;margin:2px 0 6px}
+.tokuho .tw b{font-size:11px;font-weight:700;color:#ff8f8f;border:1px solid rgba(255,143,143,.55);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.tokuho .tw p{margin:0;font-size:14px;line-height:1.6;text-indent:0}
 .intv .kick{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;color:#ffd27a;border:1px solid rgba(255,210,122,.55);background:rgba(255,210,122,.1);border-radius:999px;padding:1px 9px;margin-bottom:8px}
 .intv .ilead{font-size:13.5px;line-height:1.7;color:var(--ink2);margin:0 0 6px}
 .intv .qa{border-top:1px solid var(--line);padding:10px 0 2px}
@@ -597,6 +612,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 
   <div id="t-paper">
     <section class="panel gogai" id="gogai" hidden></section>
+    <section class="panel gogai tokuho" id="tokuho" hidden></section>
     <section class="panel issue" id="issue"></section>
     <section class="panel intv" id="intv" hidden></section>
     <section class="panel" id="sunwk" hidden></section>
@@ -995,6 +1011,26 @@ function renderGogai(){
     ${R.length?`<div class="nws races">${R.map(([t,x])=>`<b>${esc(t)}</b><p>${esc(x)}</p>`).join("")}</div>`:""}
     <div class="rxn" style="margin-top:10px">${tx(`議席数と当確は${esc(E.source||"AP通信")}の判定による。改選のない議席を含む。斜線はリードしているだけで当確前の選挙区（開票の途中経過）。`,`Seats and calls as ${esc(E.source||"AP")} reports them, seats not up included; hatched: leading, not yet called.`)}</div>
     ${Array.isArray(E.sources)&&E.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${E.sources.map(([a,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(a)}</a>`).join(" / ")}</div></div>`:""}`;
+}
+// 特報: a special report at the top of the morning paper, for one big event of the day (an earnings release, say).
+// data/special.json {items: [{date (the US trading day of the morning paper it belongs to), pub, revisedAt?, kicker,
+// title: [head, sub], lead, table?: {cols: [...], rows: [[label, ...values]], em?: [row indexes]}, watch?: [[tag, text]],
+// sections?: [[heading, paragraph]], sources?: [[name, url]]}]}, the newest first. Shown with the morning paper of that
+// date only (gone from the evening and Sunday editions, and from the next morning paper)
+let SPEC=null;
+function renderTokuho(){
+  const el=$("tokuho"),it=SPEC&&SPEC.items||[],cur=STORY&&it.find(x=>x.date===STORY.date&&+new Date(x.pub)<=Date.now());
+  if(!cur||!STORY.date){el.hidden=true;return}
+  const at=new Date(cur.revisedAt||cur.pub),tm=at.toLocaleString("ja-JP",{timeZone:"Asia/Tokyo",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
+  const T=cur.table,tbl=T&&T.rows&&T.rows.length?`<table><thead><tr>${(T.cols||[]).map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${T.rows.map((r,i)=>`<tr class="${(T.em||[]).includes(i)?"em":""}">${r.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>${T.note?`<div class="rxn">${esc(T.note)}</div>`:""}`:"";
+  el.hidden=false;
+  el.innerHTML=`<div class="gtop"><span class="gtag">特報</span><span class="asof">${esc(tm)}${cur.revisedAt?" 更新":""}</span></div>
+    ${cur.kicker?`<div class="tsub">${esc(cur.kicker)}</div>`:""}
+    <div class="head">${esc(cur.title[0])}${cur.title[1]?`<span class="h2b">${esc(cur.title[1])}</span>`:""}</div>
+    ${cur.lead?`<p class="tlead">${esc(cur.lead)}</p>`:""}${tbl}
+    ${Array.isArray(cur.watch)&&cur.watch.length?`<div class="tsec"><h3>${esc(cur.watchHead||"見どころの答え")}</h3><div class="tw">${cur.watch.map(([a,b])=>`<b>${esc(a)}</b><p>${esc(b)}</p>`).join("")}</div></div>`:""}
+    ${(cur.sections||[]).map(([h,b])=>`<div class="tsec"><h3>${esc(h)}</h3>${String(b).split(/\n+/).map(p=>`<p>${esc(p)}</p>`).join("")}</div>`).join("")}
+    ${Array.isArray(cur.sources)&&cur.sources.length?`<div class="story"><div class="src">出典 ${cur.sources.map(([a,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(a)}</a>`).join(" / ")}</div></div>`:""}`;
 }
 // the director's special interview: data/interview.json {items: [{date, pub, title: [head, sub], lead, qa: [[q, a]]}]},
 // the newest first; in the Sunday edition only (gone from the next weekday issue on), within 7 days from pub, the first 3 answers open and the rest behind a tap
@@ -2428,9 +2464,10 @@ async function loadPaper(){
     fetch("../mri-app/data/weekly.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WK=j).catch(()=>WK=null),
     fetch("../mri-app/data/weekend.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>WE=j).catch(()=>WE=null),
     fetch("data/interview.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>INTV=j).catch(()=>INTV=null),
-    fetch("data/election.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>ELEC=j).catch(()=>ELEC=null)]);
+    fetch("data/election.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>ELEC=j).catch(()=>ELEC=null),
+    fetch("data/special.json?ts="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>SPEC=j).catch(()=>SPEC=null)]);
   applyPre();
-  renderIdx();renderGogai();renderIntv();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderGrav();renderCanary();renderFedw();
+  renderIdx();renderGogai();renderTokuho();renderIntv();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderGrav();renderCanary();renderFedw();
 }
 const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
 async function load(){
