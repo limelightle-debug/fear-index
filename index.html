@@ -1734,17 +1734,17 @@ function wfBuildP(ttl,act,ax,Wd){
   return`<div class="rchart"><svg viewBox="0 0 ${Wd} ${H}" height="${H}">${o}</svg></div>`}
 // 図2-12: the growth premium's gap from its standard, then the inflation premium's, ending at the rate's gap from the axis
 function wfGapP(ttl,rate,axr,pg,pi,rp,lo,hi,Wd){
-  const H=150,MT=26,MB=34,ML=44,MR=6,PH=H-MT-MB,dg=pg-rp,di=pi-rp,dt=dg+di;
+  const H=150,MT=26,MB=34,ML=58,MR=6,PH=H-MT-MB,dg=pg-rp,di=pi-rp,dt=dg+di;
   const y=v=>MT+(hi-v)/(hi-lo)*PH,cw=(Wd-ML-MR)/3,bw=Math.min(52,cw*.5);
   let o=`<text x="6" y="13" style="fill:#fff;font-size:12.5px;font-weight:700">${ttl} ${fz(rate)}%<tspan style="fill:#9a9aa4;font-weight:400">（軸 ${fz(axr)}%、乖離 ${sz(dt)}）</tspan></text>`;
-  o+=`<line x1="${ML}" x2="${Wd-MR}" y1="${y(0)}" y2="${y(0)}" stroke="#fff" stroke-opacity=".55" stroke-dasharray="4 3"/><text x="${ML-5}" y="${y(0)+3.5}" text-anchor="end" style="fill:#c8c8d0;font-size:10px">標準 ${fz(rp)}</text>`;
-  [[0,di,"#2ee6ff","インフレ",pi],[di,dt,"#ffe066","成長",pg],[0,dt,"#f2f2f7","軸からの乖離",null]].forEach(([a,b,c,n,pv],i)=>{
+  o+=`<line x1="${ML}" x2="${Wd-MR}" y1="${y(0)}" y2="${y(0)}" stroke="#fff" stroke-opacity=".55" stroke-dasharray="4 3"/><text x="${ML-5}" y="${y(0)+3.5}" text-anchor="end" style="fill:#c8c8d0;font-size:10px">標準どおり</text>`;
+  [[0,di,"#2ee6ff","インフレ",pi,rp],[di,dt,"#ffe066","成長",pg,rp],[0,dt,"#f2f2f7","軸からの乖離",pg+pi,2*rp]].forEach(([a,b,c,n,pv,sv],i)=>{
     const cx=ML+cw*(i+.5),top=y(Math.max(a,b)),h=Math.max(1.5,Math.abs(y(a)-y(b))),d=b-a;
     o+=`<rect x="${cx-bw/2}" y="${top}" width="${bw}" height="${h}" fill="${c}" opacity=".92"/>`;
     if(i<2)o+=`<line x1="${cx+bw/2}" x2="${cx+cw-bw/2}" y1="${y(b)}" y2="${y(b)}" stroke="#fff" stroke-opacity=".3"/>`;
     o+=`<text x="${cx}" y="${d<0?y(Math.min(a,b))+13:top-5}" text-anchor="middle" style="fill:#fff;font-size:12.5px;font-weight:700">${sz(d)}</text>`;
     o+=`<text x="${cx}" y="${H-MB+14}" text-anchor="middle" style="fill:#c8c8d0;font-size:11px">${n}</text>`;
-    o+=`<text x="${cx}" y="${H-MB+27}" text-anchor="middle" style="fill:#8a8a96;font-size:10px">${pv!=null?`${fz(pv)}（標準 ${fz(rp)}）`:`${fz(rate)} − ${fz(axr)}`}</text>`});
+    o+=`<text x="${cx}" y="${H-MB+27}" text-anchor="middle" style="fill:#8a8a96;font-size:10px">${fz(pv)}（標準 ${fz(sv)}）</text>`});
   return`<div class="rchart"><svg viewBox="0 0 ${Wd} ${H}" height="${H}">${o}</svg></div>`}
 function wfBlock(){
   const X=axisNow();if(!X||!X.t10)return"";const RW=pw($("rates")),{t10,t30,rs}=X;
