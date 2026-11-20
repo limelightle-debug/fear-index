@@ -308,21 +308,21 @@ body.evening #t-paper>section:not(#issue):not(#gogai):not(#intv):not(#mritop):no
 .trend .tchart .grid{stroke:var(--line);stroke-width:1}
 .trend .tchart .xh{stroke:var(--ink2);stroke-width:1;stroke-dasharray:3 3}
 .trend .tlab{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:4px}.trend .tlab i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
-.trend .tsig{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
-.trend .tsig h3{margin:0 0 2px;font-size:13px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
-.trend .tl{display:grid;grid-template-columns:112px 1fr 76px;align-items:center;gap:10px;padding:9px 0}
-.trend .tl+.tl{border-top:1px solid var(--line)}
-.trend .tln{font-weight:800;font-size:13.5px;color:var(--ink);white-space:nowrap}
-.trend .tln small{display:block;font-weight:600;font-size:11px;color:var(--muted);margin-top:3px}
-.trend .tln .sk{font-style:normal;font-weight:800;font-size:9.5px;letter-spacing:.06em;color:#fff;background:#F44336;border-radius:4px;padding:1px 5px;margin-right:5px}
-.trend .tln .sk.buy{background:#4CAF50}
-.trend .tlh{justify-self:center;display:flex;gap:10px;background:#040405;border:1px solid var(--line);border-radius:22px;padding:7px 12px 15px}
-.trend .tlh i{position:relative;width:24px;height:24px;border-radius:50%;background:var(--c);opacity:.18}
-.trend .tlh i.on{opacity:1;box-shadow:0 0 12px 3px var(--c),inset 0 -3px 6px rgba(0,0,0,.25)}
-.trend .tlh small{position:absolute;left:50%;top:27px;transform:translateX(-50%);font:600 9.5px/1 var(--f-tick);font-stretch:85%;color:var(--muted);white-space:nowrap;font-style:normal}
-.trend .tlh i.on small{color:var(--ink2)}
-.trend .tlv{text-align:right;font-family:var(--f-tick);font-stretch:82%;font-size:12.5px;color:var(--ink2);white-space:nowrap;line-height:1.35}
-.trend .tlv b{display:block;font-family:var(--f-body);font-stretch:100%;font-weight:600;font-size:10.5px;color:var(--muted)}
+:is(.trend,.mtop) .tsig{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+:is(.trend,.mtop) .tsig h3{margin:0 0 2px;font-size:13px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
+:is(.trend,.mtop) .tl{display:grid;grid-template-columns:112px 1fr 76px;align-items:center;gap:10px;padding:9px 0}
+:is(.trend,.mtop) .tl+.tl{border-top:1px solid var(--line)}
+:is(.trend,.mtop) .tln{font-weight:800;font-size:13.5px;color:var(--ink);white-space:nowrap}
+:is(.trend,.mtop) .tln small{display:block;font-weight:600;font-size:11px;color:var(--muted);margin-top:3px}
+:is(.trend,.mtop) .tln .sk{font-style:normal;font-weight:800;font-size:9.5px;letter-spacing:.06em;color:#fff;background:#F44336;border-radius:4px;padding:1px 5px;margin-right:5px}
+:is(.trend,.mtop) .tln .sk.buy{background:#4CAF50}
+:is(.trend,.mtop) .tlh{justify-self:center;display:flex;gap:10px;background:#040405;border:1px solid var(--line);border-radius:22px;padding:7px 12px 15px}
+:is(.trend,.mtop) .tlh i{position:relative;width:24px;height:24px;border-radius:50%;background:var(--c);opacity:.18}
+:is(.trend,.mtop) .tlh i.on{opacity:1;box-shadow:0 0 12px 3px var(--c),inset 0 -3px 6px rgba(0,0,0,.25)}
+:is(.trend,.mtop) .tlh small{position:absolute;left:50%;top:27px;transform:translateX(-50%);font:600 9.5px/1 var(--f-tick);font-stretch:85%;color:var(--muted);white-space:nowrap;font-style:normal}
+:is(.trend,.mtop) .tlh i.on small{color:var(--ink2)}
+:is(.trend,.mtop) .tlv{text-align:right;font-family:var(--f-tick);font-stretch:82%;font-size:12.5px;color:var(--ink2);white-space:nowrap;line-height:1.35}
+:is(.trend,.mtop) .tlv b{display:block;font-family:var(--f-body);font-stretch:100%;font-weight:600;font-size:10.5px;color:var(--muted)}
 .anom .ar{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:10px 0;align-items:start}
 .anom .ar+.ar{border-top:1px solid var(--line)}
 .anom .av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;line-height:1;margin-top:1px}
@@ -1235,7 +1235,7 @@ function renderMriTop(){
       <div class="mv"><div><span class="ml">MRI</span><span class="big" style="color:var(${lv[2]})">${(m*100).toFixed(2)}</span></div><div class="chg">${live?tx("前日確定比","vs last close"):tx("前日比","vs prev.")} ${dm>=0?"+":"−"}${Math.abs(dm).toFixed(2)}pt</div></div></div>
     <div class="rampw"><div class="flag buy${m<=.08?" on":""}" style="left:8%">BUY<b>8</b></div><div class="flag sell${m>=.8?" on":""}" style="left:80%">SELL<b>80</b></div>
       <div class="ramp"><div class="tk" style="left:8%"></div><div class="tk" style="left:80%"></div><div class="mk" style="left:${Math.min(Math.max(m*100,1),99)}%"></div></div></div>
-    <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>`+mriInds(r,p,live?hm:`${Mo}/${Dd} 終値`)+xpl("3つの指標のスコアとは",[["スコアとは", "VIX、SKEW、CAPE のそれぞれが、自分の過去10年の平均からどれだけ離れているかを、0〜100%にしたものだ。離れ方を、その離れ方の過去10年の散らばりで割り、正規分布の累積確率に直している。"], ["目盛りの意味", "50%が平均並みだ。84.13%で平均より1σ上、97.72%で2σ上、99.87%で3σ上になる。15.87%は1σ下だ。CAPE のスコアが84.13%を超えるとテクニカル・バブルの Level1 が点灯する。"], ["向き", "3つとも、高いほどリスクが高い向きにそろえてある。SKEW と CAPE はそのまま、VIX だけは逆さにしてある。VIX が低いほど、つまり誰も怖がっていないほど、VIX のスコアは高くなる。VIX と SKEW は対数で測っている。"], ["3つの窓", "VIX は感情（恐怖と油断）、SKEW は持ち高（機関のロングと保険）、CAPE は割高さを映す。3つが同時に高いとき、つまり誰も怖がらず、保険を積み、値が高いとき、風船は最も膨らんでいる。"], ["MRI とは", "3つのスコアの平均だ。80以上が SELL、8以下が BUY の線になる。平均と散らばりは、その月を含む過去120ヶ月で毎月測り直す。相場の水準や仕組みが変わっても、その時代の物差しで読める。"]]);
+    <div class="rlab"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>`+sigLights(mri,rows[rows.length-1][0])+mriInds(r,p,live?hm:`${Mo}/${Dd} 終値`)+xpl("3つの指標のスコアとは",[["スコアとは", "VIX、SKEW、CAPE のそれぞれが、自分の過去10年の平均からどれだけ離れているかを、0〜100%にしたものだ。離れ方を、その離れ方の過去10年の散らばりで割り、正規分布の累積確率に直している。"], ["目盛りの意味", "50%が平均並みだ。84.13%で平均より1σ上、97.72%で2σ上、99.87%で3σ上になる。15.87%は1σ下だ。CAPE のスコアが84.13%を超えるとテクニカル・バブルの Level1 が点灯する。"], ["向き", "3つとも、高いほどリスクが高い向きにそろえてある。SKEW と CAPE はそのまま、VIX だけは逆さにしてある。VIX が低いほど、つまり誰も怖がっていないほど、VIX のスコアは高くなる。VIX と SKEW は対数で測っている。"], ["3つの窓", "VIX は感情（恐怖と油断）、SKEW は持ち高（機関のロングと保険）、CAPE は割高さを映す。3つが同時に高いとき、つまり誰も怖がらず、保険を積み、値が高いとき、風船は最も膨らんでいる。"], ["MRI とは", "3つのスコアの平均だ。80以上が SELL、8以下が BUY の線になる。平均と散らばりは、その月を含む過去120ヶ月で毎月測り直す。相場の水準や仕組みが変わっても、その時代の物差しで読める。"]]);
 }
 // the MRI over the past year (daily, confirmed closes), with the S&P 500's trend-corrected percentile below, as in the
 // MRI app's chart; the reading in the medium and long run is the Sunday article (paper.json "mriTrend", "mriTrendHead"),
