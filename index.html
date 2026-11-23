@@ -956,7 +956,7 @@ function renderIdx(){
   const day=(String(t0).match(/^\d{4}-\d\d-\d\d/)||[""])[0], st=STORY&&sameDay(day)?STORY:null;
   let [h1,h2]=headline(L); if(st){h1=SP(st,"headline");h2=""}
   renderIssue(st);
-  if(EVE()){renderIdxEve(el,st,asof);drawNdx();return}
+  if(EVE()){renderIdxEve(el,st,asof);return}
   el.innerHTML=`<div class="ph"><h2>${tx("主要指数","Markets")}</h2><span class="asof">${asof}</span></div><div class="head">${Array.isArray(h1)?esc(h1[0])+(h1[1]?`<span class="h2b">${esc(h1[1])}</span>`:""):esc(h1)}</div>${h2?`<div class="sub">${h2}</div>`:`<div style="height:8px"></div>`}${st?`<div class="ccm"><p>${esc(SP(st,"body")||(st.sections||[]).map(x=>x[1]).join(""))}</p></div>`:""}<div class="tiles">`+L.map(x=>
     {const lv=x.price.toLocaleString("en-US",{minimumFractionDigits:x.k==="DJI"?0:2,maximumFractionDigits:x.k==="DJI"?0:2});
     return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${EN()?x.en:x.ja}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
@@ -978,7 +978,7 @@ function renderIdxEve(el,st,asof){
     return x.k==="SPX"?`<div class="tile hero" style="background:${tileColor(x.pct)}"><div><div class="tn">${nm}</div><div class="tl">${lv}</div></div><div class="tp">${fmtPct(x.pct)}</div></div>`
       :`<div class="tile" style="background:${tileColor(x.pct)}"><div class="tn">${nm}</div><div class="tb"><span class="tp">${fmtPct(x.pct)}</span><span class="tl">${lv}</span></div></div>`};
   el.innerHTML=`<div class="ph"><h2>${tx("株価指数先物","Index futures")}</h2><span class="asof">${preLab()}</span></div><div class="head">${esc(h1)}${h2?`<span class="h2b">${esc(h2)}</span>`:""}</div><div style="height:8px"></div>${fc?`<div class="ccm"><p>${esc(fc)}</p></div>`:""}<div class="tiles">${F.map(tile).join("")}</div>
-    <div class="rxn">${tx("前日の清算値からの騰落。半導体は先物がないため、半導体ETF（SOXX）の寄り前の値。","Change from the previous settlement. Semiconductors: no future trades, so the SOXX ETF's pre-market quote.")}</div><div class="ndxw" id="ndxw"></div>`
+    <div class="rxn">${tx("前日の清算値からの騰落。半導体は先物がないため、半導体ETF（SOXX）の寄り前の値。","Change from the previous settlement. Semiconductors: no future trades, so the SOXX ETF's pre-market quote.")}</div>`
     +(st&&st.sources&&st.sources.length?`<div class="story"><div class="src">${tx("出典","Sources")} ${st.sources.map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join(" / ")}</div></div>`:"");
 }
 // 号外: data/election.json {active, head: [h1, h2], body, house/senate: {D, R, I, total, need}, races: [[tag, text]], asof, source,
