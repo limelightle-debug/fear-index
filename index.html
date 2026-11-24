@@ -1637,15 +1637,9 @@ function rLatest(){
 const withEst=(H,x)=>!H||!x||!x.est||!x.day?H:[...H.filter(q=>q[0]<x.day.replace(/-/g,"")),[x.day.replace(/-/g,""),x.v]];
 function ratesMore(){
   const Z=rLatest(),{I}=Z;if(!I)return"";
-  const RW=pw($("rates"));
-  // cards as the yields above: the value, the day's change, and 推定値 while it is an estimate
-  // the maturity (or what it covers) over each name, so the 10-year cards and the corporate ones read apart
   const row=(name,x,pre)=>!x?"":`<div><i class="pre">${pre}</i>${name}<b>${x.v.toFixed(2)}</b>${x.dv==null?"":`<small class="${x.dv>0?"u":x.dv<0?"d":""}">${x.dv>0?"▲":x.dv<0?"▼":""} ${Math.abs(x.dv).toFixed(2)}</small>`}${x.est?`<em>${tx("推定値","est.")}</em>`:""}</div>`;
-  const RH=withEst(I&&I.hist,Z.real);
-  return `<div class="rcap"><span>${tx("実質金利・インフレ期待","Real yield, breakeven")}</span></div><div class="rsum rx2">
-    ${row(tx("実質金利","Real yield"),Z.real,tx("10年","10Y"))}${row(tx("インフレ期待","Breakeven"),Z.be,tx("10年","10Y"))}</div>
-    ${RH&&RH.length>1?`<div class="rcap"><span>${tx("10年実質金利の推移","10Y real yield")}</span>${rpSeg("rl")}</div>${Z.real&&Z.real.est?`<div class="rkey rleg">${tx("最後の点は推定値","Last point is an estimate")}</div>`:""}<div class="rchart">${histChart(RH,RW,RC.now,"rlf","rl")}</div>`:""}`+xpl("実質金利とインフレ期待とは",[["分け方", "10年債の利回りは、実質金利とインフレ期待に分けられる。実質金利は物価連動国債（TIPS）の利回りで、物価の上がり分を除いた本当の金利だ。インフレ期待は普通の国債と物価連動国債の利回りの差で、市場が見込む今後10年の平均の物価上昇率になる。"], ["株との関係", "株の値段は、将来の利益を今の価値に割り戻したものだ。その割引率の芯が実質金利になる。実質金利が上がると、遠い将来の利益に値がついているハイテク株や、PER の高い株ほど重くなる。"], ["組み合わせで読む", "実質金利が上がり、インフレ期待が動かないなら、引き締めか成長への期待だ。実質金利が下がり、インフレ期待が動かないなら、市場は先行きの成長を下方修正している。利上げが効いてきた形か、国債への逃避だ。インフレ期待が上がるなら物価への不安で、2%を大きく超えて上がり続けるなら FRB への信認が揺らいでいる。"], ["推定値", "公式の値（米財務省）は1日遅れる。その間は、物価連動国債と国債の ETF の値動きから推し量った値を出し、推定値と書いている。公式の値が出れば置き換わる。"]]);
-}
+  return `<div class="rsum rx2">${row(tx("実質金利","Real yield"),Z.real,tx("10年","10Y"))}${row(tx("インフレ期待","Breakeven"),Z.be,tx("10年","10Y"))}</div>`}
+const realXpl=()=>xpl("実質金利とインフレ期待とは",[["分け方", "10年債の利回りは、実質金利とインフレ期待に分けられる。実質金利は物価連動国債（TIPS）の利回りで、物価の上がり分を除いた本当の金利だ。インフレ期待は普通の国債と物価連動国債の利回りの差で、市場が見込む今後10年の平均の物価上昇率になる。"], ["株との関係", "株の値段は、将来の利益を今の価値に割り戻したものだ。その割引率の芯が実質金利になる。実質金利が上がると、遠い将来の利益に値がついているハイテク株や、PER の高い株ほど重くなる。"], ["組み合わせで読む", "実質金利が上がり、インフレ期待が動かないなら、引き締めか成長への期待だ。実質金利が下がり、インフレ期待が動かないなら、市場は先行きの成長を下方修正している。利上げが効いてきた形か、国債への逃避だ。インフレ期待が上がるなら物価への不安で、2%を大きく超えて上がり続けるなら FRB への信認が揺らいでいる。"], ["推定値", "公式の値（米財務省）は1日遅れる。その間は、物価連動国債と国債の ETF の値動きから推し量った値を出し、推定値と書いている。公式の値が出れば置き換わる。"]]);
 // 中立金利: the axis of 『金利の重力』 chapter 8, as the Money app builds it. 自然利子率Now: the New York Fed's LW r*
 // (one-sided, quarterly, one quarter late; the MRI app's data/rstar.json) carried over the unpublished quarters by GDP
 // and core PCE (money.json lwnow), plus the 2% inflation target for the nominal neutral rate. The 10-year axis adds the
@@ -1685,13 +1679,13 @@ function rstarBlock(){
   return `<div class="rcap"><span>${tx("中立金利（軸）","Neutral rates (the axis)")}</span><span class="asof">${tx(`自然利子率Now は${qj(X.q)}`,`r* Now through ${X.q}`)}</span></div>
     <div class="rsum rx2 c4">${card(X.now?tx("LW Now","LW Now"):"LW",tx("自然利子率","r*"),rs)}${card("+2%",tx("名目中立","Neutral"),N)}${card("+1.0",tx("10年の軸","10Y axis"),N+1)}${card("+1.5",tx("30年の軸","30Y axis"),N+1.5)}</div>
     ${sdp?`<div class="rstate"><span class="pill" style="color:${sdp[1]};border-color:${sdp[1]}55;background:${sdp[1]}14"><i></i>${tx("政策は","Policy: ")}${sdp[0]}</span></div>`:""}
-    <div class="mtab"><div class="lq hd"><span>${tx("軸からの乖離","Distance from the axis")}</span><span>${tx("実際 / 軸","Actual / axis")}</span><span>${tx("差","Gap")}</span></div>${row(tx("政策金利","Policy rate"),X.pol,N,gp,3)}${ten(t10,10,tx("10年債","10Y"))}${ten(t30,30,tx("30年債","30Y"))}</div>
+    <!--split2--><div class="mtab"><div class="lq hd"><span>${tx("軸からの乖離","Distance from the axis")}</span><span>${tx("実際 / 軸","Actual / axis")}</span><span>${tx("差","Gap")}</span></div>${row(tx("政策金利","Policy rate"),X.pol,N,gp,3)}${ten(t10,10,tx("10年債","10Y"))}${ten(t30,30,tx("30年債","30Y"))}</div>
     <div class="rkey rleg">${tx("成長とインフレは市場期間プレミアム（実際 / 標準期間プレミアム）","Growth and inflation: market term premium (actual / standard)")}</div>
     ${EN()?"":`<div class="rstate" style="flex-wrap:wrap;gap:6px">${scn(t10)}${scn(t30)}</div>`}
     <!--split--><div class="rcap"><span>${tx("名目中立金利と政策金利（%）","Neutral rate and policy rate (%)")}</span><div class="seg rpseg">${SP.map(([k,lb])=>`<button type="button" data-rs="${k}" aria-pressed="${k===sp[0]}">${EN()?k:lb}</button>`).join("")}</div></div>
     <div class="rkey rleg"><span><i style="border-color:#ffb547"></i>${tx("名目中立金利","Neutral rate")}</span>${X.now?`<span><i style="border-color:#ffb547;border-top-style:dashed"></i>${tx("Now（未公表の四半期）","Now (unpublished quarters)")}</span>`:""}<span><i style="border-color:#2ee6ff"></i>${tx("政策金利","Policy rate")}</span></div>
     ${tsChart(S,RW,{H:230,unit:"%",ref:[0]})}
-    <div class="lsrc">${tx("軸は『金利の重力』第八章による。自然利子率はニューヨーク連銀の LW モデル（Laubach・Williams、四半期、一期遅れ、片側推計）。まだ出ていない四半期は、LW と同じ材料の実質GDP（GDPNow）とコア PCE で先に動かした値（自然利子率Now）で、公式が出たら置き換わる。名目中立は自然利子率にインフレ目標の2%を足したもの。標準期間プレミアムは10年が成長とインフレに0.50ずつ、30年が0.75ずつ。市場期間プレミアムは、成長が実質金利 − 自然利子率、インフレが期待インフレ − 2%で、マイナスにもなる。政策金利の線は四半期平均の FF 金利で、最後の点はいまの誘導目標の中央。分解のグラフは下にある","Axis from 『金利の重力』 ch. 8: the New York Fed's LW r*, carried over unpublished quarters by GDPNow and core PCE (r* Now), plus the 2% target. Standard term premium 0.50 each for growth and inflation on 10Y, 0.75 each on 30Y")}　${tx("出典","Source")} ${tx("ニューヨーク連銀、米財務省","New York Fed, US Treasury")}</div>`;
+    <div class="lsrc">政策金利の線は四半期平均の FF 金利で、最後の点はいまの誘導目標の中央。軸は『金利の重力』第八章による。出典 ニューヨーク連銀、米財務省</div>`;
 }
 // The Money app's rate panels, carried into the paper's rates panel (numbers and charts only; the reading is the
 // article's): 自然利子率 (LW and 自然利子率Now, the origin of every axis), the 10-year and 30-year built up from the axis
@@ -1705,7 +1699,6 @@ function rstarHero(){
   const NP=X.now?[[qtM(X.L[0]),X.L[2]]].concat(X.path.map(p=>[qtM(p[0]),p[4]])):[];
   const qs=k=>`${k.slice(0,4)}年${["1〜3","4〜6","7〜9","10〜12"][+k.slice(6)-1]}月期`;
   return `<div class="rcap"><span>自然利子率（すべての起点）</span><span class="asof">公式 LW は${qs(X.L[0])}</span></div>
-    <div class="rsum rx2"><div><i class="pre">${X.now?qs(X.q):"LW"}</i>自然利子率Now<b>${X.rs.toFixed(2)}</b></div><div><i class="pre">${qs(X.L[0])}</i>公式 LW<b>${X.lw.toFixed(2)}</b></div></div>
     <div class="rkey rleg"><span><i style="border-color:#ffffff"></i>公式 LW</span>${X.now?`<span><i style="border-color:#ffe066;border-top-style:dashed"></i>自然利子率Now（未公表の四半期）</span>`:""}</div>
     ${tsChart([{c:"#ffffff",p:LW,w:1.8},{c:"#ffe066",p:NP,w:1.8,d:"4 3"}],RW,{H:180,unit:"%",dec:2,ref:[0]})}
     <div class="lsrc">景気を冷やしも温めもしない実質金利。軸も重力も、ここから測る。公式はニューヨーク連銀の LW モデル（四半期、一期遅れ）。まだ出ていない四半期は、同じ材料の実質GDP（GDPNow）とコア PCE で先に動かした値で、公式が出たら置き換わる（Money アプリと同じ）</div>`}
@@ -1751,10 +1744,7 @@ function wfBlock(){
   const ds=[0,t10.di,t10.dg+t10.di].concat(t30?[t30.di,t30.dg+t30.di]:[]),lo=Math.min(-.25,Math.min(...ds)-.22),hi=Math.max(.25,Math.max(...ds)+.18);
   return `<div class="rcap"><span>軸と実勢の積み上げ</span></div>
     <div class="rkey rleg">色の棒が市場、右の点線の枠が標準期間プレミアムと軸。市場期間プレミアムはマイナスにもなる。標準は10年0.50ずつ、30年0.75ずつ</div>
-    ${wfBuildP("10年債",[rs,2,t10.i,t10.g],[rs,2,RPS[10],RPS[10]],RW)}${t30?wfBuildP("30年債",[rs,2,t30.i,t30.g],[rs,2,RPS[30],RPS[30]],RW):""}
-    <div class="rcap"><span>軸からの乖離はどこから来ているか</span></div>
-    <div class="rkey rleg">市場期間プレミアム − 標準期間プレミアム</div>
-    ${wfGapP("10年債",t10.n,t10.ax,t10.g,t10.i,RPS[10],lo,hi,RW)}${t30?wfGapP("30年債",t30.n,t30.ax,t30.g,t30.i,RPS[30],lo,hi,RW):""}`}
+    ${wfBuildP("10年債",[rs,2,t10.i,t10.g],[rs,2,RPS[10],RPS[10]],RW)}${t30?wfBuildP("30年債",[rs,2,t30.i,t30.g],[rs,2,RPS[30],RPS[30]],RW):""}`}
 // 長期金利の分解: the 10-year, the real rate and expected inflation (daily for 1 and 5 years, monthly since 2003)
 function decompBlock(){
   const X=axisNow(),all=MO&&MO.real&&MO.real.all||[],M=MO&&MO.real&&MO.real.monthly||[];if(!X||all.length<300)return"";const RW=pw($("rates"));
@@ -1763,10 +1753,10 @@ function decompBlock(){
   const t0=sp[2]>50?0:src[src.length-1][0]-sp[2]*365.25*864e5,S=src.filter(q=>q[0]>=t0);
   const L=all[all.length-1],a12=all.filter(r=>r[0]<=String(+L[0]-10000)).pop(),dn=L[2]-a12[2],dr=L[5]-a12[5];
   return `<div class="rcap"><span>長期金利の分解</span><div class="seg rpseg">${SP.map(([k,lb])=>`<button type="button" data-dc="${k}" aria-pressed="${k===sp[0]}">${lb}</button>`).join("")}</div></div>
-    <div class="rkey rleg">10年 = 実質 + 期待インフレ</div><div class="rkey rleg"><span><i style="border-color:#ffffff"></i>10年</span><span><i style="border-color:#2ee6ff"></i>実質</span><span><i style="border-color:#ffb547"></i>期待インフレ</span></div>
+    ${ratesMore()}<div class="rkey rleg">10年 = 実質 + 期待インフレ</div><div class="rkey rleg"><span><i style="border-color:#ffffff"></i>10年</span><span><i style="border-color:#2ee6ff"></i>実質</span><span><i style="border-color:#ffb547"></i>期待インフレ</span></div>
     ${tsChart([{c:"#ffffff",p:S.map(q=>[q[0],q[1]]),w:1.2},{c:"#2ee6ff",p:S.map(q=>[q[0],q[2]]),w:1.6},{c:"#ffb547",p:S.map(q=>[q[0],q[3]]),w:1.4}],RW,{H:200,unit:"%",dec:2,zero:true})}
-    <div class="rsum rx2 c4"><div><i class="pre">1年</i>10年<b>${sz(dn)}</b></div><div><i class="pre">うち</i>実質<b>${sz(dr)}</b></div><div><i class="pre">うち</i>期待インフレ<b>${sz(dn-dr)}</b></div><div><i class="pre">軸 ${fz(X.rs+RPS[10])}</i>実質の乖離<b>${sz(L[5]-X.rs-RPS[10])}</b></div></div>
-    <div class="lsrc">実質金利は10年物価連動国債の利回り、期待インフレは10年債との差（ブレークイーブン）。1年と5年は日次、2003年からは月次。実質の軸は自然利子率Now＋0.50、期待インフレの軸は2.50。出典 米財務省</div>`}
+    <div class="rsum rx2 c3"><div><i class="pre">1年</i>10年<b>${sz(dn)}</b></div><div><i class="pre">うち</i>実質<b>${sz(dr)}</b></div><div><i class="pre">うち</i>期待インフレ<b>${sz(dn-dr)}</b></div></div>
+    <div class="lsrc">実質金利は10年物価連動国債の利回り、期待インフレは10年債との差（ブレークイーブン）。1年と5年は日次、2003年からは月次。出典 米財務省</div>`+realXpl()}
 // 金利と財政: the 10-year against nominal GDP growth, and the interest bill and the debt against GDP
 function fiscalBlock(){
   const Fz=MO&&MO.fiscal,M=MO&&MO.real&&MO.real.monthly||[];if(!Fz||!Fz.ngdp)return"";const RW=pw($("rates"));
@@ -1775,7 +1765,7 @@ function fiscalBlock(){
   const I=Fz.interest,Db=Fz.debt,li=I[I.length-1],ld=Db[Db.length-1],ng=NG[NG.length-1],imax=I.reduce((a,b)=>b[1]>a[1]?b:a);
   const n10=CV&&CV.now&&CV.now.y["10Y"],qs=k=>`${k.slice(0,4)}年${["1〜3","4〜6","7〜9","10〜12"][+k.slice(6)-1]}月期`;
   return `<div class="rcap"><span>金利と財政</span><span class="asof">${qs(ng[0])}</span></div>
-    <div class="rsum rx2 c4"><div><i class="pre">${qs(ng[0])}</i>名目成長<b>${fz(ng[1],1)}</b></div><div><i class="pre">いま</i>10年債<b>${fz(n10)}</b></div><div><i class="pre">${qs(li[0])}</i>利払い/GDP<b>${fz(li[1])}</b></div><div><i class="pre">${qs(ld[0])}</i>債務/GDP<b>${fz(ld[1],0)}</b></div></div>
+    <div class="rsum rx2 c3"><div><i class="pre">${qs(ng[0])}</i>名目成長<b>${fz(ng[1],1)}</b></div><div><i class="pre">${qs(li[0])}</i>利払い/GDP<b>${fz(li[1])}</b></div><div><i class="pre">${qs(ld[0])}</i>債務/GDP<b>${fz(ld[1],0)}</b></div></div>
     <div class="rkey rleg"><span><i style="border-color:#5fd08e"></i>名目 GDP 成長率（前年比）</span><span><i style="border-color:#2ee6ff"></i>10年債（四半期平均）</span></div>
     ${tsChart([{c:"#5fd08e",p:NG.map(r=>[qtM(r[0]),r[1]]),w:1.6},{c:"#2ee6ff",p:N10,w:1.6}],RW,{H:180,unit:"%",zero:true})}
     <div class="rkey rleg"><span><i style="border-color:#ffb547"></i>連邦の利払い / GDP（%）</span></div>
@@ -1951,12 +1941,11 @@ function renderRates(){
   if(fq){const v=fq.price,dv=fq.chg||0,a=Math.abs(dv);rh=EN()?[`US 10Y ${a<.01?"flat at":dv>0?"up to":"down to"} ${v.toFixed(2)}% pre-open`,`${st[0]}, rate path: ${pth}`]
     :[`米10年債 寄り前は${v.toFixed(2)}%${a<.01?"で横ばい":`に${a>=.1?"大幅":""}${dv>0?"上昇":"低下"}`}`,`${st[0]}、2年−3ヶ月は${pth}`]}
   el.innerHTML=`<div class="ph"><h2>${tx("金利","Rates")}</h2><span class="asof">${dayLab(M,D,wdOf(Y,M,D))} ${tx("米国債","Treasuries")}</span></div>${headHTML(fq?"ratesEveHead":"ratesHead",rh)}${note("rates",autoRates())}
-    ${(()=>{const r=rstarBlock().split("<!--split-->");return rstarHero()+r[0]+wfBlock()+(r[1]||"")})()}
-    ${EVE()&&FUT.markets&&FUT.markets.us10y?`<div class="rcap"><span>${tx("寄り前の利回り","Pre-open yields")}</span><span class="asof">${preLab()}</span></div><div class="rsum rx2">${[[tx("3ヶ月","3M"),"us3m"],[tx("2年","2Y"),"us2y"],[tx("10年","10Y"),"us10y"],[tx("30年","30Y"),"us30y"]].filter(([,k])=>FUT.markets[k]).map(([l,k])=>{const q=FUT.markets[k],dv=q.chg;return `<div>${l}<b>${q.price.toFixed(3)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(3)}</small>`}</div>`}).join("")}</div><div class="rcap"><span>${tx("前日の米国債（財務省）","Last session (Treasury)")}</span></div>`:""}
+    ${EVE()&&FUT.markets&&FUT.markets.us10y?`<div class="rcap"><span>${tx("寄り前の利回り","Pre-open yields")}</span><span class="asof">${preLab()}</span></div><div class="rsum rx2">${[[tx("3ヶ月","3M"),"us3m"],[tx("2年","2Y"),"us2y"],[tx("10年","10Y"),"us10y"],[tx("30年","30Y"),"us30y"]].filter(([,k])=>FUT.markets[k]).map(([l,k])=>{const q=FUT.markets[k],dv=q.chg;return `<div>${l}<b>${q.price.toFixed(3)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(3)}</small>`}</div>`}).join("")}</div>`:""}
     ${fq?"":`<div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>`}
     ${b.pre?`<div class="rcap"><span>${tx("長短金利差（寄り前）","Spreads (pre-open)")}</span></div>`:""}<div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp main">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span>${s2>=0?`<span class="sp main inv">${tx("逆イールドまで","To inversion")}<b>${tx(`あと${Math.round(s2*100)}bp`,`${Math.round(s2*100)}bp`)}</b>${mn3?`<em>${tx(`3ヶ月前は${Math.round(mn3*100)}bp`,`${Math.round(mn3*100)}bp 3M ago`)}</em>`:""}</span>`:""}<span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(gap)}</b><em class="path" style="color:${pathOf(gap)[1]}">${pathOf(gap)[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
-    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span style="opacity:.6"><i style="border-color:${RC.m3};border-top-style:dashed"></i>${tx("10年−3ヶ月（参考）","10Y−3M (ref.)")}</span>${b.pre?`<span><b style="display:inline-block;width:7px;height:7px;border:1.6px solid ${RC.now};border-radius:50%;margin-right:4px;vertical-align:middle"></b>${tx("寄り前","Pre-open")}</span>`:""}</div><div class="rchart">${spreadChart(S,W,b.pre?{s2,s3}:null)}</div>${decompBlock()}${ratesMore()}${fiscalBlock()}`;
+    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span style="opacity:.6"><i style="border-color:${RC.m3};border-top-style:dashed"></i>${tx("10年−3ヶ月（参考）","10Y−3M (ref.)")}</span>${b.pre?`<span><b style="display:inline-block;width:7px;height:7px;border:1.6px solid ${RC.now};border-radius:50%;margin-right:4px;vertical-align:middle"></b>${tx("寄り前","Pre-open")}</span>`:""}</div><div class="rchart">${spreadChart(S,W,b.pre?{s2,s3}:null)}</div>${(()=>{const r=rstarBlock().split("<!--split-->"),a=(r[0]||"").split("<!--split2-->");return rstarHero()+a[0]+(r[1]||"")+(a[1]||"")+wfBlock()})()}${decompBlock()}${fiscalBlock()}`;
 }
 function renderNews(){
   const el=$("news"),day=IDX&&IDX.indices&&IDX.indices.length?(String((IDX.indices.find(x=>x.k==="SPX")||IDX.indices[0]).time).match(/^\d{4}-\d\d-\d\d/)||[""])[0]:"";
