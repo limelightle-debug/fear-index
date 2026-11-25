@@ -339,7 +339,7 @@ body.evening #t-paper>section:not(#issue):not(#gogai):not(#intv):not(#mritop):no
 .ndxw .nh span{font-size:11.5px;color:var(--muted)}
 .ndxw .bud{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2)}.ndxw .bud b{font-family:var(--f-tick);font-size:17px;color:var(--ink)}
 .ndxw .bud .up b{color:var(--pos)}.ndxw .bud .dn b{color:var(--neg)}
-.ndxw .bbar{flex:1;display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line)}.ndxw .bbar i.up{background:var(--pos)}.ndxw .bbar i.dn{background:var(--neg);margin-left:auto}
+.ndxw .bbar{flex:1;display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line)}.ndxw .bbar i.up{background:var(--pos)}.ndxw .bbar i.fl{background:var(--muted);opacity:.6}.ndxw .bbar i.dn{background:var(--neg);margin-left:auto}
 .ndxw .bur{font-size:11.5px;color:var(--muted);margin:4px 0 2px}
 .ndxw .bsub{font-size:11.5px;color:var(--muted);margin:12px 0 4px;letter-spacing:.04em}
 .ndxw .bs{display:grid;grid-template-columns:8.6em 1fr 4.6em;align-items:center;gap:8px;font-size:12.5px;padding:2px 0}
@@ -677,7 +677,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v238";
+const APP_VER="fi-v239";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1387,14 +1387,14 @@ function drawNdx(){
   if(spx&&String(spx.time).slice(0,10)!==day){box.innerHTML="";return}
   const dt=new Date(day+"T12:00:00Z"),td=isNaN(dt)?"":(EN()?`${MON[dt.getUTCMonth()]} ${dt.getUTCDate()}`:`${dt.getUTCMonth()+1}/${dt.getUTCDate()}（${WD(dt.getUTCDay())}）`);
   const pc=v=>v==null?"—":`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(2)}%`,cl=v=>v>0?"up":v<0?"dn":"";
-  const up=D.up,dn=D.down,n=D.n,ur=Math.round(up/n*100);
+  const up=D.up,dn=D.down,n=D.n,fl=D.flat!=null?D.flat:Math.max(0,n-up-dn),ur=Math.round(up/n*100);
   const S=D.sectors.filter(x=>x.pct!=null).sort((a,b)=>b.pct-a.pct),mx=Math.max(1,...S.map(x=>Math.abs(x.pct)));
   const sec=S.map(x=>{const w=Math.abs(x.pct)/mx*50;
     return `<div class="bs"><span class="k">${EN()?x.en:x.ja}<small>${x.w.toFixed(0)}%</small></span><span class="bar"><i class="${cl(x.pct)}" style="${x.pct>=0?`left:50%`:`right:50%`};width:${w}%"></i></span><span class="v ${cl(x.pct)}">${pc(x.pct)}</span></div>`}).join("");
   const C=(L,t)=>`<div class="bc"><div class="bct">${t}</div>${L.map(r=>`<div class="bcr"><b>${esc(r[0])}</b><span class="nm">${esc(r[1])}</span><span class="pt ${cl(r[3])}">${r[3]>0?"+":"−"}${Math.abs(r[3]).toFixed(1)}</span><span class="pc ${cl(r[2])}">${pc(r[2])}</span></div>`).join("")}</div>`;
   box.innerHTML=`<div class="nh"><b>${tx("S&amp;P500 の中身","Inside the S&amp;P 500")}</b><span>${esc(td)}</span></div>
-    <div class="bud"><span class="up">${tx("上昇","Up")} <b>${up}</b></span><span class="bbar"><i class="up" style="width:${up/n*100}%"></i><i class="dn" style="width:${dn/n*100}%"></i></span><span class="dn">${tx("下落","Down")} <b>${dn}</b></span></div>
-    <div class="bur">${tx(`${n}銘柄のうち ${ur}% が上げた`,`${ur}% of ${n} stocks rose`)}</div>
+    <div class="bud"><span class="up">${tx("上昇","Up")} <b>${up}</b></span><span class="bbar"><i class="up" style="width:${up/n*100}%"></i>${fl?`<i class="fl" style="width:${fl/n*100}%"></i>`:""}<i class="dn" style="width:${dn/n*100}%"></i></span><span class="dn">${tx("下落","Down")} <b>${dn}</b></span></div>
+    <div class="bur">${tx(`${n}銘柄のうち ${ur}% が上げた${fl?`、変化なし ${fl}`:""}`,`${ur}% of ${n} stocks rose${fl?`, ${fl} unchanged`:""}`)}</div>
     <div class="bsub">${tx("セクター（指数の比重で加重）","Sectors (weighted as in the index)")}</div>${sec}
     <div class="bsub">${tx("指数への寄与（ポイント）","Points added to the index")}</div><div class="bcs">${C(D.top||[],tx("押し上げ","Added"))}${C(D.bottom||[],tx("押し下げ","Took away"))}</div>`;
 }
