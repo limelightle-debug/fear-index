@@ -658,7 +658,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 </div>
 
 <script src="books.js"></script>
-<script src="../ndx-heatmap/d3.min.js"></script>
+<script src="../tqqq/d3.min.js"></script>
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
@@ -682,7 +682,7 @@ const APPS=[
   ["vix","VIX Events","VIX イベントの記録と周期",`${BASE}/mri-app/vix/`,"icons/app-vix.png"],
   ["tqqq","TQQQ","TQQQ の価格、高値からの下落、年次の成績",`${BASE}/tqqq/`,"icons/app-tqqq.png"],
   ["mind","Mind","毎朝の局面と、今大切な言葉、陥りやすいバイアス",`${BASE}/mind/`,"icons/app-mind.png"],
-  ["ndx","Nasdaq 100","構成銘柄のヒートマップ、騰落率、組入比率",`${BASE}/ndx-heatmap/`,"icons/app-ndx.png"],
+  ["ndx","Nasdaq 100","構成銘柄の騰落率、寄与度、組入比率",`${BASE}/tqqq/ndx/`,"icons/app-ndx.png"],
   ["money","Money","金利・量・ものさし。自然利子率Now と、軸からの距離",`${BASE}/money/`,"icons/app-money.png"]];
 // the books in the order of the institute's book map, each linking to its Amazon page
 // [title, Amazon, cover, layer in the tree, the title's box on the tree image in % (left, top, width, height)]
@@ -2516,7 +2516,7 @@ async function loadMarkets(){
     fetch(`../mri-app/data/mmf.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MMF=j).catch(()=>MMF=null),
     fetch(`../mri-app/data/macro.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>MAC=j).catch(()=>MAC=null),
     fetch(`../mri-app/data/fedwatch.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>FW=j).catch(()=>FW=null),
-    fetch(`../ndx-heatmap/data/ndx.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>NDXD=j).catch(()=>NDXD=null)]);
+    fetch(`../tqqq/data/ndx.json?ts=${Date.now()}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>NDXD=j).catch(()=>NDXD=null)]);
   applyPre();
   renderFedw();renderNums();renderRates();renderCanary();renderCmdty();renderSun();renderLiq();renderGDP();renderInfl();renderJobs();renderEye();renderAnom();drawNdx();
 }
@@ -2547,7 +2547,7 @@ async function loadPaper(){
   applyPre();
   renderIdx();renderGogai();renderTokuho();renderIntv();renderSun();renderNews();renderMriTop();renderMriTrend();renderKokoro();renderNums();renderEye();renderCmdty();renderRates();renderGrav();renderCanary();renderFedw();
 }
-const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../ndx-heatmap/data/ndx.json"};
+const SRC={mri:"../mri-app/data/mri.json",vix:"../mri-app/data/vix.json",tqqq:"../tqqq/data/tqqq.json",ndx:"../tqqq/data/ndx.json"};
 async function load(){
   await Promise.all(Object.entries(SRC).map(async([k,u])=>{try{const r=await fetch(u+"?ts="+Date.now(),{cache:"no-store"});if(r.ok)DATA[k]=await r.json()}catch(e){}}));
   if(!Object.keys(DATA).length)$("empty").textContent="データを読み込めませんでした";
