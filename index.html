@@ -678,7 +678,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v250";
+const APP_VER="fi-v251";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1748,7 +1748,8 @@ function wfBlock(){
   const ds=[0,t10.di,t10.dg+t10.di].concat(t30?[t30.di,t30.dg+t30.di]:[]),lo=Math.min(-.25,Math.min(...ds)-.22),hi=Math.max(.25,Math.max(...ds)+.18);
   return `<div class="rcap"><span>軸と実勢の積み上げ</span></div>
     <div class="rkey rleg">色の棒が市場、右の点線の枠が標準期間プレミアムと軸。市場期間プレミアムはマイナスにもなる。標準は10年0.50ずつ、30年0.75ずつ</div>
-    ${wfBuildP("10年債",[rs,2,t10.i,t10.g],[rs,2,RPS[10],RPS[10]],RW)}${t30?wfBuildP("30年債",[rs,2,t30.i,t30.g],[rs,2,RPS[30],RPS[30]],RW):""}`}
+    ${wfBuildP("10年債",[rs,2,t10.i,t10.g],[rs,2,RPS[10],RPS[10]],RW)}${t30?wfBuildP("30年債",[rs,2,t30.i,t30.g],[rs,2,RPS[30],RPS[30]],RW):""}
+    ${EN()?"":`<div class="rstate" style="flex-wrap:wrap;gap:6px">${[[t10,"10年"],[t30,"30年"]].filter(([t])=>t).map(([t,n])=>`<span class="pill" style="color:#e8e8ec;border-color:#ffffff33;background:#ffffff0d"><i></i>${n}　${esc(t.scn)}</span>`).join("")}</div>`}`}
 // 長期金利の分解: the 10-year, the real rate and expected inflation (daily for 1 and 5 years, monthly since 2003)
 function decompBlock(){
   const X=axisNow(),all=MO&&MO.real&&MO.real.all||[],M=MO&&MO.real&&MO.real.monthly||[];if(!X||all.length<300)return"";const RW=pw($("rates"));
