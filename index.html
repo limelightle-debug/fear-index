@@ -678,7 +678,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v249";
+const APP_VER="fi-v250";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1685,9 +1685,7 @@ function rstarBlock(){
   return `<div class="rcap"><span>${tx("中立金利（軸）","Neutral rates (the axis)")}</span><span class="asof">${tx(`自然利子率Now は${qj(X.q)}`,`r* Now through ${X.q}`)}</span></div>
     <div class="rsum rx2 c4">${card(X.now?tx("LW Now","LW Now"):"LW",tx("自然利子率","r*"),rs)}${card("+2%",tx("名目中立","Neutral"),N)}${card("+1.0",tx("10年の軸","10Y axis"),N+1)}${card("+1.5",tx("30年の軸","30Y axis"),N+1.5)}</div>
     ${sdp?`<div class="rstate"><span class="pill" style="color:${sdp[1]};border-color:${sdp[1]}55;background:${sdp[1]}14"><i></i>${tx("政策は","Policy: ")}${sdp[0]}</span></div>`:""}
-    <!--split2--><div class="mtab"><div class="lq hd"><span>${tx("軸からの乖離","Distance from the axis")}</span><span>${tx("実際 / 軸","Actual / axis")}</span><span>${tx("差","Gap")}</span></div>${row(tx("政策金利","Policy rate"),X.pol,N,gp,3)}${ten(t10,10,tx("10年債","10Y"))}${ten(t30,30,tx("30年債","30Y"))}</div>
-    <div class="rkey rleg">${tx("成長とインフレは市場期間プレミアム（実際 / 標準期間プレミアム）","Growth and inflation: market term premium (actual / standard)")}</div>
-    ${EN()?"":`<div class="rstate" style="flex-wrap:wrap;gap:6px">${scn(t10)}${scn(t30)}</div>`}
+    <!--split2-->
     <!--split--><div class="rcap"><span>${tx("名目中立金利と政策金利（%）","Neutral rate and policy rate (%)")}</span><div class="seg rpseg">${SP.map(([k,lb])=>`<button type="button" data-rs="${k}" aria-pressed="${k===sp[0]}">${EN()?k:lb}</button>`).join("")}</div></div>
     <div class="rkey rleg"><span><i style="border-color:#ffb547"></i>${tx("名目中立金利","Neutral rate")}</span>${X.now?`<span><i style="border-color:#ffb547;border-top-style:dashed"></i>${tx("Now（未公表の四半期）","Now (unpublished quarters)")}</span>`:""}<span><i style="border-color:#2ee6ff"></i>${tx("政策金利","Policy rate")}</span></div>
     ${tsChart(S,RW,{H:230,unit:"%",ref:[0]})}
