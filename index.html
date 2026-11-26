@@ -630,6 +630,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
   <div id="t-paper">
     <section class="panel gogai" id="gogai" hidden></section>
     <section class="panel issue" id="issue"></section>
+    <section class="panel" id="news" hidden></section>
     <section class="panel gogai tokuho" id="tokuho" hidden></section>
     <section class="panel intv" id="intv" hidden></section>
     <section class="panel" id="sunwk" hidden></section>
@@ -642,7 +643,6 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel trend" id="mritrend" hidden></section>
     <section class="panel" id="idx"><div class="soon">読み込み中…</div></section>
     <section class="panel" id="cmdty" hidden></section>
-    <section class="panel" id="news" hidden></section>
     <section class="panel" id="rates" hidden></section>
     <section class="panel" id="grav" hidden></section>
     <section class="panel" id="canary" hidden></section>
@@ -678,7 +678,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v254";
+const APP_VER="fi-v255";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -833,12 +833,12 @@ function bookRow([b,url,cv,layer]){
 // the last panel: why each panel is in the paper and what to look at, in the paper's order
 const GUIDE=[
  ["注目点","その日いちばん目を向けるべき2〜3点。ここだけ読めば、その朝の要点がつかめる。","Points to watch","The two or three things to look at first. Read only these and you have the morning."],
+ ["主なニュース","動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。","News","Why it moved. See which news lines up with which move."],
  ["虫の目・鷹の目・魚の目","この新聞の全部を3つの段落にまとめた冒頭のページ。虫の目はその日の細部を、鷹の目は高い空から全体の景色を、魚の目はこの1〜3ヶ月の流れと潮目を見る。3つを順に読むと、今日何が起き、それがどんな景色の中にあり、どちらへ向かうかがつながる。","Hawk, fish and bug's eyes","The whole paper in three paragraphs at the top. The hawk sees the landscape from high above, the fish reads the current of the last one to three months, the bug looks at the day's detail. Read in turn, they tie together what is happening, where it is heading and what today confirms."],
  ["心","全体を見たあとに、その日の局面で陥りやすい考えのクセを確かめる。","心 (Mind)","After the overview, check the habit of mind this stage of the market tends to bring out."],
  ["MRI 確定値","VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。","MRI, confirmed","Fear and froth in the market as one number, from VIX, SKEW and CAPE. Look less at the value than at how far it is from SELL 80 and BUY 8, and how it moved from the day before."],
  ["主要指数と記事","米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。","Markets and the story","How US stocks moved. The S&amp;P 500 is the whole, the Nasdaq 100 and chips the centre of the action, the Russell 2000 the small caps that feel the economy. A day when only one moves a lot is a lopsided market."],
  ["コモディティ・ドル","金は不安、原油はインフレと景気、銅は景気、ビットコインはリスクを取る気分、ドルは世界のお金の向きを映す。","Commodities and the dollar","Gold reads fear, crude inflation and growth, copper growth, bitcoin the appetite for risk, the dollar the direction of the world's money."],
- ["主なニュース","動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。","News","Why it moved. See which news lines up with which move."],
  ["金利","株の値段の重し。10年債は株価の割引率、2年債は利上げと利下げの見通しを映す。逆イールドとその解消は景気の節目の目印で、この新聞では解消から1年を「解消直後」として追う。2年債と3ヶ月債の差は、政策金利の先行きの織り込みを表す。","Rates","The weight on stock prices. The 10-year is the discount rate for stocks, the 2-year reflects where policy rates are expected to go. An inversion and its end mark turns in the cycle; this paper follows the year after an inversion ends as just uninverted. The 2-year less the 3-month shows the rate path priced."],
  ["FedWatch","FF金利先物の価格から、次の FOMC 会合以降に政策金利がどこにあるかの確率を出したもの（CME FedWatch と同じ方法）。見出しは次の会合で動く確率と、先の会合までに何回分の利上げか利下げを市場が織り込んでいるか。数字そのものより、日々どちらへ傾いていくかを見る。","FedWatch","The odds of where the policy rate will sit after each coming FOMC meeting, from fed funds futures prices (CME FedWatch's method). The headline gives the chance of a move at the next meeting and how many hikes or cuts are priced further out. Watch which way it leans from day to day more than the numbers."],
  ["実質金利・インフレ期待","10年債の利回りを、インフレの分と、物価を除いた本当の金利に分けたもの。実質金利の上昇は、PER の高い株ほど重しになる。","Real yield and breakeven","The 10-year yield split into inflation and the real rate. A rising real rate weighs most on high P/E stocks."],
