@@ -678,7 +678,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v255";
+const APP_VER="fi-v256";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -2388,7 +2388,7 @@ function liqCharts(){
   if(Y&&Y.repo&&Y.repo.length){const R30=Y.repo.filter(q=>dms(q[0])>=Date.now()-30*864e5),tot=R30.reduce((a,q)=>a+q[1],0);
     if(tot>.05)rows+=row(tx("SRF（常設レポ）","Standing repo"),tx("この30日の利用","taken, last 30 days"),B(tot),pill(tx("利用あり","in use"),C.a))}
   if(rows)h+=`<div class="rcap"><span>${tx("配管の状態","The plumbing")}</span></div><div class="mtab" style="margin-top:2px">${rows}</div>`+xpl("配管の状態とは",[["表の並び", "『金利の重力』第十七章の見取り図を上から並べた。緩衝材のリバースレポ、本体の準備預金、綱の張り（SOFR−IORB）、FRB の総資産、常設レポの利用だ。ドルが吸われると、上から順に変化が現れる。"], ["緩衝材", "リバースレポの残高が500億ドル未満なら「枯渇」、3000億ドル未満なら「細る」、それ以上なら「残る」と付ける。"], ["本体", "準備預金が13週で500億ドル以上減れば「削られる」、500億ドル以上増えれば「積み増し」、その間は「横ばい」と付ける。"], ["綱の張り", "SOFR が IORB を上回れば「逼迫」、下回っていても差が5bp以内なら「張りつめ」、それより下なら「落ち着き」と付ける。"], ["FRB の総資産と常設レポ", "総資産が4週で50億ドルを超えて増えれば「拡大」、減れば「縮小」、その間は「横ばい」と付ける。常設レポがこの30日に使われていれば「利用あり」と出る。銀行が FRB から直接現金を借り始めた合図だ。"]]);
-  h+=`<div class="lthm"><b>${tx("1 緩衝材と本体","1 Buffer and body")}</b><span>${tx("ドルが吸われると、まずリバースレポ（緩衝材）が減る。尽きると準備預金（本体）が削られる","When dollars are drained, the reverse repo (the buffer) goes first; once it is gone, reserves (the body) are cut")}</span></div><!--lq:body-->`;
+  h+=`<div class="lthm"><b>${tx("緩衝材と本体","Buffer and body")}</b><span>${tx("ドルが吸われると、まずリバースレポ（緩衝材）が減る。尽きると準備預金（本体）が削られる","When dollars are drained, the reverse repo (the buffer) goes first; once it is gone, reserves (the body) are cut")}</span></div><!--lq:body-->`;
   if(F&&F.hist&&R&&R.hist){const s0=F.hist[0][0],wk=new Map();R.hist.forEach(q=>{if(q[0]>=s0){const k=q[0].slice(0,8)+String(Math.min(28,Math.ceil(+q[0].slice(8)/7)*7)).padStart(2,"0");wk.set(k,q)}});
     h+=`<div class="rcap"><span>${tx(`準備預金とリバースレポ（兆ドル、${s0.slice(0,4)}年から）`,`Reserves and reverse repo ($T, since ${s0.slice(0,4)})`)}</span></div>${legend([[tx("準備預金","Reserves"),"#7fd6a4"],[tx("リバースレポ","Reverse repo"),"#ffb547"]])}`
       +tsChart([{c:"#7fd6a4",p:F.hist.map(q=>[dms(q[0]),q[2]/1e6]),w:1.8},{c:"#ffb547",p:[...wk.values()].map(q=>[dms(q[0]),q[1]/1e3]),w:1.4}],W,{H:220,dec:1,zero:true,ref:[1.4]})
@@ -2399,15 +2399,15 @@ function liqCharts(){
         ["どちらから減るか","量的引き締めや国債の大量発行でドルが吸われるとき、まず減るのはリバースレポだ。MMF は FRB に預けるより利回りの良い短期国債に乗り換える。その現金が財務省に渡り、緩衝材が細る。緩衝材が尽きると、吸われるドルは準備預金という本体から直接抜けていく。"],
         ["下限は誰にも分からない","銀行が安心して決済できる準備預金の量には下限がある。だがその水準は事前には分からない。2019年9月は約1.4兆ドルで短期金利が跳ねた。点線がその水準だ。経済も銀行の規模も大きくなったので、今の下限はそれより上にあると考えられている。"],
         ["読み方","オレンジの線（リバースレポ）が0近くに張りついたら、緩衝材は尽きている。そのあと緑の線（準備預金）が下がり続けるなら、本体が削られている。同時に SOFR が IORB を上回れば、下限が近い合図だ。"]])}
-  h+=`<div class="lthm"><b>${tx("2 綱の張り","2 The strain")}</b><span>${tx("準備預金が足りなくなると、銀行どうしの資金の金利（SOFR）が FRB の預金金利（IORB）を上回る","When reserves run short, the repo rate (SOFR) rises above the rate the Fed pays on reserves (IORB)")}</span></div>`;
+  h+=`<div class="lthm"><b>${tx("綱の張り","The strain")}</b><span>${tx("準備預金が足りなくなると、銀行どうしの資金の金利（SOFR）が FRB の預金金利（IORB）を上回る","When reserves run short, the repo rate (SOFR) rises above the rate the Fed pays on reserves (IORB)")}</span></div>`;
   if(Y&&Y.spread&&Y.spread.length>20){
     h+=`<div class="rcap"><span>${tx("SOFR − IORB（bp）","SOFR − IORB (bp)")}</span>${rpSeg("sf")}</div>`+tsChart([{c:"#ff8a7a",p:rCut(Y.spread,"sf").map(q=>[dms(q[0]),q[2]*100]),w:1.2}],W,{H:180,dec:0,zero:true})
       +`<div class="lsrc" style="margin-top:2px">${tx("0より上は、準備預金（銀行の手元のドル）が足りなくなってきた合図。月末や年末の一時的な跳ねではなく、0より上が続くかを見る","Above 0: reserves are getting short. Watch whether it stays above 0, not the month-end spikes")}</div>`
       +`<details class="xpl"><summary>SOFR − IORB とは（詳しく）</summary><p><b>SOFR とは</b>米国債を担保にして、翌日まで現金を貸し借りする取引（レポ）の金利だ。1日に2兆ドルを超える取引の実際の金利から、ニューヨーク連銀が毎朝、前の営業日の分を出す。ドルの短期金利の正本と言っていい。</p><p><b>IORB とは</b>FRB が銀行の準備預金に付ける金利だ。政策金利の幅の上限から0.10を引いた水準に置かれている。銀行は準備預金を FRB に置いておくだけで、この金利を危険なしに受け取れる。</p><p><b>なぜ差を見るのか</b>準備預金を持つ銀行は、IORB より高い金利でなければレポに現金を出さない。準備預金がたっぷりあるあいだは、現金が余っているので SOFR は IORB より下に沈む。この1年の大半がそうだった。準備預金が足りなくなると、国債を抱えるディーラーが現金を求めて金利を競り上げ、SOFR が IORB を上回る。0より上は、銀行が FRB に置いておくより高い金利を払ってでも、現金を取り合っているということだ。</p><p><b>緩衝材と本体</b>FRB が量的引き締めでドルを吸うとき、まず減るのは MMF などが FRB に置くリバースレポ、つまり緩衝材だ。緩衝材が尽きると、準備預金という本体が直接削られる。SOFR と IORB の差は、その本体がどこまで細ったかを、最も早く、最も正直に映す。</p><p><b>2019年9月</b>準備預金が約1.4兆ドルまで減ったところで、レポ金利が一気に跳ねた。9月17日の SOFR は5.25%で、当時の準備預金の金利（2.10%）を3ポイント以上も上回った。どこが下限かは、跳ねるまで誰にも分からなかった。FRB は急いで資金を供給し、短期国債の買い入れを始めた。</p><p><b>月末の跳ねは割り引く</b>月末、四半期末、年末は、銀行が決算の見栄えのためにレポの貸し出しを絞り、国債の決済や納税も重なるので、SOFR は一時的に跳ねやすい。チャートの11月から12月、年末の突き出しの多くはこれだ。見るべきは、そうした日ではない普通の日に0を上回り続けるかどうかだ。</p><p><b>天井の目安</b>FRB は政策金利の幅の上限で、国債を担保に現金を貸す常設の窓口（スタンディング・レポ・ファシリティ）を開いている。理屈の上では、SOFR が上限を大きく超える前に、銀行はこの窓口から借りる。IORB は上限より0.10低いので、差が10bp前後まで張るのは、窓口が使われ始める水準だ。</p><p><b>いまの読み方</b>この1年、差はほぼ0の下にあった。10月下旬から、月末でもない日に0を上回り始めている。緩衝材のリバースレポはすでに尽きている。差がプラスに居座り、じわじわ広がるなら、準備預金は下限に近づいている。株にとっては配管の詰まりという向かい風になる。同時に、FRB が綱を緩めに動く合図にもなる。2019年はそうなった。</p></details>`}
-  h+=`<div class="lthm"><b>${tx("3 FRB のバランスシート","3 The Fed balance sheet")}</b><span>${tx("準備預金の大もと。量的引き締めで国債を手放せば減り、国債を買えば増える","Where reserves come from: they shrink as quantitative tightening runs bonds off, and grow when the Fed buys")}</span></div><!--lq:fa-->`;
+  h+=`<div class="lthm"><b>${tx("FRB のバランスシート","The Fed balance sheet")}</b><span>${tx("準備預金の大もと。量的引き締めで国債を手放せば減り、国債を買えば増える","Where reserves come from: they shrink as quantitative tightening runs bonds off, and grow when the Fed buys")}</span></div><!--lq:fa-->`;
   if(F&&F.hist&&F.hist.length>4){const P=rCut(F.hist,"fa");
     h+=`<div class="rcap"><span>${tx("FRB総資産（兆ドル）","Fed total assets ($T)")}</span>${rpSeg("fa")}</div>`+tsChart([{c:"#2ee6ff",p:P.map(q=>[dms(q[0]),q[1]/1e6]),w:1.8}],W,{H:210,dec:2})}
-  h+=`<div class="lthm"><b>${tx("4 銀行の外のお金","4 Money outside the banks")}</b><span>${tx("家計や企業の手元のお金（M2）と、その待機資金が集まる MMF","The money households and firms hold (M2), and money market funds, where idle cash waits")}</span></div><!--lq:m2-->`;
+  h+=`<div class="lthm"><b>${tx("銀行の外のお金","Money outside the banks")}</b><span>${tx("家計や企業の手元のお金（M2）と、その待機資金が集まる MMF","The money households and firms hold (M2), and money market funds, where idle cash waits")}</span></div><!--lq:m2-->`;
   if(M&&M.hist){const yy=yoyOf(M.hist);h+=M.hist.length>=12?`<div class="rcap"><span>${tx("M2 総額と前年比","M2, level and change on a year")}</span></div>`
     +legend([[tx("総額（兆ドル・左）","Level ($tn, left)"),"#b59cff"],[tx("前年比（%・右）","Year on year (%, right)"),"#5fd08e"]])+m2Chart(M.hist,yy,W):""}
   if(MMF&&MMF.hist&&MMF.hist.length>12){const P=rCut(MMF.hist,"mm"),L=MMF.hist[MMF.hist.length-1];
