@@ -677,7 +677,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v240";
+const APP_VER="fi-v241";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -1567,6 +1567,40 @@ function spreadChart(S,W,pre){
     ${pre?(()=>{const e1=p1[p1.length-1],e2=p2[p2.length-1],X=x(n-1);return `${e2&&pre.s3!=null?`<path d="M${e2[0].toFixed(1)},${e2[1].toFixed(1)}L${X.toFixed(1)},${y(pre.s3).toFixed(1)}" stroke="${RC.m3}" stroke-width=".9" stroke-opacity=".6" stroke-dasharray="2 2"/>`:""}<path d="M${e1[0].toFixed(1)},${e1[1].toFixed(1)}L${X.toFixed(1)},${y(pre.s2).toFixed(1)}" stroke="${RC.now}" stroke-width="1.6" stroke-dasharray="2 2"/><circle cx="${X.toFixed(1)}" cy="${y(pre.s2).toFixed(1)}" r="3.2" fill="var(--panel)" stroke="${RC.now}" stroke-width="1.6"/>`})():""}
     ${lab(L[1],RC.now,L[1]>=L[2]?-5:5)}${L[2]!=null?lab(L[2],RC.m3,L[2]>L[1]?-5:5):""}</svg>`;
 }
+// the 2-year yield by month (candles from the daily par yields in money.json real.all) with MACD (12, 26, 9) on the
+// month-end yields: the speed at which the priced hikes build, and whether that speed is growing or fading. Dashed:
+// the S&P 500's bottoms in the three hiking cycles into a hot economy (2018/12/24, 2022/10/12, 2023/10/27)
+function y2mBlock(W){
+  if(!MO||!MO.real||!MO.real.all)return "";
+  const M=[];let cur=null;
+  for(const r of MO.real.all){if(r[1]==null)continue;const k=r[0].slice(0,6);
+    if(!cur||cur.k!==k){cur={k,o:r[1],h:r[1],l:r[1],c:r[1]};M.push(cur)}else{cur.h=Math.max(cur.h,r[1]);cur.l=Math.min(cur.l,r[1]);cur.c=r[1]}}
+  if(M.length<40)return "";
+  const ema=(a,n)=>{const k=2/(n+1),o=[a[0]];for(let i=1;i<a.length;i++)o.push(k*a[i]+(1-k)*o[i-1]);return o};
+  const C=M.map(m=>m.c),e1=ema(C,12),e2=ema(C,26),md=C.map((_,i)=>e1[i]-e2[i]),sg=ema(md,9),hs=md.map((v,i)=>v-sg[i]);
+  const i0=Math.max(0,M.findIndex(m=>m.k>="201701")),S=M.slice(i0),MD=md.slice(i0),SG=sg.slice(i0),HS=hs.slice(i0),n=S.length;
+  const ML=28,MR=40,PW=W-ML-MR,H1=190,H2=110,G=14,MT=8,MB=18,H=MT+H1+G+H2+MB,bw=Math.max(1,PW/n*.62),x=i=>ML+(i+.5)/n*PW;
+  const lo=Math.floor(Math.min(...S.map(m=>m.l))*2)/2,hi=Math.ceil(Math.max(...S.map(m=>m.h))*2)/2,y=v=>MT+(hi-v)/(hi-lo)*H1;
+  const mx=Math.max(...MD.map(Math.abs),...HS.map(Math.abs))*1.08,T2=MT+H1+G,z=T2+H2/2,ym=v=>z-v/mx*(H2/2);
+  const up="#5fd08e",dn="#ff7a7a",yt=[];for(let v=lo;v<=hi+1e-9;v+=1)yt.push(v);
+  const yrs=[];S.forEach((m,i)=>{if(i&&m.k.slice(4)==="01")yrs.push([i,m.k.slice(0,4)])});
+  const btm=["201812","202210","202310"].map(k=>S.findIndex(m=>m.k===k)).filter(i=>i>=0);
+  const ln=a=>a.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${ym(v).toFixed(1)}`).join("");
+  const L=S[n-1],lh=HS[n-1],mk=L.k,mon=+mk.slice(4),open=mk===(()=>{const d=new Date();return `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,"0")}`})();
+  const svg=`<svg viewBox="0 0 ${W} ${H}" height="${H}">
+    ${yt.map(v=>`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#ffffff" stroke-opacity=".06"/><text x="${ML-6}" y="${y(v)+3}" text-anchor="end">${v.toFixed(0)}</text>`).join("")}
+    ${yrs.map(([i,l])=>`<line x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${T2+H2}" stroke="#ffffff" stroke-opacity=".05"/><text x="${x(i)}" y="${H-5}" text-anchor="middle">${(+l%2===0||yrs.length<7)?l:""}</text>`).join("")}
+    ${btm.map(i=>`<line x1="${x(i)}" x2="${x(i)}" y1="${MT}" y2="${T2+H2}" stroke="#ffe066" stroke-opacity=".55" stroke-dasharray="2 3"/>`).join("")}
+    ${S.map((m,i)=>{const c=m.c>=m.o?up:dn;return `<line x1="${x(i)}" x2="${x(i)}" y1="${y(m.h)}" y2="${y(m.l)}" stroke="${c}" stroke-width="1"/><rect x="${(x(i)-bw/2).toFixed(1)}" y="${y(Math.max(m.o,m.c)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,Math.abs(y(m.o)-y(m.c))).toFixed(1)}" fill="${c}"/>`}).join("")}
+    <text x="${ML+PW+6}" y="${y(L.c)+3.5}" style="fill:#f2f2f7;font-weight:700">${L.c.toFixed(2)}</text>
+    <line x1="${ML}" x2="${ML+PW}" y1="${z}" y2="${z}" stroke="#ffffff" stroke-opacity=".25"/>
+    ${HS.map((v,i)=>{const p=i?HS[i-1]:v,c=v>=0?(v>=p?"#2ee6ff":"#2ee6ff88"):(v<=p?"#ff5a5a":"#ff5a5a88");return `<rect x="${(x(i)-bw/2).toFixed(1)}" y="${Math.min(z,ym(v)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(.5,Math.abs(ym(v)-z)).toFixed(1)}" fill="${c}"/>`}).join("")}
+    <path d="${ln(MD)}" fill="none" stroke="#f2f2f7" stroke-width="1.3"/><path d="${ln(SG)}" fill="none" stroke="#ffb547" stroke-width="1.2"/>
+    <text x="${ML+PW+6}" y="${ym(lh)+3.5}" style="fill:#2ee6ff;font-weight:700">${lh>=0?"+":"−"}${Math.abs(lh).toFixed(3)}</text>
+    <text x="${ML+4}" y="${T2+10}" style="font-size:10px">MACD</text></svg>`;
+  return `<div class="rcap"><span>${tx("2年債利回り（月足）とMACD","2-year yield, monthly, with MACD")}</span></div>${legend([[tx("MACD","MACD"),"#f2f2f7"],[tx("シグナル","Signal"),"#ffb547"],[tx("ヒストグラム","Histogram"),"#2ee6ff"],[tx("株の底","Stock bottoms"),"#ffe066"]])}<div class="rchart">${svg}</div>
+    <div class="lsrc">${tx(`MACD（12・26・9）は2年債利回りの月末値から計算。2年債は織り込まれた利上げの道筋なので、MACD はその織り込みが強まる速さ、ヒストグラムはその速さが増しているか衰えているかを示す。点線は過熱した景気への利上げで株が底をつけた月（2018年12月、2022年10月、2023年10月）。${open?`${mon}月の足とヒストグラムは月末まで確定しない。`:""}`,`MACD (12, 26, 9) on month-end 2-year yields. The 2-year yield is the priced path of hikes, so MACD is the speed at which that pricing builds and the histogram whether the speed is growing or fading. Dashed: the months stocks bottomed in hiking cycles into a hot economy (Dec 2018, Oct 2022, Oct 2023).${open?" This month's candle and histogram are not final until month end.":""}`)}</div>`;
+}
 // under the charts: the 10-year real yield and breakeven inflation, and the corporate bond spreads (OAS)
 // (curve.json "infl" and "oas"). When the official value for the latest session is not out yet (OAS comes a day
 // later), the estimate from that session's bond ETF moves (markets.json, as in the MRI app) stands in, marked 推定値,
@@ -1916,7 +1950,7 @@ function renderRates(){
     ${fq?"":`<div class="rsum">${[[tx("3ヶ月","3M"),"3M"],[tx("2年","2Y"),"2Y"],[tx("10年","10Y"),"10Y"],[tx("30年","30Y"),"30Y"]].map(([l,k])=>{const p=CV.prev&&CV.prev.y[k],dv=p==null?null:n[k]-p;return `<div>${l}<b>${n[k].toFixed(2)}</b>${dv==null?"":`<small class="${dv>0?"u":dv<0?"d":""}">${dv>0?"▲":dv<0?"▼":""} ${Math.abs(dv).toFixed(2)}</small>`}</div>`}).join("")}</div>`}
     ${b.pre?`<div class="rcap"><span>${tx("長短金利差（寄り前）","Spreads (pre-open)")}</span></div>`:""}<div class="rstate"><span class="pill" style="color:${st[1]};border-color:${st[1]}55;background:${st[1]}14"><i></i>${st[0]}</span><span class="sp main">${tx("10年−2年","10Y−2Y")}<b>${sg(s2)}</b></span>${s2>=0?`<span class="sp main inv">${tx("逆イールドまで","To inversion")}<b>${tx(`あと${Math.round(s2*100)}bp`,`${Math.round(s2*100)}bp`)}</b>${mn3?`<em>${tx(`3ヶ月前は${Math.round(mn3*100)}bp`,`${Math.round(mn3*100)}bp 3M ago`)}</em>`:""}</span>`:""}<span class="sp">${tx("10年−3ヶ月","10Y−3M")}<b>${sg(s3)}</b></span><span class="sp">${tx("2年−3ヶ月","2Y−3M")}<b>${sg(gap)}</b><em class="path" style="color:${pathOf(gap)[1]}">${pathOf(gap)[0]}</em></span>${st[2]?`<span class="note">${st[2]}</span>`:""}</div>
     <div class="rcap"><span>${tx("イールドカーブ","Yield curve")}</span><span class="rkey"><span><i style="border-color:${RC.now}"></i>${tx("最新","Latest")}</span><span><i style="border-color:${RC.m3}"></i>${tx("3ヶ月前","3M ago")}</span><span><i style="border-color:${RC.m6};border-top-style:dashed"></i>${tx("6ヶ月前","6M ago")}</span></span></div><div class="rchart">${curveChart(CV,W)}</div>
-    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span style="opacity:.6"><i style="border-color:${RC.m3};border-top-style:dashed"></i>${tx("10年−3ヶ月（参考）","10Y−3M (ref.)")}</span>${b.pre?`<span><b style="display:inline-block;width:7px;height:7px;border:1.6px solid ${RC.now};border-radius:50%;margin-right:4px;vertical-align:middle"></b>${tx("寄り前","Pre-open")}</span>`:""}</div><div class="rchart">${spreadChart(S,W,b.pre?{s2,s3}:null)}</div>${(()=>{const r=rstarBlock().split("<!--split-->"),a=(r[0]||"").split("<!--split2-->");return rstarHero()+a[0]+(r[1]||"")+(a[1]||"")+wfBlock()})()}${decompBlock()}`;
+    <div class="rcap"><span>${tx("長短金利差の推移","Yield spreads")}</span>${rpSeg("sp")}</div><div class="rkey rleg"><span><i style="border-color:${RC.now}"></i>${tx("10年−2年","10Y−2Y")}</span><span style="opacity:.6"><i style="border-color:${RC.m3};border-top-style:dashed"></i>${tx("10年−3ヶ月（参考）","10Y−3M (ref.)")}</span>${b.pre?`<span><b style="display:inline-block;width:7px;height:7px;border:1.6px solid ${RC.now};border-radius:50%;margin-right:4px;vertical-align:middle"></b>${tx("寄り前","Pre-open")}</span>`:""}</div><div class="rchart">${spreadChart(S,W,b.pre?{s2,s3}:null)}</div>${y2mBlock(W)}${(()=>{const r=rstarBlock().split("<!--split-->"),a=(r[0]||"").split("<!--split2-->");return rstarHero()+a[0]+(r[1]||"")+(a[1]||"")+wfBlock()})()}${decompBlock()}`;
 }
 function renderNews(){
   const el=$("news"),day=IDX&&IDX.indices&&IDX.indices.length?(String((IDX.indices.find(x=>x.k==="SPX")||IDX.indices[0]).time).match(/^\d{4}-\d\d-\d\d/)||[""])[0]:"";
