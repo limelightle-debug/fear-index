@@ -2247,8 +2247,6 @@ const lastOf=A=>A&&A.length?A[A.length-1]:null;
 const pct1=v=>v==null?"":`${v>0?"+":v<0?"−":"±"}${Math.abs(v).toFixed(1)}%`;
 const moLab=k=>{const m=+k.slice(5);return tx(`${m}月`,MON[m-1])};
 let MAC=null;
-// Beveridge curve: the unemployment rate (across) against the job openings rate (up), month by month, older
-// months fainter; the dashed diagonal is where the two are equal (above it, more openings than unemployed)
 // growth: real GDP (quarterly, % at an annual rate) and the Atlanta Fed's GDPNow for the quarter being tracked
 const qLab=q=>{const [y,n]=q.split("-Q");return tx(`${["1〜3","4〜6","7〜9","10〜12"][n-1]}月期`,`Q${n} ${y}`)};
 function renderGDP(){
