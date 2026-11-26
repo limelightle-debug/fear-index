@@ -636,6 +636,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="sunwe" hidden></section>
     <section class="panel" id="sunnx" hidden></section>
     <section class="panel eye" id="eye" hidden></section>
+    <section class="panel kokoro" id="kokoro" hidden></section>
     <div class="sec" id="sec-daily"></div>
     <section class="panel mtop" id="mritop" hidden></section>
     <section class="panel trend" id="mritrend" hidden></section>
@@ -646,7 +647,6 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
     <section class="panel" id="canary" hidden></section>
     <section class="panel" id="fedw" hidden></section>
     <section class="panel" id="cmdty" hidden></section>
-    <section class="panel kokoro" id="kokoro" hidden></section>
     <section class="panel anom" id="anom" hidden></section>
     <div class="sec" id="sec-rel"></div>
     <section class="panel" id="gdp" hidden></section>
@@ -678,7 +678,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v247";
+const APP_VER="fi-v248";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -834,6 +834,7 @@ function bookRow([b,url,cv,layer]){
 const GUIDE=[
  ["注目点","その日いちばん目を向けるべき2〜3点。ここだけ読めば、その朝の要点がつかめる。","Points to watch","The two or three things to look at first. Read only these and you have the morning."],
  ["虫の目・鷹の目・魚の目","この新聞の全部を3つの段落にまとめた冒頭のページ。虫の目はその日の細部を、鷹の目は高い空から全体の景色を、魚の目はこの1〜3ヶ月の流れと潮目を見る。3つを順に読むと、今日何が起き、それがどんな景色の中にあり、どちらへ向かうかがつながる。","Hawk, fish and bug's eyes","The whole paper in three paragraphs at the top. The hawk sees the landscape from high above, the fish reads the current of the last one to three months, the bug looks at the day's detail. Read in turn, they tie together what is happening, where it is heading and what today confirms."],
+ ["心","全体を見たあとに、その日の局面で陥りやすい考えのクセを確かめる。","心 (Mind)","After the overview, check the habit of mind this stage of the market tends to bring out."],
  ["MRI 確定値","VIX・SKEW・CAPE から、相場の恐怖と過熱を一つの数にしたもの。値そのものより、SELL 80 と BUY 8 までの距離と、前日からの動きを見る。","MRI, confirmed","Fear and froth in the market as one number, from VIX, SKEW and CAPE. Look less at the value than at how far it is from SELL 80 and BUY 8, and how it moved from the day before."],
  ["主要指数と記事","米国株がどう動いたか。S&amp;P500 が全体、ナスダック100 と半導体が値動きの中心、ラッセル2000 が景気に敏感な小型株。どれか一つだけが大きく動く日は、相場が偏っている。","Markets and the story","How US stocks moved. The S&amp;P 500 is the whole, the Nasdaq 100 and chips the centre of the action, the Russell 2000 the small caps that feel the economy. A day when only one moves a lot is a lopsided market."],
  ["主なニュース","動きの理由。指数の上げ下げと、どのニュースが結びつくかを見る。","News","Why it moved. See which news lines up with which move."],
@@ -842,7 +843,6 @@ const GUIDE=[
  ["実質金利・インフレ期待","10年債の利回りを、インフレの分と、物価を除いた本当の金利に分けたもの。実質金利の上昇は、PER の高い株ほど重しになる。","Real yield and breakeven","The 10-year yield split into inflation and the real rate. A rising real rate weighs most on high P/E stocks."],
  ["OAS","社債の上乗せ金利。お金の貸し手が不安になると広がる。ハイイールドの急な拡大は、株の急落と同時か、少し前に出やすい。","OAS","The extra yield on corporate bonds. It widens when lenders get nervous. A sudden widening in high yield tends to come with a sharp fall in stocks, or just before it."],
  ["コモディティ・ドル","金は不安、原油はインフレと景気、銅は景気、ビットコインはリスクを取る気分、ドルは世界のお金の向きを映す。","Commodities and the dollar","Gold reads fear, crude inflation and growth, copper growth, bitcoin the appetite for risk, the dollar the direction of the world's money."],
- ["心","数字を読んだあとに、その日の局面で陥りやすい考えのクセを確かめる。","心 (Mind)","After the numbers, check the habit of mind this stage of the market tends to bring out."],
  ["景気","実質GDP（前期比年率）の四半期の推移と、アトランタ連銀の GDPNow。GDPNow は発表を待たずに今の四半期を見積もるもので、新しい指標が出るたびに更新される。その推移が上向きか下向きかが、景気の勢いの変化を先に映す。","Growth","Real GDP by quarter (annualised) and the Atlanta Fed's GDPNow, which estimates the current quarter before it is published and updates with each new release. Whether its path bends up or down shows the change in momentum early."],
  ["インフレ","CPI、PCE、PPI の前年比。FRB が目標にする 2% との距離と、前月比の勢いを見る。コアは値動きの大きい食品とエネルギーを除いたもので、物価の地合いを表す。PPI は企業の仕入れ値で、消費者物価の先を映しやすい。","Inflation","CPI, PCE and PPI on the year. See how far they are from the Fed's 2% target and the pace on the month. Core leaves out volatile food and energy and shows the underlying trend. PPI, the prices businesses pay, tends to run ahead of consumer prices."],
  ["雇用","雇用者数の増減、失業率、求人率、平均時給、失業保険の申請。求人率が失業率を上回っているあいだは人手不足で、下回ると雇用は緩み始める。平均時給は物価と比べ、上回れば実質賃金はプラス。新規申請は毎週出る、景気の変化にいちばん早く反応する数字。","Jobs","Payrolls, unemployment, job openings, hourly earnings and jobless claims. While openings run above unemployment the market is tight; below it, it starts to loosen. The Beveridge curve joins the two month by month; above the dashed line is the tight side. Hourly earnings against prices show real wages. Weekly claims are the quickest to react to a turn."],
