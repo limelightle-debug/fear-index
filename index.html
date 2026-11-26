@@ -678,7 +678,7 @@ html.embed .top,html.embed .foot,html.embed body::before{display:none}html.embed
 <script src="../mind/engine.js"></script>
 <script src="../mind/words.js"></script>
 <script>
-const APP_VER="fi-v251";
+const APP_VER="fi-v252";
 const $=id=>document.getElementById(id);
 // the paper is Japanese only (its English edition was retired); the アプリ / 書籍 tabs shown inside another app keep that app's language (?lang=)
 const LANG=EMBED&&(location.search.match(/[?&]lang=(ja|en)\b/)||[])[1]||"ja";
@@ -2089,7 +2089,7 @@ function renderFedw(){
   const h2=Math.abs(mv)<.2?(en?`little change priced through ${L.date.slice(0,4)}`:`${L.date.slice(0,4)}年末までほぼ据え置きを織り込む`):(en?`${Math.abs(mv).toFixed(1)} ${mv>0?"hikes":"cuts"} priced by ${ymd(L.date)}`:`${L.date.slice(0,4)}年${L.date.slice(5,7)==="12"?"末":`${+L.date.slice(5,7)}月`}までに${mv>0?"利上げ":"利下げ"}${Math.abs(mv).toFixed(1)}回分を織り込む`);
   // the expected policy rate after each meeting, from today's level
   const pts=[[Date.now(),FW.now]].concat(M.map(m=>[dms(m.date),m.after]));
-  const chart=tsChart([{c:"#6ec3ff",p:pts,w:2}],W,{H:200,dec:2,unit:"%",ref:[(lo+hi)/2]});
+  const chart=tsChart([{c:"#6ec3ff",p:pts,w:2}],W,{H:200,dec:2,unit:"%",ref:[(lo+hi)/2],refLab:[tx(`いまの政策金利 ${lo.toFixed(2)}〜${hi.toFixed(2)}%`,`Current target ${lo.toFixed(2)}-${hi.toFixed(2)}%`)]});
   const ranges=[...new Set(M.flatMap(m=>Object.keys(m.probs)))].sort();
   const tab=`<table class="fw"><tr><th>${tx("会合","Meeting")}</th>${ranges.map(r=>`<th>${r.replace(/(\d\.\d\d)-(\d\.\d\d)/,(x,a,b)=>`${a}〜${b}`.replace(/\.(\d\d)/g,".$1"))}</th>`).join("")}</tr>${M.map(m=>{const best=Object.entries(m.probs).sort((a,b)=>b[1]-a[1]);
     return `<tr><td>${en?`${MON[+m.date.slice(5,7)-1]} ${+m.date.slice(8)} ’${m.date.slice(2,4)}`:`${m.date.slice(2,4)}/${md(m.date)}`}</td>${ranges.map(r=>{const v=m.probs[r];return `<td class="${v==null?"":r===best[0][0]?"mx":"sd"}">${v==null?"":v.toFixed(1)}</td>`}).join("")}</tr>`}).join("")}</table>`;
@@ -2194,7 +2194,9 @@ function tsChart(S,W,o={}){
   if(t1-t0<400*864e5){const d=new Date(t0);for(let m=d.getUTCMonth()+1,yy=d.getUTCFullYear();Date.UTC(yy,m,1)<=t1;m++){const tt=Date.UTC(yy,m,1),xx=x(tt),mo=new Date(tt).getUTCMonth();g+=`<line x1="${xx}" x2="${xx}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".08"/><text x="${xx}" y="${H-5}" text-anchor="middle">${tx(`${mo+1}月`,MON[mo])}</text>`}}
   else{const span=(t1-t0)/(365.25*864e5),step=span>40?10:span>16?5:span>8?2:1;  // long spans: a year mark every 2, 5 or 10 years
     for(let yr=new Date(t0).getUTCFullYear()+1;Date.UTC(yr,0,1)<=t1;yr++){if(yr%step)continue;const xx=x(Date.UTC(yr,0,1));g+=`<line x1="${xx}" x2="${xx}" y1="${MT}" y2="${MT+PH}" stroke="#fff" stroke-opacity=".08"/><text x="${xx}" y="${H-5}" text-anchor="middle">${yr}</text>`}}
-  (o.ref||[]).forEach(v=>{g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity=".4" stroke-dasharray="3 3"/>`});
+  // o.refLab: a label for each reference line, above it at the right end
+  (o.ref||[]).forEach((v,i)=>{g+=`<line x1="${ML}" x2="${ML+PW}" y1="${y(v)}" y2="${y(v)}" stroke="#fff" stroke-opacity=".4" stroke-dasharray="3 3"/>`;
+    const lb=o.refLab&&o.refLab[i];if(lb)g+=`<text x="${ML+PW-2}" y="${y(v)-5}" text-anchor="end" style="fill:var(--ink2)">${lb}</text>`});
   if(o.gap){const A=S[o.gap[0]].p,Bm=new Map(S[o.gap[1]].p.map(q=>[q[0],q[1]])),Q=A.filter(q=>Bm.has(q[0])).map(q=>[q[0],q[1],Bm.get(q[0])]);
     for(let i=1;i<Q.length;i++){const [t0,a0,b0]=Q[i-1],[t1,a1,b1]=Q[i],d0=a0-b0,d1=a1-b1;
       const poly=(ts,as,bs,c)=>{g+=`<polygon points="${ts.map((t,k)=>`${x(t).toFixed(1)},${y(as[k]).toFixed(1)}`).concat(ts.slice().reverse().map((t,k)=>`${x(t).toFixed(1)},${y(bs[bs.length-1-k]).toFixed(1)}`)).join(" ")}" fill="${c}" opacity=".22"/>`};
